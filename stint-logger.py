@@ -34,6 +34,7 @@ class Stint:
         end_position: int,
         incidents: int,
         service_time: float,
+        tire_replacement: bool,
     ) -> dict:
         return {
             "Local Time": datetime.now().strftime("%H:%M:%S"),
@@ -87,35 +88,43 @@ class IracingInterface:
             == "Race"
         )
 
-    def get_player_car_idx(self):
+    def get_player_car_idx(self) -> int:
         return self.ir["PlayerCarIdx"]
 
-    def get_driver_name(self):
+    def get_driver_name(self) -> str:
         car_idx = self.get_player_car_idx()
         return self.ir["DriverInfo"]["Drivers"][car_idx]["UserName"]
 
-    def get_lap(self):
+    def get_lap(self) -> int:
         return self.ir["Lap"]
 
-    def get_last_lap_time(self):
+    def get_last_lap_time(self) -> float:
         return self.ir["LapLastLapTime"]
 
-    def get_session_time(self):
+    def get_session_time(self):  # TODO: check if session time is int or float
         return self.ir["SessionTime"]
 
-    def get_player_position(self):
+    def get_player_position(self) -> int:
         return self.ir["PlayerCarPosition"]
 
-    def get_team_incidents(self):
+    def get_team_incidents(self) -> int:
         return self.ir["PlayerCarTeamIncidentCount"]
 
-    def get_fuel_level(self):
+    def get_fuel_level(self) -> float:
         return self.ir["FuelLevel"]
 
-    def get_pitstop_active(self):
+    def get_tire_replacement(self) -> bool:
+        return (
+            self.ir["dpLFTireChange"]
+            or self.ir["dpRFTireChange"]
+            or self.ir["dpLRTireChange"]
+            or self.ir["dpRRTireChange"]
+        )
+
+    def get_pitstop_active(self) -> bool:
         return self.ir["PitstopActive"]
 
-    def get_service_time(self):
+    def get_service_time(self) -> float:
         return self.ir["PitOptRepairLeft"] + self.ir["PitRepairLeft"]
 
 
@@ -181,9 +190,15 @@ def main():
                     end_pos = ir_interface.get_player_position()
                     incidents = ir_interface.get_team_incidents()
                     service_time = ir_interface.get_service_time()
+                    tire_replacement = ir_interface.get_tire_replacement()
 
                     stint_data = current_stint.to_dict(
-                        end_time, end_fuel, end_pos, incidents, service_time
+                        end_time,
+                        end_fuel,
+                        end_pos,
+                        incidents,
+                        service_time,
+                        tire_replacement,
                     )
                     stints.append(stint_data)
                     print(stints)
