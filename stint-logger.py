@@ -6,6 +6,12 @@ import irsdk
 import pandas as pd
 
 
+def format_time(seconds: float) -> str:
+    h, m = divmod(int(seconds), 3600)
+    m, s = divmod(m, 60)
+    return f"{h}:{m:02}:{s:03}" if h > 0 else f"{m}:{s:03}"
+
+
 @dataclass
 class Stint:
     driver: str
@@ -47,19 +53,19 @@ class Stint:
         return {
             "Local Time": datetime.now().strftime("%H:%M:%S"),
             "Driver": self.driver,
-            "Stint Start": self.start_time,
-            "Stint Length": self.stint_length(end_time),
+            "Stint Start": format_time(self.start_time),
+            "Stint Length": format_time(self.stint_length(end_time)),
             "Laps": len(self.laps),
-            "Average Lap": self.average_lap(),
-            "Fastest Lap": self.fastest_lap(),
-            "Out Lap": self.laps[0] if self.laps else None,
-            "In Lap": self.laps[-1] if self.laps else None,
+            "Average Lap": format_time(self.average_lap()),
+            "Fastest Lap": format_time(self.fastest_lap()),
+            "Out Lap": format_time(self.laps[0] if self.laps else None),
+            "In Lap": format_time(self.laps[-1] if self.laps else None),
             "Start Fuel Qty.": self.start_fuel,
             "End Fuel Qty.": end_fuel,
             "Refuel Qty.": 0,
             "Tires": str(tire_replacement),
             "Repairs": str(self.repairs(end_fast_repairs, service_time)),
-            "Service Time": service_time,
+            "Service Time": format_time(service_time),
             "Incidents": incidents - self.start_incidents,
             "Start Position": self.start_position,
             "End Position": end_position,
@@ -137,6 +143,9 @@ class IracingInterface:
 
     def get_service_time(self) -> float:
         return self.ir["PitOptRepairLeft"] + self.ir["PitRepairLeft"]
+
+
+# TODO: only calculate inital position under green flag, not race session
 
 
 def main():
