@@ -14,6 +14,7 @@ class Stint:
     start_position: int
     start_incidents: int
     start_fuel: float
+    start_fast_repairs: int
 
     def stint_length(self, current_time: float) -> float:
         return current_time - self.start_time
@@ -27,6 +28,12 @@ class Stint:
     def refuel_amount(self, prev_start_fuel: float, end_fuel: float) -> float:
         return prev_start_fuel - end_fuel
 
+    def repairs(self, end_fast_repairs: int, service_time: float) -> bool:
+        if end_fast_repairs is not None and self.start_fast_repairs is not None:
+            return end_fast_repairs < self.start_fast_repairs
+        else:
+            return service_time > 0
+
     def to_dict(
         self,
         end_time: float,
@@ -35,6 +42,7 @@ class Stint:
         incidents: int,
         service_time: float,
         tire_replacement: bool,
+        end_fast_repairs: int,
     ) -> dict:
         return {
             "Local Time": datetime.now().strftime("%H:%M:%S"),
@@ -49,8 +57,8 @@ class Stint:
             "Start Fuel Qty.": self.start_fuel,
             "End Fuel Qty.": end_fuel,
             "Refuel Qty.": 0,
-            "Tires": False,  # TODO: check if tires were taken at pit stop
-            "Repairs": False,  # TODO: check if repairs were needed for pitstop
+            "Tires": tire_replacement,
+            "Repairs": self.repairs(end_fast_repairs, service_time),
             "Service Time": service_time,
             "Incidents": incidents - self.start_incidents,
             "Start Position": self.start_position,
@@ -121,6 +129,9 @@ class IracingInterface:
             or self.ir["dpRRTireChange"]
         )
 
+    def get_fast_repairs(self) -> int:
+        return self.ir["PlayerCarFastRepairsUsed"]
+
     def get_pitstop_active(self) -> bool:
         return self.ir["PitstopActive"]
 
@@ -147,7 +158,7 @@ def main():
 
             if ir_interface.is_race_session():
 
-                out_file_name = ir_interface.ir["SessionUniqueID"]
+                out_file_name = str(ir_interface.ir["SessionUniqueID"])
 
                 current_lap = ir_interface.get_lap()
                 pitstop_active = ir_interface.get_pitstop_active()
@@ -160,7 +171,9 @@ def main():
                         start_position=ir_interface.get_player_position(),
                         start_incidents=ir_interface.get_team_incidents(),
                         start_fuel=ir_interface.get_fuel_level(),
+                        start_fast_repairs=ir_interface.get_fast_repairs(),
                     )
+                    print("new stint started")
 
                     if len(stints) >= 2:
                         stints[-2]["Refuel Qty."] = max(
@@ -191,6 +204,7 @@ def main():
                     incidents = ir_interface.get_team_incidents()
                     service_time = ir_interface.get_service_time()
                     tire_replacement = ir_interface.get_tire_replacement()
+                    end_fast_repairs = ir_interface.get_fast_repairs()
 
                     stint_data = current_stint.to_dict(
                         end_time,
@@ -199,9 +213,10 @@ def main():
                         incidents,
                         service_time,
                         tire_replacement,
+                        end_fast_repairs,
                     )
                     stints.append(stint_data)
-                    print(stints)
+                    print("stint ended")
                     current_stint = None
 
                 last_pitstop_active = pitstop_active
@@ -211,7 +226,7 @@ def main():
         print("Exiting")
 
     # Export DataFrame
-    out_path = "./races/" + out_file_name + "csv"
+    out_path = "./races/" + out_file_name + ".csv"
     df = pd.DataFrame(stints)
     df.to_csv(out_path, index=False)
     print(f"Stints saved to {out_path}")
