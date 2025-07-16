@@ -65,7 +65,7 @@ class Stint:
             "Start Fuel Qty.": self.start_fuel,
             "End Fuel Qty.": end_fuel,
             "Refuel Qty.": 0,
-            "Tires": str(tire_replacement),
+            "Tires": "True" if tire_replacement == 1.0 else "False",
             "Repairs": str(self.repairs(end_fast_repairs, service_time)),
             "Service Time": format_time(service_time),
             "Incidents": incidents - self.start_incidents,
@@ -149,10 +149,15 @@ class IracingInterface:
     def get_session_flags(self) -> str:
         return self.ir["SessionFlags"]
 
+    def get_grid_pos(self) -> int:
+        return self.ir["CarIdxPosition"][self.get_player_car_idx()]
+
 
 # TODO: only calculate inital position under green flag, not race session
 
-# TODO: separate processing methods for practice/quali/race\
+# TODO: separate processing methods for practice/quali/race
+
+# TODO: if we join the middle of a session, dont start collecting data until the next stint starts for consistency
 
 
 def process_race(ir_interface: IracingInterface):
@@ -202,11 +207,17 @@ def main():
                             driver=ir_interface.get_driver_name(),
                             start_time=ir_interface.get_session_time(),
                             laps=[],
-                            start_position=ir_interface.get_player_position(),
+                            start_position=(
+                                ir_interface.get_player_position()
+                                if len(stints) > 1
+                                else ir_interface.get_grid_pos()
+                            ),
                             start_incidents=ir_interface.get_team_incidents(),
                             start_fuel=ir_interface.get_fuel_level(),
                             start_fast_repairs=ir_interface.get_fast_repairs(),
                         )
+
+                        print(f"Position: {current_stint.start_position}")
 
                         if len(stints) > 0:
                             stints[-1]["Refuel Qty."] = max(
@@ -221,7 +232,7 @@ def main():
 
                     if (
                         current_stint
-                        and current_lap > 0
+                        and current_lap > 1
                         and current_lap > last_recorded_lap
                     ):
                         lap_time = ir_interface.get_last_lap_time()
