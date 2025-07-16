@@ -9,7 +9,9 @@ import pandas as pd
 def format_time(seconds: float) -> str:
     h, m = divmod(int(seconds), 3600)
     m, s = divmod(m, 60)
-    return f"{h}:{m:02}:{s:03}" if h > 0 else f"{m}:{s:03}"
+    ms = seconds % 1
+    s_with_ms = s + ms
+    return f"{h}:{m:02}:{s_with_ms:06.3f}" if h > 0 else f"{m:02}:{s_with_ms:06.3f}"
 
 
 @dataclass
@@ -58,8 +60,8 @@ class Stint:
             "Laps": len(self.laps),
             "Average Lap": format_time(self.average_lap()),
             "Fastest Lap": format_time(self.fastest_lap()),
-            "Out Lap": format_time(self.laps[0] if self.laps else None),
-            "In Lap": format_time(self.laps[-1] if self.laps else None),
+            "Out Lap": format_time(self.laps[0]) if self.laps else None,
+            "In Lap": format_time(self.laps[-1]) if self.laps else None,
             "Start Fuel Qty.": self.start_fuel,
             "End Fuel Qty.": end_fuel,
             "Refuel Qty.": 0,
@@ -144,17 +146,35 @@ class IracingInterface:
     def get_service_time(self) -> float:
         return self.ir["PitOptRepairLeft"] + self.ir["PitRepairLeft"]
 
+    def get_session_flags(self) -> str:
+        return self.ir["SessionFlags"]
+
 
 # TODO: only calculate inital position under green flag, not race session
+
+# TODO: separate processing methods for practice/quali/race\
+
+
+def process_race(ir_interface: IracingInterface):
+    pass
+
+
+def process_practice():
+    pass
+
+
+def process_quali():
+    pass
 
 
 def main():
     ir_interface = IracingInterface()
-    out_file_name = "stints.csv"
+    out_file_name = "stints"
     stints = []
     current_stint = None
     last_pitstop_active = False
     last_recorded_lap = -1
+    first_green_flag = False
 
     try:
         print("initializing")
@@ -167,71 +187,82 @@ def main():
 
             if ir_interface.is_race_session():
 
-                out_file_name = str(ir_interface.ir["SessionUniqueID"])
+                current_flags = ir_interface.get_session_flags()
 
-                current_lap = ir_interface.get_lap()
-                pitstop_active = ir_interface.get_pitstop_active()
+                if first_green_flag or (current_flags & irsdk.Flags.green):
+                    first_green_flag = True
 
-                if current_stint is None and not pitstop_active:
-                    current_stint = Stint(
-                        driver=ir_interface.get_driver_name(),
-                        start_time=ir_interface.get_session_time(),
-                        laps=[],
-                        start_position=ir_interface.get_player_position(),
-                        start_incidents=ir_interface.get_team_incidents(),
-                        start_fuel=ir_interface.get_fuel_level(),
-                        start_fast_repairs=ir_interface.get_fast_repairs(),
-                    )
-                    print("new stint started")
+                    out_file_name = str(ir_interface.ir["SessionUniqueID"])
 
-                    if len(stints) >= 2:
-                        stints[-2]["Refuel Qty."] = max(
-                            0, current_stint.start_fuel - stints[-2]["End Fuel Qty."]
-                        )
-                        print(
-                            f'prev stint refuel updated to {stints[-2]["Refuel Qty."]}'
+                    current_lap = ir_interface.get_lap()
+                    pitstop_active = ir_interface.get_pitstop_active()
+
+                    if current_stint is None and not pitstop_active:
+                        current_stint = Stint(
+                            driver=ir_interface.get_driver_name(),
+                            start_time=ir_interface.get_session_time(),
+                            laps=[],
+                            start_position=ir_interface.get_player_position(),
+                            start_incidents=ir_interface.get_team_incidents(),
+                            start_fuel=ir_interface.get_fuel_level(),
+                            start_fast_repairs=ir_interface.get_fast_repairs(),
                         )
 
-                if (
-                    current_stint
-                    and current_lap > 0
-                    and current_lap > last_recorded_lap
-                ):
-                    lap_time = ir_interface.get_last_lap_time()
-                    current_stint.laps.append(lap_time)
-                    last_recorded_lap = current_lap
+                        if len(stints) > 0:
+                            stints[-1]["Refuel Qty."] = max(
+                                0,
+                                current_stint.start_fuel - stints[-1]["End Fuel Qty."],
+                            )
+                            print(
+                                f'prev stint refuel updated to {stints[-1]["Refuel Qty."]}'
+                            )
 
-                if (
-                    pitstop_active
-                    and not last_pitstop_active
-                    and current_stint is not None
-                ):
-                    # Pit started, record stint
-                    end_time = ir_interface.get_session_time()
-                    end_fuel = ir_interface.get_fuel_level()
-                    end_pos = ir_interface.get_player_position()
-                    incidents = ir_interface.get_team_incidents()
-                    service_time = ir_interface.get_service_time()
-                    tire_replacement = ir_interface.get_tire_replacement()
-                    end_fast_repairs = ir_interface.get_fast_repairs()
+                        print("new stint started")
 
-                    stint_data = current_stint.to_dict(
-                        end_time,
-                        end_fuel,
-                        end_pos,
-                        incidents,
-                        service_time,
-                        tire_replacement,
-                        end_fast_repairs,
-                    )
-                    stints.append(stint_data)
-                    print("stint ended")
-                    current_stint = None
+                    if (
+                        current_stint
+                        and current_lap > 0
+                        and current_lap > last_recorded_lap
+                    ):
+                        lap_time = ir_interface.get_last_lap_time()
+                        current_stint.laps.append(lap_time)
+                        last_recorded_lap = current_lap
 
-                last_pitstop_active = pitstop_active
+                    if (
+                        pitstop_active
+                        and not last_pitstop_active
+                        and current_stint is not None
+                    ):
+                        # Pit started, record stint
+                        end_time = ir_interface.get_session_time()
+                        end_fuel = ir_interface.get_fuel_level()
+                        end_pos = ir_interface.get_player_position()
+                        incidents = ir_interface.get_team_incidents()
+                        service_time = ir_interface.get_service_time()
+                        tire_replacement = ir_interface.get_tire_replacement()
+                        end_fast_repairs = ir_interface.get_fast_repairs()
+
+                        stint_data = current_stint.to_dict(
+                            end_time,
+                            end_fuel,
+                            end_pos,
+                            incidents,
+                            service_time,
+                            tire_replacement,
+                            end_fast_repairs,
+                        )
+                        stints.append(stint_data)
+
+                        print(stints)
+                        current_stint = None
+
+                    last_pitstop_active = pitstop_active
+                else:
+                    print("waiting for first green")
             time.sleep(1)
 
     except KeyboardInterrupt:
+        # TODO: log the current stint on exit
         print("Exiting")
 
     # Export DataFrame
