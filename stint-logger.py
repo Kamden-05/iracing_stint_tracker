@@ -149,9 +149,6 @@ class IracingInterface:
     def get_session_flags(self) -> str:
         return self.ir["SessionFlags"]
 
-    def get_grid_pos(self) -> int:
-        return self.ir["CarIdxPosition"][self.get_player_car_idx()]
-
 
 # TODO: only calculate inital position under green flag, not race session
 
@@ -179,7 +176,6 @@ def main():
     current_stint = None
     last_pitstop_active = False
     last_recorded_lap = -1
-    first_green_flag = False
 
     try:
         print("initializing")
@@ -192,10 +188,8 @@ def main():
 
             if ir_interface.is_race_session():
 
-                current_flags = ir_interface.get_session_flags()
-
-                if first_green_flag or (current_flags & irsdk.Flags.green):
-                    first_green_flag = True
+                position = ir_interface.get_player_position()
+                if position > 0:
 
                     out_file_name = str(ir_interface.ir["SessionUniqueID"])
 
@@ -207,17 +201,11 @@ def main():
                             driver=ir_interface.get_driver_name(),
                             start_time=ir_interface.get_session_time(),
                             laps=[],
-                            start_position=(
-                                ir_interface.get_player_position()
-                                if len(stints) > 1
-                                else ir_interface.get_grid_pos()
-                            ),
+                            start_position=ir_interface.get_player_position(),
                             start_incidents=ir_interface.get_team_incidents(),
                             start_fuel=ir_interface.get_fuel_level(),
                             start_fast_repairs=ir_interface.get_fast_repairs(),
                         )
-
-                        print(f"Position: {current_stint.start_position}")
 
                         if len(stints) > 0:
                             stints[-1]["Refuel Qty."] = max(
@@ -269,7 +257,7 @@ def main():
 
                     last_pitstop_active = pitstop_active
                 else:
-                    print("waiting for first green")
+                    print("waiting for race start")
             time.sleep(1)
 
     except KeyboardInterrupt:
