@@ -62,8 +62,8 @@ class Stint:
             "Fastest Lap": format_time(self.fastest_lap()),
             "Out Lap": format_time(self.laps[0]) if self.laps else None,
             "In Lap": format_time(self.laps[-1]) if self.laps else None,
-            "Start Fuel Qty.": self.start_fuel,
-            "End Fuel Qty.": end_fuel,
+            "Start Fuel Qty.": f"{self.start_fuel:.2f}",
+            "End Fuel Qty.": f"{end_fuel:.2f}",
             "Refuel Qty.": 0,
             "Tires": "True" if tire_replacement == 1.0 else "False",
             "Repairs": str(self.repairs(end_fast_repairs, service_time)),
@@ -210,7 +210,7 @@ def main():
                         if len(stints) > 0:
                             stints[-1]["Refuel Qty."] = max(
                                 0,
-                                current_stint.start_fuel - stints[-1]["End Fuel Qty."],
+                                f"{current_stint.start_fuel - stints[-1]["End Fuel Qty."]:.2f}",
                             )
                             print(
                                 f'prev stint refuel updated to {stints[-1]["Refuel Qty."]}'
