@@ -2,6 +2,7 @@ import time
 from iracing_interface import IracingInterface
 import pandas as pd
 from stint import Stint
+from session_manager import SessionManager
 
 
 def update_prev_refuel(prev_stint: Stint, current_stint: Stint) -> Stint:
@@ -63,11 +64,12 @@ def main():
     current_stint = None
     last_pitstop_active = False
     last_recorded_lap = -1
+    manager = SessionManager(ir_interface)
 
     try:
         print("initializing")
         while True:
-            if not ir_interface.check_connection():
+            if not manager.connected():
                 time.sleep(1)
                 continue
 
