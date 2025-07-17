@@ -40,6 +40,9 @@ class IracingInterface:
     def get_lap(self) -> int:
         return self.ir["Lap"]
 
+    def get_completed_laps(self) -> int:
+        return self.ir["LapCompleted"]
+
     def get_last_lap_time(self) -> float:
         return self.ir["LapLastLapTime"]
 

@@ -38,7 +38,7 @@ def main():
 
     # Export DataFrame
     out_path = "./races/stints.csv"
-    df = pd.DataFrame(manager.export_stints())
+    df = pd.DataFrame(manager.export_stint_data())
     df.to_csv(out_path, index=False)
     print(f"Stints saved to {out_path}")
 

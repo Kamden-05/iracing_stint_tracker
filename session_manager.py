@@ -1,5 +1,6 @@
 from iracing_interface import IracingInterface
 from stint import Stint
+from typing import List
 
 # TODO: could we potentially want to track stints for other drivers?
 # what data from other drivers would be available that would be useful?
@@ -9,44 +10,30 @@ class SessionManager:
 
     def __init__(self, ir_interface: IracingInterface):
         self.ir = ir_interface
-        self.stints = []
-        self.current_stint = None
+        self.stints: List[Stint] = []
+        self.current_stint: Stint = None
         self.last_pitstop_active = False
         self.last_recorded_lap = -1
+        self.prev_completed = 0
 
     # handle different session types
 
-    def update_prev_refuel(self, prev_stint: Stint) -> Stint:
-        prev_stint["Refuel Qty."] = max(
-            0,
-            round(
-                self.current_stint.start_fuel - prev_stint["End Fuel Qty."],
-                2,
-            ),
+    def record_stint(self):
+        self.current_stint.end_time = self.ir.get_session_time()
+        self.current_stint.end_position = self.ir.get_player_position()
+        self.current_stint.end_fuel = self.ir.get_fuel_level()
+        self.current_stint.incidents = self.ir.get_team_incidents()
+        self.current_stint.service_time = self.ir.get_service_time()
+        self.current_stint.tire_replacement = self.ir.get_tire_replacement()
+        self.current_stint.end_fast_repairs = self.ir.get_fast_repairs()
+        self.current_stint.laps_completed = (
+            self.ir.get_completed_laps() - self.prev_completed
         )
 
-        return prev_stint
-
-    def record_stint(self) -> dict:
-        end_time = self.ir.get_session_time()
-        end_fuel = self.ir.get_fuel_level()
-        end_pos = self.ir.get_player_position()
-        incidents = self.ir.get_team_incidents()
-        service_time = self.ir.get_service_time()
-        tire_replacement = self.ir.get_tire_replacement()
-        end_fast_repairs = self.ir.get_fast_repairs()
-
-        stint_data = self.current_stint.to_dict(
-            end_time,
-            end_fuel,
-            end_pos,
-            incidents,
-            service_time,
-            tire_replacement,
-            end_fast_repairs,
+    def update_prev_refuel(self):
+        self.stints[-1].refuel_amount = max(
+            0, self.current_stint.start_fuel - self.stints[-1].end_fuel
         )
-
-        return stint_data
 
     def process_race(self):
         current_lap = self.ir.get_lap()
@@ -64,8 +51,7 @@ class SessionManager:
             )
 
             if len(self.stints) > 0:
-                self.stints[-1] = self.update_prev_refuel(self.stints[-1])
-
+                self.update_prev_refuel()
             print("new stint started")
 
         if (
@@ -83,11 +69,15 @@ class SessionManager:
             and self.current_stint is not None
         ):
             # Pit started, record stint
-            self.stints.append(self.record_stint())
+
+            self.record_stint()
+            self.stints.append(self.current_stint)
             self.current_stint = None
+            self.prev_completed = self.ir.get_completed_laps()
             print("Stint recorded")
 
         self.last_pitstop_active = pitstop_active
 
-    def export_stints(self) -> list[dict]:
-        return self.stints
+    # TODO: change as list of dicts for return instead of list of Stints
+    def export_stint_data(self) -> list[dict]:
+        return [stint.to_dict() for stint in self.stints]
