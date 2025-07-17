@@ -35,6 +35,7 @@ class SessionManager:
             0, self.current_stint.start_fuel - self.stints[-1].end_fuel
         )
 
+    # TODO: fix logic to update service time if not all optional repairs are taken
     def process_race(self):
         current_lap = self.ir.get_lap()
         pitstop_active = self.ir.get_pitstop_active()
