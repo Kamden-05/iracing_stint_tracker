@@ -24,19 +24,19 @@ class Stint:
     start_fuel: float
     start_fast_repairs: int
 
-    def stint_length(self, current_time: float) -> float:
+    def get_stint_length(self, current_time: float) -> float:
         return current_time - self.start_time
 
-    def average_lap(self) -> float:
+    def get_average_lap(self) -> float:
         return sum(self.laps) / len(self.laps) if self.laps else 0.0
 
-    def fastest_lap(self) -> float:
+    def get_fastest_lap(self) -> float:
         return min(self.laps) if self.laps else 0.0
 
-    def refuel_amount(self, prev_start_fuel: float, end_fuel: float) -> float:
+    def get_refuel_amount(self, prev_start_fuel: float, end_fuel: float) -> float:
         return prev_start_fuel - end_fuel
 
-    def repairs(self, end_fast_repairs: int, service_time: float) -> bool:
+    def repairing(self, end_fast_repairs: int, service_time: float) -> bool:
         if end_fast_repairs is not None and self.start_fast_repairs is not None:
             return end_fast_repairs < self.start_fast_repairs
         else:
@@ -56,17 +56,19 @@ class Stint:
             "Local Time": datetime.now().strftime("%H:%M:%S"),
             "Driver": self.driver,
             "Stint Start": format_time(self.start_time),
-            "Stint Length": format_time(self.stint_length(end_time)),
+            "Stint Length": format_time(self.get_stint_length(end_time)),
             "Laps": len(self.laps),
-            "Average Lap": format_time(self.average_lap()),
-            "Fastest Lap": format_time(self.fastest_lap()),
+            "Average Lap": format_time(self.get_average_lap()),
+            "Fastest Lap": format_time(self.get_fastest_lap()),
             "Out Lap": format_time(self.laps[0]) if self.laps else None,
             "In Lap": format_time(self.laps[-1]) if self.laps else None,
             "Start Fuel Qty.": round(self.start_fuel, 2),
             "End Fuel Qty.": round(end_fuel, 2),
             "Refuel Qty.": 0,
             "Tires": "True" if tire_replacement == 1.0 else "False",
-            "Repairs": str(self.repairs(end_fast_repairs, service_time)),
+            "Repairs": (
+                "True" if self.repairing(end_fast_repairs, service_time) else "False"
+            ),
             "Service Time": format_time(service_time),
             "Incidents": incidents - self.start_incidents,
             "Start Position": self.start_position,
