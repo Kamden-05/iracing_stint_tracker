@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 from datetime import datetime
-from main import format_time
+from utils import format_time
 
 
 @dataclass

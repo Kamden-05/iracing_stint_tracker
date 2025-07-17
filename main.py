@@ -4,14 +4,6 @@ import pandas as pd
 from stint import Stint
 
 
-def format_time(seconds: float) -> str:
-    h, m = divmod(int(seconds), 3600)
-    m, s = divmod(m, 60)
-    ms = seconds % 1
-    s_with_ms = s + ms
-    return f"{h}:{m:02}:{s_with_ms:06.3f}" if h > 0 else f"{m:02}:{s_with_ms:06.3f}"
-
-
 def update_prev_refuel(prev_stint: Stint, current_stint: Stint) -> Stint:
     prev_stint["Refuel Qty."] = max(
         0,
@@ -75,9 +67,7 @@ def main():
     try:
         print("initializing")
         while True:
-            ir_interface.connect()
-            if not ir_interface.is_connected():
-                ir_interface.disconnect()
+            if not ir_interface.check_connection():
                 time.sleep(1)
                 continue
 

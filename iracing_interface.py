@@ -6,26 +6,28 @@ class IracingInterface:
         self.ir = irsdk.IRSDK()
         self.ir_connected = False
 
-    def connect(self):
-        if (
+    def check_connection(self):
+        if self.ir_connected and not (self.ir.is_initialized and self.ir.is_connected):
+            self.ir_connected = False
+
+            self.ir.shutdown()
+            print("irsdk disconnected")
+        elif (
             not self.ir_connected
             and self.ir.startup()
             and self.ir.is_initialized
             and self.ir.is_connected
         ):
             self.ir_connected = True
-            print("Connected to iRacing")
+            print("irsdk connected")
 
-    def disconnect(self):
-        if self.ir_connected and not (self.ir.is_initialized and self.ir.is_connected):
-            self.ir_connected = False
-            self.ir.shutdown()
-            print("Disconnected from iRacing")
+        return self.ir_connected
 
     def is_connected(self):
         return self.ir_connected
 
-    def is_race_session(self):
+    # TODO: change to check for session type instead of specifically race type
+    def is_race_session(self) -> bool:
         return (
             self.ir["SessionInfo"]["Sessions"][self.ir["SessionNum"]]["SessionType"]
             == "Race"
