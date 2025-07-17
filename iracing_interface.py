@@ -27,11 +27,8 @@ class IracingInterface:
         return self.ir_connected
 
     # TODO: change to check for session type instead of specifically race type
-    def is_race_session(self) -> bool:
-        return (
-            self.ir["SessionInfo"]["Sessions"][self.ir["SessionNum"]]["SessionType"]
-            == "Race"
-        )
+    def get_session_type(self) -> str:
+        return self.ir["SessionInfo"]["Sessions"][self.ir["SessionNum"]]["SessionType"]
 
     def get_player_car_idx(self) -> int:
         return self.ir["PlayerCarIdx"]
