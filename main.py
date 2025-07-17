@@ -14,23 +14,23 @@ from session_manager import SessionManager
 def main():
     ir_interface = IracingInterface()
     manager = SessionManager(ir_interface)
+    sleep_time = 1
 
     try:
         print("initializing")
         while True:
             if not ir_interface.check_connection():
-                time.sleep(1)
+                time.sleep(sleep_time)
                 continue
 
             # check if race data is ready to be recorded
-            if (
-                ir_interface.get_session_type() == "Race"
-                and ir_interface.get_player_position() > 0
-            ):
-                manager.process_race()
-            else:
-                print("Waiting for race start")
-            time.sleep(1)
+            if ir_interface.get_session_type() == "Race":
+                if ir_interface.get_player_position() > 0:
+                    manager.process_race()
+                else:
+                    print("Waiting for race start")
+
+            time.sleep(sleep_time)
 
     except KeyboardInterrupt:
         # TODO: log the current stint on exit
