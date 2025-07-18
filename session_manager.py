@@ -15,6 +15,8 @@ class SessionManager:
         self.last_pitstop_active = False
         self.last_recorded_lap = -1
         self.prev_completed = 0
+        self.pit_start_time = 0
+        self.pit_end_time = 0
 
     # handle different session types
 
@@ -23,7 +25,8 @@ class SessionManager:
         self.current_stint.end_position = self.ir.get_player_position()
         self.current_stint.end_fuel = self.ir.get_fuel_level()
         self.current_stint.incidents = self.ir.get_team_incidents()
-        self.current_stint.service_time = self.ir.get_service_time()
+        self.current_stint.required_repair_time = self.ir.get_repair_time()
+        self.current_stint.optional_repair_time = self.ir.get_optional_repair_time()
         self.current_stint.tire_replacement = self.ir.get_tire_replacement()
         self.current_stint.end_fast_repairs = self.ir.get_fast_repairs()
         self.current_stint.laps_completed = (
@@ -35,25 +38,33 @@ class SessionManager:
             0, self.current_stint.start_fuel - self.stints[-1].end_fuel
         )
 
+    def update_prev_service_time(self):
+        self.stints[-1].service_time = self.pit_end_time - self.pit_start_time
+
     # TODO: fix logic to update service time if not all optional repairs are taken
     def process_race(self):
         current_lap = self.ir.get_lap()
         pitstop_active = self.ir.get_pitstop_active()
 
-        if self.current_stint is None and not pitstop_active:
-            self.current_stint = Stint(
-                driver=self.ir.get_driver_name(),
-                start_time=self.ir.get_session_time(),
-                laps=[],
-                start_position=self.ir.get_player_position(),
-                start_incidents=self.ir.get_team_incidents(),
-                start_fuel=self.ir.get_fuel_level(),
-                start_fast_repairs=self.ir.get_fast_repairs(),
-            )
+        if not pitstop_active:
+            if self.last_pitstop_active:
+                self.pit_end_time = self.ir.get_session_time()
+                self.update_prev_service_time()
 
-            if len(self.stints) > 0:
-                self.update_prev_refuel()
-            print("new stint started")
+            if self.current_stint is None:
+                self.current_stint = Stint(
+                    driver=self.ir.get_driver_name(),
+                    start_time=self.ir.get_session_time(),
+                    laps=[],
+                    start_position=self.ir.get_player_position(),
+                    start_incidents=self.ir.get_team_incidents(),
+                    start_fuel=self.ir.get_fuel_level(),
+                    start_fast_repairs=self.ir.get_fast_repairs(),
+                )
+
+                if len(self.stints) > 0:
+                    self.update_prev_refuel()
+                print("new stint started")
 
         if (
             self.current_stint
@@ -70,7 +81,7 @@ class SessionManager:
             and self.current_stint is not None
         ):
             # Pit started, record stint
-
+            self.pit_start_time = self.ir.get_session_time()
             self.record_stint()
             self.stints.append(self.current_stint)
             self.current_stint = None

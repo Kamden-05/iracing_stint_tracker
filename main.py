@@ -10,6 +10,8 @@ from session_manager import SessionManager
 
 # TODO: if we join the middle of a session, dont start collecting data until the next stint starts for consistency
 
+# TODO:
+
 
 def main():
     ir_interface = IracingInterface()

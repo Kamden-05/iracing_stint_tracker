@@ -72,8 +72,11 @@ class IracingInterface:
     def get_pitstop_active(self) -> bool:
         return self.ir["PitstopActive"]
 
-    def get_service_time(self) -> float:
-        return self.ir["PitOptRepairLeft"] + self.ir["PitRepairLeft"]
+    def get_optional_repair_time(self) -> float:
+        return self.ir["PitOptRepairLeft"]
+
+    def get_repair_time(self) -> float:
+        return self.ir["PitRepairLeft"]
 
     def get_session_flags(self) -> str:
         return self.ir["SessionFlags"]

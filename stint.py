@@ -19,6 +19,8 @@ class Stint:
     end_position: int = -1
     end_fuel: float = -1.0
     incidents: int = -1
+    required_repair_time: float = 0.0
+    optional_repair_time: float = 0.0
     service_time: float = -1.0
     tire_replacement: bool = None
     end_fast_repairs: int = -1
@@ -39,6 +41,11 @@ class Stint:
         else:
             return self.service_time > 0
 
+    def get_optional_repair_time(self) -> float:
+        return min(
+            self.optional_repair_time, self.service_time - self.required_repair_time
+        )
+
     def to_dict(self) -> dict:
         return {
             "Local Time": datetime.now().strftime("%H:%M:%S"),
@@ -54,8 +61,11 @@ class Stint:
             "End Fuel Qty.": round(self.end_fuel, 2),
             "Refuel Qty.": round(self.refuel_amount, 2),
             "Tires": "True" if self.tire_replacement == 1.0 else "False",
+            "Time in Pits": 0,  # TODO: time from crossing pit entrance to leaving pit exit
             "Repairs": ("True" if self.repairing() else "False"),
-            "Service Time": format_time(self.service_time),
+            "Required Repair Time": format_time(self.required_repair_time),
+            "Optional Repair Time": format_time(self.get_optional_repair_time()),
+            "Total Service Time": format_time(self.service_time),
             "Incidents": self.incidents - self.start_incidents,
             "Start Position": self.start_position,
             "End Position": self.end_position,
