@@ -14,6 +14,8 @@ class Stint:
     start_fuel: float
     start_fast_repairs: int
 
+    in_lap: float = None
+    out_lap: float = None
     laps_completed: int = -1
     end_time: float = -1.0
     end_position: int = -1
@@ -55,13 +57,17 @@ class Stint:
             "Laps": self.laps_completed,
             "Average Lap": format_time(self.get_average_lap()),
             "Fastest Lap": format_time(self.get_fastest_lap()),
-            "Out Lap": format_time(self.laps[0]) if self.laps else None,
-            "In Lap": format_time(self.laps[-1]) if self.laps else None,
+            "Out Lap": format_time(self.out_lap) if self.out_lap else None,
+            "In Lap": format_time(self.in_lap) if self.in_lap else None,
             "Start Fuel Qty.": round(self.start_fuel, 2),
-            "End Fuel Qty.": round(self.end_fuel, 2),
-            "Refuel Qty.": round(self.refuel_amount, 2),
-            "Tires": "True" if self.tire_replacement == 1.0 else "False",
-            "Time in Pits": 0,  # TODO: time from crossing pit entrance to leaving pit exit
+            "End Fuel Qty.": round(self.end_fuel, 2),  # default None if stint isnt over
+            "Refuel Qty.": round(
+                self.refuel_amount, 2
+            ),  # default None if stint isnt over or race ends
+            "Tires": (
+                "True" if self.tire_replacement == 1.0 else "False"
+            ),  # default None if we dont pit
+            "Time in Pits": None,  # TODO: time from crossing pit entrance to leaving pit exit
             "Repairs": ("True" if self.repairing() else "False"),
             "Required Repair Time": format_time(self.required_repair_time),
             "Optional Repair Time": format_time(self.get_optional_repair_time()),

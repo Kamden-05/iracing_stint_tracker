@@ -11,7 +11,7 @@ import irsdk
 
 # TODO: if we join the middle of a session, dont start collecting data until the next stint starts for consistency
 
-# TODO:
+# TODO: handle disconnects
 
 
 def main():

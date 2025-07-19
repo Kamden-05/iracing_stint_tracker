@@ -32,6 +32,8 @@ class SessionManager:
         )
 
         if not self.is_checkered():
+            self.current_stint.in_lap = self.current_stint.laps[-1]
+            self.current_stint.out_lap = self.current_stint.laps[0]
             self.current_stint.required_repair_time = self.ir.get_repair_time()
             self.current_stint.optional_repair_time = self.ir.get_optional_repair_time()
             self.current_stint.tire_replacement = self.ir.get_tire_replacement()
@@ -86,7 +88,7 @@ class SessionManager:
                 self.current_stint.laps.append(lap_time)
                 self.last_recorded_lap = current_lap
 
-                if self.is_checkered():
+                if self.is_checkered()
                     self.race_over = True
                     self.record_stint()
 
@@ -103,6 +105,9 @@ class SessionManager:
             print("Stint recorded")
 
         self.last_pitstop_active = pitstop_active
+
+        # if cool down period:
+            # self.race_over = True
 
     # TODO: change as list of dicts for return instead of list of Stints
     def export_stint_data(self) -> list[dict]:
