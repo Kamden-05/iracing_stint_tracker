@@ -88,7 +88,7 @@ class SessionManager:
                 self.current_stint.laps.append(lap_time)
                 self.last_recorded_lap = current_lap
 
-                if self.is_checkered()
+                if self.is_checkered():
                     self.race_over = True
                     self.record_stint()
 
@@ -107,7 +107,7 @@ class SessionManager:
         self.last_pitstop_active = pitstop_active
 
         # if cool down period:
-            # self.race_over = True
+        # self.race_over = True
 
     # TODO: change as list of dicts for return instead of list of Stints
     def export_stint_data(self) -> list[dict]:
