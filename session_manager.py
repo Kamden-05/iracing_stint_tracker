@@ -1,6 +1,7 @@
 from iracing_interface import IracingInterface
 from stint import Stint
 from typing import List
+import irsdk
 
 # TODO: could we potentially want to track stints for other drivers?
 # what data from other drivers would be available that would be useful?
@@ -17,6 +18,7 @@ class SessionManager:
         self.prev_completed = 0
         self.pit_start_time = 0
         self.pit_end_time = 0
+        self.race_over = False
 
     # handle different session types
 
@@ -25,13 +27,17 @@ class SessionManager:
         self.current_stint.end_position = self.ir.get_player_position()
         self.current_stint.end_fuel = self.ir.get_fuel_level()
         self.current_stint.incidents = self.ir.get_team_incidents()
-        self.current_stint.required_repair_time = self.ir.get_repair_time()
-        self.current_stint.optional_repair_time = self.ir.get_optional_repair_time()
-        self.current_stint.tire_replacement = self.ir.get_tire_replacement()
-        self.current_stint.end_fast_repairs = self.ir.get_fast_repairs()
         self.current_stint.laps_completed = (
             self.ir.get_completed_laps() - self.prev_completed
         )
+
+        if not self.is_checkered():
+            self.current_stint.required_repair_time = self.ir.get_repair_time()
+            self.current_stint.optional_repair_time = self.ir.get_optional_repair_time()
+            self.current_stint.tire_replacement = self.ir.get_tire_replacement()
+            self.current_stint.end_fast_repairs = self.ir.get_fast_repairs()
+
+        self.stints.append(self.current_stint)
 
     def update_prev_refuel(self):
         self.stints[-1].refuel_amount = max(
@@ -40,6 +46,9 @@ class SessionManager:
 
     def update_prev_service_time(self):
         self.stints[-1].service_time = self.pit_end_time - self.pit_start_time
+
+    def is_checkered(self) -> bool:
+        return self.ir.get_session_flags() & irsdk.Flags.checkered
 
     # TODO: fix logic to update service time if not all optional repairs are taken
     def process_race(self):
@@ -72,8 +81,14 @@ class SessionManager:
             and current_lap > self.last_recorded_lap
         ):
             lap_time = self.ir.get_last_lap_time()
-            self.current_stint.laps.append(lap_time)
-            self.last_recorded_lap = current_lap
+
+            if lap_time > 0:
+                self.current_stint.laps.append(lap_time)
+                self.last_recorded_lap = current_lap
+
+                if self.is_checkered():
+                    self.race_over = True
+                    self.record_stint()
 
         if (
             pitstop_active
@@ -83,7 +98,6 @@ class SessionManager:
             # Pit started, record stint
             self.pit_start_time = self.ir.get_session_time()
             self.record_stint()
-            self.stints.append(self.current_stint)
             self.current_stint = None
             self.prev_completed = self.ir.get_completed_laps()
             print("Stint recorded")

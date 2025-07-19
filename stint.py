@@ -21,10 +21,10 @@ class Stint:
     incidents: int = -1
     required_repair_time: float = 0.0
     optional_repair_time: float = 0.0
-    service_time: float = -1.0
+    service_time: float = 0.0
     tire_replacement: bool = None
     end_fast_repairs: int = -1
-    refuel_amount: float = -1.0
+    refuel_amount: float = 0.0
 
     def get_stint_length(self, current_time: float) -> float:
         return current_time - self.start_time

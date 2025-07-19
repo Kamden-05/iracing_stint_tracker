@@ -2,6 +2,7 @@ import time
 from iracing_interface import IracingInterface
 import pandas as pd
 from session_manager import SessionManager
+import irsdk
 
 
 # TODO: only calculate inital position under green flag, not race session
@@ -32,10 +33,15 @@ def main():
                 else:
                     print("Waiting for race start")
 
+                # check if race session is over
+                if manager.race_over:
+                    print("Race session over")
+                    break
+
             time.sleep(sleep_time)
 
     except KeyboardInterrupt:
-        # TODO: log the current stint on exit
+        manager.record_stint()
         print("Exiting")
 
     # Export DataFrame
