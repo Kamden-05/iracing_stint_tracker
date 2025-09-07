@@ -14,7 +14,7 @@ class SessionManager:
         self.stints: List[Stint] = []
         self.current_stint: Stint = None
         self.last_pitstop_active = False
-        self.last_recorded_lap = -1
+        self.last_recorded_lap = 0
         self.prev_completed = 0
         self.pit_start_time = 0
         self.pit_end_time = 0
@@ -54,7 +54,7 @@ class SessionManager:
 
     # TODO: fix logic to update service time if not all optional repairs are taken
     def process_race(self):
-        current_lap = self.ir.get_lap()
+        current_lap_completed = self.ir.get_last_completed_lap()
         pitstop_active = self.ir.get_pitstop_active()
 
         if not pitstop_active:
@@ -77,20 +77,20 @@ class SessionManager:
                     self.update_prev_refuel()
                 print("new stint started")
 
-        if (
-            self.current_stint
-            and current_lap > 1
-            and current_lap > self.last_recorded_lap
-        ):
+        if self.current_stint and current_lap_completed != self.last_recorded_lap:
             lap_time = self.ir.get_last_lap_time()
+            print(f"Current Lap: {current_lap_completed}")
+            print(f"Prev Lap: {self.last_recorded_lap}")
 
             if lap_time > 0:
                 self.current_stint.laps.append(lap_time)
-                self.last_recorded_lap = current_lap
+                self.last_recorded_lap = current_lap_completed
+                print(f"Laps: {self.current_stint.laps}")
 
                 if self.is_checkered():
                     self.race_over = True
                     self.record_stint()
+                    return
 
         if (
             pitstop_active

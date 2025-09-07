@@ -2,6 +2,8 @@ import irsdk
 
 
 class IracingInterface:
+    player_idx = None
+
     def __init__(self):
         self.ir = irsdk.IRSDK()
         self.ir_connected = False
@@ -19,6 +21,7 @@ class IracingInterface:
             and self.ir.is_connected
         ):
             self.ir_connected = True
+            self.player_idx = self.ir["PlayerCarIdx"]
             print("irsdk connected")
 
         return self.ir_connected
@@ -39,6 +42,9 @@ class IracingInterface:
 
     def get_lap(self) -> int:
         return self.ir["Lap"]
+
+    def get_last_completed_lap(self) -> int:
+        return self.ir["CarIdxLapCompleted"][self.player_idx]
 
     def get_completed_laps(self) -> int:
         return self.ir["LapCompleted"]
