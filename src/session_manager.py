@@ -6,8 +6,8 @@ import logging
 
 class SessionManager:
 
-    def __init__(self):
-        self.ir = irsdk.IRSDK()
+    def __init__(self, ir=None):
+        self.ir = ir or irsdk.IRSDK()
         self.is_connected: bool = False
         self.stints: List[Stint] = []
         self.stint_count: int = 0
@@ -60,23 +60,40 @@ class SessionManager:
             start_position=self.ir["CarIdxClassPosition"],
             start_incidents=self.ir["PlayerCarMyIncidentCount"],
             start_fuel=self.ir["FuelLevel"],
-            start_fast_repairs=self.ir["FastRepairAvailable"],
-            start_tires_used=self.ir["TireSetsUsed"],
+            start_fast_repairs=self.ir["FastRepairUsed"],
         )
 
         return new_stint
 
     def _end_stint(self, stint: Stint) -> Stint:
-        stint.end_time = self.ir["CarIdxClassPosition"]
+        stint.stint_length = self.ir["SessionTime"] - stint.start_time
         stint.end_position = self.ir["CarIdxClassPosition"]
-        stint.end_incidents = self.ir["PlayerCarMyIncidentCount"]
-        stint.out_lap = stint.laps[1] if len(stint.laps) > 0 else 0
-        stint.in_lap = stint.laps[-1] if len(stint.laps) > 0 else 0
+        stint.incidents = self.ir["PlayerCarMyIncidentCount"] - stint.start_incidents
+        stint.out_lap = stint.laps[1] if stint.laps else 0.0
+        stint.in_lap = stint.laps[-1] if stint.laps else 0.0
         return stint
 
     def _record_pit(self, stint: Stint) -> Stint:
         stint.required_repair_time = self.ir["PitRepairLeft"]
         stint.optional_repair_time = self.ir["PitOptRepairLeft"]
         stint.end_fuel = self.ir["FuelLevel"]
-        stint.fuel_add_amount = self.ir["dpFuelAddKg"]
+        stint.refuel_amount = max(self.ir["dpFuelAddKg"] - stint.end_fuel, 0.0)
+        stint.repairs = self._check_repairs(stint)
+        stint.tire_change = self._check_tires()
         return stint
+
+    def _check_repairs(self, stint: Stint) -> bool:
+        if stint.required_repair_time + stint.optional_repair_time > 0:
+            return True
+        elif self.ir["FastRepairUsed"] - stint.start_fast_repairs > 0:
+            return True
+        else:
+            return False
+
+    def _check_tires(self) -> bool:
+        return (
+            self.ir["dpLFTireChange"]
+            or self.ir["dpRFTireChange"]
+            or self.ir["dpLRTireChange"]
+            or self.ir["dpRRTireChange"]
+        )
