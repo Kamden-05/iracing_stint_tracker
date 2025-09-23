@@ -32,10 +32,11 @@ class Stint:
     required_repair_time: Optional[float] = None
     optional_repair_time: Optional[float] = None
     service_time: Optional[float] = None
+    service_start_time: Optional[float] = None
     tire_change: Optional[bool] = False
     repairs: Optional[bool] = False
 
-    def display(self) -> None:
+    def display(self):
         """Print all values in the stint for easy review."""
         print(f"{'='*40}")
         print(f"Driver: {self.driver}")
@@ -58,6 +59,7 @@ class Stint:
         print(f"Refuel Amount: {self.refuel_amount}")
         print(f"Required Repair Time: {self.required_repair_time}")
         print(f"Optional Repair Time: {self.optional_repair_time}")
+        print(f"Service Start Time: {self.service_start_time}")
         print(f"Service Time: {self.service_time}")
         print(f"Tire Change: {self.tire_change}")
         print(f"Repairs: {self.repairs}")

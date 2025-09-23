@@ -14,7 +14,7 @@ def main():
             if manager.is_connected:
                 while manager.is_connected:
                     manager.process_race()
-                    time.sleep(1)
+                    time.sleep(1 / 60)
 
     except KeyboardInterrupt:
         if manager:

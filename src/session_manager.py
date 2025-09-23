@@ -14,6 +14,9 @@ class SessionManager:
         self.current_stint: Stint = None
         self.last_recorded_lap = -1
         self.end_stint = False
+        self.race_started = False
+        self.race_ended = False
+        self.prev_lap_time = -99999.0
 
     def connect(self) -> bool:
         if not self.is_connected:
@@ -57,24 +60,20 @@ class SessionManager:
         if self.current_stint:
             lap_time = self.ir["LapLastLapTime"]
 
-            if (
-                lap_time > 0.0
-                and lap != self.last_recorded_lap
-                and (
-                    len(self.current_stint.laps) == 0
-                    or (lap_time != self.current_stint.laps[-1])
-                )
-            ):
+            if lap != self.last_recorded_lap and lap_time != self.prev_lap_time:
                 print(f"Recording lap {lap}: {lap_time}")
                 self.current_stint.laps.append(lap_time)
                 self.last_recorded_lap = lap
+                self.prev_lap_time = lap_time
 
             if self.end_stint:
                 self.current_stint = self._end_stint(self.current_stint)
                 self.stints.append(self.current_stint)
+                print(f"\nStint {len(self.stints)}")
                 print(self.current_stint.display())
                 self.current_stint = None
                 self.end_stint = False
+
         self.prev_pit_active = pit_active
 
     def _start_stint(self, car_id: int) -> Stint:
@@ -99,6 +98,12 @@ class SessionManager:
         stint.avg_lap = (
             float(sum(stint.laps)) / float(len(stint.laps)) if stint.laps else 0.0
         )
+        stint.laps_completed = len(stint.laps)
+        stint.service_time = (
+            self.ir["SessionTime"] - stint.service_start_time
+            if stint.service_start_time
+            else 0.0
+        )
         return stint
 
     def _record_pit(self, stint: Stint) -> Stint:
@@ -108,7 +113,7 @@ class SessionManager:
         stint.refuel_amount = max(self.ir["dpFuelAddKg"] - stint.end_fuel, 0.0)
         stint.repairs = self._check_repairs(stint)
         stint.tire_change = self._check_tires()
-
+        stint.service_start_time = self.ir["SessionTime"]
         return stint
 
     def _check_repairs(self, stint: Stint) -> bool:
