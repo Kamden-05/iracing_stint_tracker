@@ -26,6 +26,9 @@ class SessionManager:
 
     def disconnect(self) -> None:
         if self.is_connected:
+            if self.current_stint:
+                self._end_stint(self.current_stint)
+
             self.ir.shutdown()
             self.is_connected = False
             logging.info("Disconnected from iRacing")
