@@ -15,8 +15,9 @@ class SessionManager:
         self.last_recorded_lap = -1
         self.end_stint = False
         self.race_started = False
-        self.race_ended = False
         self.prev_lap_time = -99999.0
+        self.race_started = False
+        self.race_ended = False
 
     def connect(self) -> bool:
         if not self.is_connected:
@@ -36,45 +37,61 @@ class SessionManager:
             self.is_connected = False
             logging.info("Disconnected from iRacing")
 
+    def check_race_started(self) -> bool:
+        session_state = self.ir["SessionState"]
+        if (
+            session_state == irsdk.SessionState.racing
+            and self.ir["PlayerCarClassPosition"] > 0
+        ):
+            self.race_started = True
+            print("race has started")
+
     def process_race(self):
         self.ir.freeze_var_buffer_latest()
-        car_id = self.ir["PlayerCarIdx"]
-        pit_active = self.ir["PitstopActive"]
-        lap = self.ir["LapCompleted"]
+        if self.race_started:
+            car_id = self.ir["PlayerCarIdx"]
+            pit_active = self.ir["PitstopActive"]
+            lap = self.ir["LapCompleted"]
 
-        """ 
-        if pit inactive and no stint, start next stint
-        if pit active and last pit inactive, record the pit data
-        if pit inactive and last pit active, change the flag so we know to end the stint
-        """
-        if not pit_active and self.current_stint is None:
-            self.current_stint = self._start_stint(car_id)
+            """ 
+            if pit inactive and no stint, start next stint
+            if pit active and last pit inactive, record the pit data
+            if pit inactive and last pit active, change the flag so we know to end the stint
+            """
+            if not pit_active and self.current_stint is None:
+                self.current_stint = self._start_stint(car_id)
 
-        elif pit_active and not self.prev_pit_active:
-            self.current_stint = self._record_pit(self.current_stint)
+            elif pit_active and not self.prev_pit_active:
+                self.current_stint = self._record_pit(self.current_stint)
 
-        elif not pit_active and self.prev_pit_active:
-            self.end_stint = True
+            elif not pit_active and self.prev_pit_active:
+                self.end_stint = True
 
-        # record laps, make sure that the in lap has only been recorded once we've pit and crossed the start/finish line
-        if self.current_stint:
-            lap_time = self.ir["LapLastLapTime"]
+            # record laps, make sure that the in lap has only been recorded once we've pit and crossed the start/finish line
+            if self.current_stint:
+                lap_time = self.ir["LapLastLapTime"]
 
-            if lap != self.last_recorded_lap and lap_time != self.prev_lap_time:
-                print(f"Recording lap {lap}: {lap_time}")
-                self.current_stint.laps.append(lap_time)
-                self.last_recorded_lap = lap
-                self.prev_lap_time = lap_time
+                if (
+                    lap != self.last_recorded_lap
+                    and lap_time != self.prev_lap_time
+                    and lap_time != 0
+                ):
+                    print(f"Recording lap {lap}: {lap_time}")
+                    self.current_stint.laps.append(lap_time)
+                    self.last_recorded_lap = lap
+                    self.prev_lap_time = lap_time
 
-            if self.end_stint:
-                self.current_stint = self._end_stint(self.current_stint)
-                self.stints.append(self.current_stint)
-                print(f"\nStint {len(self.stints)}")
-                print(self.current_stint.display())
-                self.current_stint = None
-                self.end_stint = False
+                if self.end_stint:
+                    self.current_stint = self._end_stint(self.current_stint)
+                    self.stints.append(self.current_stint)
+                    print(f"\nStint {len(self.stints)}")
+                    print(self.current_stint.display())
+                    self.current_stint = None
+                    self.end_stint = False
 
-        self.prev_pit_active = pit_active
+            self.prev_pit_active = pit_active
+        else:
+            self.check_race_started()
 
     def _start_stint(self, car_id: int) -> Stint:
         new_stint = Stint(
