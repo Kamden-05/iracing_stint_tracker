@@ -18,9 +18,10 @@ class SessionManager:
         self.prev_lap_time = -99999.0
         self.race_started = False
         self.race_ended = False
+        self.final_lap = -1
 
     def connect(self) -> bool:
-        if not self.is_connected:
+        if not self.is_connected and not self.race_ended:
             self.is_connected = self.ir.startup()
             if self.is_connected:
                 print("Connected to iRacing")
@@ -32,23 +33,36 @@ class SessionManager:
         if self.is_connected:
             if self.current_stint:
                 self._end_stint(self.current_stint)
+                self.stints.append(self.current_stint)
+                print(f"\nStint {len(self.stints)}")
+                print(self.current_stint.display())
 
             self.ir.shutdown()
             self.is_connected = False
             logging.info("Disconnected from iRacing")
 
-    def check_race_started(self) -> bool:
+    def check_race_status(self) -> None:
         session_state = self.ir["SessionState"]
         if (
-            session_state == irsdk.SessionState.racing
+            not self.race_started
+            and session_state == irsdk.SessionState.racing
             and self.ir["PlayerCarClassPosition"] > 0
         ):
             self.race_started = True
-            print("race has started")
+            self.race_ended = False
+
+        flags = self.ir["SessionFlags"]
+        if flags & irsdk.Flags.checkered:
+            if self.final_lap == -1:
+                self.final_lap = self.ir["Lap"]
+            elif self.final_lap == self.last_recorded_lap:
+                self.race_ended = True
+                self.disconnect()
 
     def process_race(self):
         self.ir.freeze_var_buffer_latest()
-        if self.race_started:
+        self.check_race_status()
+        if self.race_started and not self.race_ended:
             car_id = self.ir["PlayerCarIdx"]
             pit_active = self.ir["PitstopActive"]
             lap = self.ir["LapCompleted"]
@@ -90,8 +104,6 @@ class SessionManager:
                     self.end_stint = False
 
             self.prev_pit_active = pit_active
-        else:
-            self.check_race_started()
 
     def _start_stint(self, car_id: int) -> Stint:
         new_stint = Stint(
