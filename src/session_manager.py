@@ -19,6 +19,8 @@ class SessionManager:
         self.race_started = False
         self.race_ended = False
         self.final_lap = -1
+        self.lap_start = 0.0
+        self.prev_lap = -1
 
     def connect(self) -> bool:
         if not self.is_connected and not self.race_ended:
@@ -85,12 +87,24 @@ class SessionManager:
             if self.current_stint:
                 lap_time = self.ir["LapLastLapTime"]
 
+                if lap > self.prev_lap and self.lap_start == 0.0:
+                    # new lap started, mark the lap start time
+                    self.lap_start = self.ir["SessionTime"]
+                    print(self.lap_start)
+                    self.prev_lap = lap
+
                 if (
                     lap != self.last_recorded_lap
                     and lap_time != self.prev_lap_time
                     and lap_time != 0
                 ):
-                    print(f"Recording lap {lap}: {lap_time}")
+
+                    # change lap time if its -1.0
+                    if lap_time == -1.0:
+                        print(self.lap_start)
+                        lap_time = self.ir["SessionTime"] - self.lap_start
+                        print(f"Recording lap {lap}: {lap_time}")
+                    self.lap_start = 0.0
                     self.current_stint.laps.append(lap_time)
                     self.last_recorded_lap = lap
                     self.prev_lap_time = lap_time
