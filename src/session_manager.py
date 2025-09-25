@@ -122,6 +122,7 @@ class SessionManager:
         stint.stint_length = self.ir["SessionTime"] - stint.start_time
         stint.end_position = self.ir["PlayerCarClassPosition"]
         stint.incidents = self.ir["PlayerCarMyIncidentCount"] - stint.start_incidents
+        stint.repairs = self._check_repairs(stint)
         stint.out_lap = stint.laps[0] if stint.laps else 0.0
         if not self.race_ended:
             stint.in_lap = stint.laps[-1] if stint.laps else 0.0
@@ -129,9 +130,9 @@ class SessionManager:
             float(sum(stint.laps)) / float(len(stint.laps)) if stint.laps else 0.0
         )
         stint.laps_completed = len(stint.laps)
-        stint.service_time = (
-            self.ir["SessionTime"] - stint.service_start_time
-            if stint.service_start_time
+        stint.pit_service_time = (
+            self.ir["SessionTime"] - stint.pit_service_start_time
+            if stint.pit_service_start_time
             else 0.0
         )
         return stint
@@ -141,9 +142,9 @@ class SessionManager:
         stint.optional_repair_time = self.ir["PitOptRepairLeft"]
         stint.end_fuel = self.ir["FuelLevel"]
         stint.refuel_amount = max(self.ir["dpFuelAddKg"] - stint.end_fuel, 0.0)
-        stint.repairs = self._check_repairs(stint)
+
         stint.tire_change = self._check_tires()
-        stint.service_start_time = self.ir["SessionTime"]
+        stint.pit_service_start_time = self.ir["SessionTime"]
         return stint
 
     def _check_repairs(self, stint: Stint) -> bool:
