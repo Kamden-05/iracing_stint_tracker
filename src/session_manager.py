@@ -122,9 +122,9 @@ class SessionManager:
         stint.stint_length = self.ir["SessionTime"] - stint.start_time
         stint.end_position = self.ir["PlayerCarClassPosition"]
         stint.incidents = self.ir["PlayerCarMyIncidentCount"] - stint.start_incidents
+        stint.out_lap = stint.laps[0] if stint.laps else 0.0
         if not self.race_ended:
-            stint.out_lap = stint.laps[0] if stint.laps else 0.0
-        stint.in_lap = stint.laps[-1] if stint.laps else 0.0
+            stint.in_lap = stint.laps[-1] if stint.laps else 0.0
         stint.avg_lap = (
             float(sum(stint.laps)) / float(len(stint.laps)) if stint.laps else 0.0
         )
