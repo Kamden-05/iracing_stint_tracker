@@ -27,12 +27,12 @@ class Stint:
 
     """Pit Values:"""
 
-    end_fuel: Optional[float] = None
-    refuel_amount: Optional[float] = None
-    required_repair_time: Optional[float] = None
-    optional_repair_time: Optional[float] = None
-    pit_service_time: Optional[float] = None
-    pit_service_start_time: Optional[float] = None
+    end_fuel: Optional[float] = 0.0
+    refuel_amount: Optional[float] = 0.0
+    required_repair_time: Optional[float] = 0.0
+    optional_repair_time: Optional[float] = 0.0
+    pit_service_time: Optional[float] = 0.0
+    pit_service_start_time: Optional[float] = 0.0
     tire_change: Optional[bool] = False
     repairs: Optional[bool] = False
 

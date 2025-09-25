@@ -21,6 +21,7 @@ class SessionManager:
         self.final_lap = -1
         self.lap_start = 0.0
         self.prev_lap = -1
+        self.prev_lap_start = 0.0
 
     def connect(self) -> bool:
         if not self.is_connected and not self.race_ended:
