@@ -12,16 +12,15 @@ class SessionManager:
         self.stints: List[Stint] = []
         self.prev_pit_active: bool = False
         self.current_stint: Stint = None
-        self.last_recorded_lap = -1
+        self.manual_time = False
         self.end_stint = False
-        self.race_started = False
         self.prev_lap_time = -99999.0
+        self.prev_lap = 0
+        self.prev_recorded_lap = 0
         self.race_started = False
         self.race_ended = False
         self.final_lap = -1
-        self.lap_start = 0.0
-        self.prev_lap = -1
-        self.prev_lap_start = 0.0
+        self.lap_start_time = 0.0
 
     def connect(self) -> bool:
         if not self.is_connected and not self.race_ended:
@@ -58,6 +57,7 @@ class SessionManager:
         if flags & irsdk.Flags.checkered:
             if self.final_lap == -1:
                 self.final_lap = self.ir["Lap"]
+            # TODO: remove self.last_recorded_lap usage
             elif self.final_lap == self.last_recorded_lap:
                 self.race_ended = True
                 self.disconnect()
@@ -68,13 +68,7 @@ class SessionManager:
         if self.race_started and not self.race_ended:
             car_id = self.ir["PlayerCarIdx"]
             pit_active = self.ir["PitstopActive"]
-            lap = self.ir["LapCompleted"]
 
-            """ 
-            if pit inactive and no stint, start next stint
-            if pit active and last pit inactive, record the pit data
-            if pit inactive and last pit active, change the flag so we know to end the stint
-            """
             if not pit_active and self.current_stint is None:
                 self.current_stint = self._start_stint(car_id)
 
@@ -84,37 +78,34 @@ class SessionManager:
             elif not pit_active and self.prev_pit_active:
                 self.end_stint = True
 
-            # record laps, make sure that the in lap has only been recorded once we've pit and crossed the start/finish line
+            current_lap = self.ir["Lap"]
+
+            if current_lap > self.prev_lap:
+                self.prev_lap_start_time = self.lap_start_time
+                self.lap_start_time = self.ir["SessionTime"]
+                self.prev_lap = current_lap
+
+            lap_time = self.ir["LapLastLapTime"]
+            last_lap = self.ir["LapCompleted"]
+
+            if (
+                lap_time != self.prev_lap_time or self.manual_time
+            ) and last_lap != self.prev_recorded_lap:
+                if lap_time == -1.0:
+                    lap_time = self.ir["SessionTime"] - self.prev_lap_start_time
+                    self.manual_time = True
+                else:
+                    self.manual_time = False
+
+                print(f"Lap {last_lap}: {lap_time}")
+                self.prev_lap_time = lap_time
+                self.prev_recorded_lap = last_lap
+
             if self.current_stint:
-                lap_time = self.ir["LapLastLapTime"]
-
-                if lap > self.prev_lap and self.lap_start == 0.0:
-                    # new lap started, mark the lap start time
-                    self.lap_start = self.ir["SessionTime"]
-                    print(self.lap_start)
-                    self.prev_lap = lap
-
-                if (
-                    lap != self.last_recorded_lap
-                    and lap_time != self.prev_lap_time
-                    and lap_time != 0
-                ):
-
-                    # change lap time if its -1.0
-                    if lap_time == -1.0:
-                        print(self.lap_start)
-                        lap_time = self.ir["SessionTime"] - self.lap_start
-                        print(f"Recording lap {lap}: {lap_time}")
-                    self.lap_start = 0.0
-                    self.current_stint.laps.append(lap_time)
-                    self.last_recorded_lap = lap
-                    self.prev_lap_time = lap_time
-
                 if self.end_stint:
                     self.current_stint = self._end_stint(self.current_stint)
                     self.stints.append(self.current_stint)
                     print(f"\nStint {len(self.stints)}")
-                    print(self.current_stint.display())
                     self.current_stint = None
                     self.end_stint = False
 
