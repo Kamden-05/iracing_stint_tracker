@@ -12,7 +12,7 @@ class SessionManager:
         self.stints: List[Stint] = []
         self.prev_pit_active: bool = False
         self.current_stint: Stint = None
-        self.manual_time = False
+        self.prev_manual_time = False
         self.end_stint = False
         self.prev_lap_time = -99999.0
         self.prev_lap = 0
@@ -36,8 +36,6 @@ class SessionManager:
             if self.current_stint:
                 self._end_stint(self.current_stint)
                 self.stints.append(self.current_stint)
-                print(f"\nStint {len(self.stints)}")
-                print(self.current_stint.display())
 
             self.ir.shutdown()
             self.is_connected = False
@@ -58,7 +56,7 @@ class SessionManager:
             if self.final_lap == -1:
                 self.final_lap = self.ir["Lap"]
             # TODO: remove self.last_recorded_lap usage
-            elif self.final_lap == self.last_recorded_lap:
+            elif self.final_lap == self.prev_recorded_lap:
                 self.race_ended = True
                 self.disconnect()
 
@@ -89,23 +87,30 @@ class SessionManager:
             last_lap = self.ir["LapCompleted"]
 
             if (
-                lap_time != self.prev_lap_time or self.manual_time
-            ) and last_lap != self.prev_recorded_lap:
+                (lap_time != self.prev_lap_time or self.prev_manual_time)
+                and last_lap != self.prev_recorded_lap
+                and lap_time != 0.0
+            ):
+                # print(f"last lap = {last_lap}")
                 if lap_time == -1.0:
                     lap_time = self.ir["SessionTime"] - self.prev_lap_start_time
-                    self.manual_time = True
+                    self.prev_manual_time = True
+                    print(f"Lap {last_lap}: {lap_time}")
+                    self.current_stint.laps.append(lap_time)
+                    self.prev_recorded_lap = last_lap
+                elif self.prev_manual_time:
+                    self.prev_manual_time = False
                 else:
-                    self.manual_time = False
+                    print(f"Lap {last_lap}: {lap_time}")
+                    self.current_stint.laps.append(lap_time)
+                    self.prev_recorded_lap = last_lap
 
-                print(f"Lap {last_lap}: {lap_time}")
                 self.prev_lap_time = lap_time
-                self.prev_recorded_lap = last_lap
 
             if self.current_stint:
                 if self.end_stint:
                     self.current_stint = self._end_stint(self.current_stint)
                     self.stints.append(self.current_stint)
-                    print(f"\nStint {len(self.stints)}")
                     self.current_stint = None
                     self.end_stint = False
 
@@ -141,6 +146,8 @@ class SessionManager:
             if stint.pit_service_start_time
             else 0.0
         )
+        print(f"\nStint {len(self.stints)}")
+        print(self.current_stint.display())
         return stint
 
     def _record_pit(self, stint: Stint) -> Stint:
