@@ -20,7 +20,7 @@ class Stint:
     """Stint End Values:"""
     stint_length: Optional[float] = -1.0
     incidents: int = field(init=False)
-    in_lap: Optional[float] = -1.0
+    in_lap: Optional[float] = "N/A"
     out_lap: Optional[float] = -1.0
     avg_lap: Optional[float] = -1.0
     laps_completed: Optional[int] = -1
@@ -32,33 +32,45 @@ class Stint:
         self.end_fast_repairs = self.start_fast_repairs
 
     """Pit Values:"""
-    end_fuel: Optional[float] = 0.0
-    refuel_amount: Optional[float] = 0.0
-    required_repair_time: Optional[float] = 0.0
-    optional_repair_time: Optional[float] = 0.0
-    pit_service_duration: Optional[float] = 0.0
-    pit_service_start_time: Optional[float] = 0.0
-    tire_change: Optional[bool] = False
-    repairs: Optional[bool] = False
+    end_fuel: Optional[float] = -1.0
+    refuel_amount: Optional[float] = "N/A"
+    required_repair_time: Optional[float] = -1.0
+    optional_repair_time: Optional[float] = -1.0
+    pit_service_duration: Optional[float] = -1.0
+    pit_service_start_time: Optional[float] = -1.0
+    tire_change: Optional[bool] = "N/A"
+    repairs: Optional[bool] = "N/A"
 
     # TODO: handle final stint logic for pit_service_duration and in_lap
     def end_stint(
-        self, time: float, position: float, incidents: int, fast_repairs: int
+        self,
+        time: float,
+        position: float,
+        incidents: int,
+        fast_repairs: int,
+        end_fuel: float,
+        final: bool,
     ) -> None:
         self.stint_length = time - self.start_time
         self.end_position = position
         self.incidents = incidents - self.start_incidents
         self.end_fast_repairs = fast_repairs
-        self.repairs = self._check_repairs()
+
+        if final:
+            self.end_fuel = end_fuel
+        else:
+            self.in_lap = self.laps[-1] if self.laps else 0.0
+            self.repairs = self._check_repairs()
+
         self.out_lap = self.laps[0] if self.laps else 0.0
-        self.in_lap = self.laps[-1] if self.laps else 0.0
+
         self.avg_lap = (
             float(sum(self.laps)) / float(len(self.laps)) if self.laps else 0.0
         )
         self.laps_completed = len(self.laps)
         self.pit_service_duration = time - self.pit_service_start_time
 
-        print(self.display())
+        self.display()
 
     def record_pit(
         self,
@@ -103,7 +115,9 @@ class Stint:
         print(f"End Position: {self.end_position}")
         print(f"Incidents in Stint: {self.incidents}")
         print(f"Out Lap: {format_time(self.out_lap)}")
-        print(f"In Lap: {format_time(self.in_lap)}")
+        print(
+            f"In Lap: {format_time(self.in_lap) if isinstance(self.in_lap, float) else self.in_lap}"
+        )
         print(f"Average Lap: {format_time(self.avg_lap)}")
         print(f"Laps Completed: {self.laps_completed}")
         print(f"{'-'*40}")

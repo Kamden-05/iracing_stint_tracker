@@ -22,6 +22,10 @@ class SessionManager:
         self.lap_start_time = 0.0
         self.lap_start_tick = 0
         self.pending_lap_time = 0.0
+        self.pit_road_lap = -1
+        self.prev_pit_road = False
+        self.pit_active_lap = -1
+        self.pending_stint_end = False
 
     def connect(self) -> bool:
         if not self.is_connected:
@@ -33,7 +37,7 @@ class SessionManager:
     def disconnect(self) -> None:
         if self.is_connected:
             if self.current_stint:
-                self._end_stint(self.current_stint)
+                self._end_stint(self.current_stint, final_stint=True)
                 self.stints.append(self.current_stint)
                 self.current_stint = None
 
@@ -88,7 +92,6 @@ class SessionManager:
             if self.final_lap == -999:
                 self.final_lap = self.ir["Lap"]
             elif self.final_lap <= self.prev_recorded_lap:
-                print("Race Ended")
                 return True
         return False
 
@@ -96,17 +99,22 @@ class SessionManager:
         self.ir.freeze_var_buffer_latest()
         self.started = self.check_start()
         self.ended = self.check_end()
-        # TODO: if not started and not ended: start stint at the next pit stop then started=true
 
+        tick = self.ir["SessionTick"]
+        lap = self.ir["Lap"]
+        on_pit_road = self.ir["OnPitRoad"]
+        pit_active = self.ir["PitstopActive"]
+        session_time = self.ir["SessionTime"]
+        position = self.ir["PlayerCarClassPosition"]
+        incidents = self.ir["PlayerCarMyIncidentCount"]
+        fuel = self.ir["FuelLevel"]
+        fast_repairs = self.ir["FastRepairUsed"]
+
+        # TODO: if not started and not ended: start stint at the next pit stop then started=true
         if self.started and not self.ended:
-            tick = self.ir["SessionTick"]
-            pending_stint_end = False
-            pit_active = self.ir["PitstopActive"]
-            session_time = self.ir["SessionTime"]
-            position = self.ir["PlayerCarClassPosition"]
-            incidents = self.ir["PlayerCarMyIncidentCount"]
-            fuel = self.ir["FuelLevel"]
-            fast_repairs = self.ir["FastRepairUsed"]
+
+            if on_pit_road and not self.prev_pit_road:
+                self.pit_road_lap = lap
 
             if not pit_active and self.current_stint is None:
 
@@ -124,6 +132,7 @@ class SessionManager:
                 )
 
             elif pit_active and not self.prev_pit_active:
+                self.pit_active_lap = lap
 
                 required_repair = self.ir["PitRepairLeft"]
                 optional_repair = self.ir["PitOptRepairLeft"]
@@ -143,13 +152,12 @@ class SessionManager:
                 )
 
             elif not pit_active and self.prev_pit_active:
-                pending_stint_end = True
+                self.pending_stint_end = True
 
             if self.current_stint:
 
                 # TODO: make sure lap times work if we pit before the s/f line
 
-                lap = self.ir["Lap"]
                 lap_completed = self.ir["LapCompleted"]
 
                 if lap > self.prev_lap:
@@ -157,6 +165,9 @@ class SessionManager:
                     self.lap_start_time = session_time
                     self.lap_start_tick = tick
                     self.prev_lap = lap
+
+                    if self.pending_stint_end:
+                        self.pit_active_lap = lap
 
                 if (
                     self.prev_recorded_lap != lap_completed
@@ -174,28 +185,35 @@ class SessionManager:
 
                     self.prev_recorded_lap = lap_completed
 
-                if pending_stint_end:
+                if self.pending_stint_end:
+                    if (
+                        self.pit_active_lap > self.pit_road_lap
+                        and self.prev_recorded_lap == self.pit_road_lap
+                    ):
+                        self._end_stint(self.current_stint)
+                        self.stints.append(self.current_stint)
+                        self.current_stint = None
+                        self.pending_stint_end = False
 
-                    self._end_stint(self.current_stint)
-                    self.stints.append(self.current_stint)
-                    self.current_stint = None
-
+            self.prev_pit_road = on_pit_road
             self.prev_pit_active = pit_active
 
     def _check_tires(self) -> bool:
-        return (
+        return bool(
             self.ir["dpLFTireChange"]
             or self.ir["dpRFTireChange"]
             or self.ir["dpLRTireChange"]
             or self.ir["dpRRTireChange"]
         )
 
-    def _end_stint(self, stint: Stint) -> None:
+    def _end_stint(self, stint: Stint, final_stint=False) -> None:
         stint.end_stint(
             time=self.ir["SessionTime"],
             position=self.ir["PlayerCarClassPosition"],
             incidents=self.ir["PlayerCarMyIncidentCount"],
             fast_repairs=self.ir["FastRepairUsed"],
+            end_fuel=self.ir["FuelLevel"],
+            final=final_stint,
         )
 
     def _get_tick_data(self) -> dict:
