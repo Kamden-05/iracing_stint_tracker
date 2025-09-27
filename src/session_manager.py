@@ -86,11 +86,19 @@ class SessionManager:
 
     def check_end(self) -> bool:
         flags = self.ir["SessionFlags"]
+        on_track = self.ir["IsOnTrack"]
+        session_state = self.ir["SessionState"]
+        tow_time = self.ir["PlayerCarTowTime"]
         if flags & irsdk.Flags.checkered:
             if self.final_lap == -999:
                 self.final_lap = self.ir["Lap"]
-            elif self.final_lap <= self.prev_recorded_lap:
+            elif self.final_lap <= self.prev_recorded_lap or not on_track:
                 return True
+        elif session_state == irsdk.SessionState.checkered and (
+            not on_track or tow_time > 0.0
+        ):
+            return True
+
         return False
 
     def process_race(self) -> None:
@@ -154,8 +162,6 @@ class SessionManager:
                 self.pending_stint_end = True
 
             if self.current_stint:
-
-                # TODO: make sure lap times work if we pit before the s/f line
 
                 if lap > self.prev_lap:
                     self.pending_lap_time = session_time - self.lap_start_time
