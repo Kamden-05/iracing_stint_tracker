@@ -18,7 +18,7 @@ class SessionManager:
         self.prev_recorded_lap = 0
         self.started = False
         self.ended = False
-        self.final_lap = -999
+        self.final_lap = None
         self.lap_start_time = 0.0
         self.lap_start_tick = 0
         self.pending_lap_time = 0.0
@@ -90,7 +90,7 @@ class SessionManager:
         session_state = self.ir["SessionState"]
         tow_time = self.ir["PlayerCarTowTime"]
         if flags & irsdk.Flags.checkered:
-            if self.final_lap == -999:
+            if self.final_lap is None:
                 self.final_lap = self.ir["Lap"]
             elif self.final_lap <= self.prev_recorded_lap or not on_track:
                 return True
