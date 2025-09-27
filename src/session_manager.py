@@ -125,7 +125,6 @@ class SessionManager:
 
             elif pit_active and not self.prev_pit_active:
 
-                # TODO: refuel_amount should be 0.0 if Begin Fueling is toggled to off
                 required_repair = self.ir["PitRepairLeft"]
                 optional_repair = self.ir["PitOptRepairLeft"]
                 refuel = 0.0
