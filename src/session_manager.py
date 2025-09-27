@@ -3,7 +3,7 @@ from src.utils import format_time
 from typing import List
 import irsdk
 import logging
-import yaml as pyyaml
+import yaml
 
 
 class SessionManager:
