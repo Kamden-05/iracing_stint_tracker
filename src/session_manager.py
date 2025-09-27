@@ -170,7 +170,7 @@ class SessionManager:
                         self.pit_active_lap = lap
 
                 if (
-                    self.prev_recorded_lap != lap_completed
+                    self.prev_recorded_lap < lap_completed
                     and tick >= self.lap_start_tick + 120
                 ):
 
