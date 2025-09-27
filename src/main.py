@@ -13,7 +13,9 @@ def main():
 
             if manager.is_connected:
                 while manager.is_connected:
-                    manager.process_race()
+                    session_type = manager.get_session_type()
+                    if session_type == "Race":
+                        manager.process_race()
                     if manager.ended:
                         manager.disconnect()
                         return

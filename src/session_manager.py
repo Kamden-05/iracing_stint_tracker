@@ -3,6 +3,7 @@ from src.utils import format_time
 from typing import List
 import irsdk
 import logging
+import yaml as pyyaml
 
 
 class SessionManager:
@@ -39,6 +40,36 @@ class SessionManager:
             self.is_connected = False
             logging.info("Disconnected from iRacing")
 
+    def get_session_type(self) -> str:
+        """
+        Returns the current session type as a string: "Race", "Practice", "Qualify", "Warmup"
+        """
+        raw = self.ir["SessionInfo"]
+        if not raw:
+            return None
+
+        # If it's a dict already, use it directly; otherwise parse YAML
+        if isinstance(raw, dict):
+            info = raw
+        else:
+            try:
+                info = yaml.safe_load(raw) or {}
+            except Exception:
+                return None
+
+        session_num = self.ir["SessionNum"]
+
+        try:
+            sessions = info.get("Sessions", [])
+            for sess in sessions:
+                if int(sess.get("SessionNum", -1)) == session_num:
+                    return str(sess.get("SessionType", "Race"))
+        except Exception:
+            return None
+
+        # default if we can't find it
+        return "Race"
+
     def check_start(self) -> bool:
         return (
             not self.started
@@ -48,7 +79,8 @@ class SessionManager:
 
     def check_end(self) -> bool:
         flags = self.ir["SessionFlags"]
-        if flags & irsdk.Flags.checkered:
+        session_type = self.get_session_type()
+        if (flags & irsdk.Flags.checkered) and session_type == "Race":
             if self.final_lap == -999:
                 self.final_lap = self.ir["Lap"]
             elif self.final_lap == self.prev_recorded_lap:
@@ -56,13 +88,14 @@ class SessionManager:
         return False
 
     def process_race(self) -> None:
-        pending_stint_end = False
         self.ir.freeze_var_buffer_latest()
+
         self.started = self.check_start()
         self.ended = self.check_end()
         # TODO: if not started and not ended: start stint at the next pit stop then started=true
 
         if self.started and not self.ended:
+            pending_stint_end = False
             pit_active = self.ir["PitstopActive"]
             session_time = self.ir["SessionTime"]
             position = self.ir["PlayerCarClassPosition"]
@@ -87,11 +120,14 @@ class SessionManager:
 
             elif pit_active and not self.prev_pit_active:
 
+                # TODO: refuel_amount should be 0.0 if Begin Fueling is toggled to off
                 required_repair = self.ir["PitRepairLeft"]
                 optional_repair = self.ir["PitOptRepairLeft"]
-                fuel_add = self.ir["dpFuelAddKg"]
-                max_fuel = fuel / self.ir["FuelLevelPct"]
-                refuel = min(fuel_add, max_fuel - fuel)
+                refuel = 0.0
+                if self.ir["dpFuelFill"]:
+                    fuel_add = self.ir["dpFuelAddKg"]
+                    max_fuel = fuel / self.ir["FuelLevelPct"]
+                    refuel = min(fuel_add, max_fuel - fuel)
 
                 self.current_stint.record_pit(
                     required_repair_time=required_repair,
@@ -106,6 +142,8 @@ class SessionManager:
                 pending_stint_end = True
 
             if self.current_stint:
+
+                # TODO: make sure lap times work if we pit before the s/f line
 
                 lap = self.ir["Lap"]
                 lap_completed = self.ir["LapCompleted"]
@@ -152,3 +190,21 @@ class SessionManager:
             incidents=self.ir["PlayerCarMyIncidentCount"],
             fast_repairs=self.ir["FastRepairUsed"],
         )
+
+    def _get_tick_data(self) -> dict:
+
+        return {
+            "pit_active": self.ir["PitstopActive"],
+            "session_time": self.ir["SessionTime"],
+            "position": self.ir["PlayerCarClassPosition"],
+            "incidents": self.ir["PlayerCarMyIncidentCount"],
+            "fuel_level": self.ir["FuelLevel"],
+            "fast_repairs": self.ir["FastRepairUsed"],
+            "lap": self.ir["Lap"],
+            "lap_completed": self.ir["LapCompleted"],
+            "lap_dist_pct": self.ir["LapDistPct"],
+            "lap_time": self.ir["LapLastLapTime"],
+            "required_repair": self.ir["PitRepairLeft"],
+            "optional_repair": self.ir["PitOptRepairLeft"],
+            "fuel_add": self.ir["dpFuelAddKg"],
+        }
