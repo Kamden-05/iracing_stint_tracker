@@ -102,6 +102,7 @@ class SessionManager:
 
         tick = self.ir["SessionTick"]
         lap = self.ir["Lap"]
+        lap_completed = self.ir["LapCompleted"]
         on_pit_road = self.ir["OnPitRoad"]
         pit_active = self.ir["PitstopActive"]
         session_time = self.ir["SessionTime"]
@@ -157,8 +158,6 @@ class SessionManager:
             if self.current_stint:
 
                 # TODO: make sure lap times work if we pit before the s/f line
-
-                lap_completed = self.ir["LapCompleted"]
 
                 if lap > self.prev_lap:
                     self.pending_lap_time = session_time - self.lap_start_time
