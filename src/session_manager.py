@@ -1,4 +1,5 @@
 from src.stint import Stint
+from src.utils import format_time
 from typing import List
 import irsdk
 import logging
@@ -12,23 +13,20 @@ class SessionManager:
         self.stints: List[Stint] = []
         self.prev_pit_active: bool = False
         self.current_stint: Stint = None
-        self.prev_manual_time = False
         self.end_stint = False
-        self.prev_lap_time = -99999.0
         self.prev_lap = 0
         self.prev_recorded_lap = 0
         self.race_started = False
         self.race_ended = False
         self.final_lap = -999
         self.lap_start_time = 0.0
+        self.pending_lap_time = 0.0
 
     def connect(self) -> bool:
         if not self.is_connected and not self.race_ended:
             self.is_connected = self.ir.startup()
             if self.is_connected:
                 print("Connected to iRacing")
-            else:
-                logging.warning("Failed to connect to iRacing")
         return self.is_connected
 
     def disconnect(self) -> None:
@@ -53,9 +51,8 @@ class SessionManager:
 
         flags = self.ir["SessionFlags"]
         if flags & irsdk.Flags.checkered:
-            if self.final_lap == -1:
+            if self.final_lap == -999:
                 self.final_lap = self.ir["Lap"]
-            # TODO: remove self.last_recorded_lap usage
             elif self.final_lap == self.prev_recorded_lap:
                 self.race_ended = True
                 self.disconnect()
@@ -78,36 +75,28 @@ class SessionManager:
 
             if self.current_stint:
 
-                current_lap = self.ir["Lap"]
+                lap = self.ir["Lap"]
+                lap_completed = self.ir["LapCompleted"]
+                lap_dist_pct = self.ir["LapDistPct"]
 
-                if current_lap > self.prev_lap:
-                    self.prev_lap_start_time = self.lap_start_time
+                if lap > self.prev_lap:
+                    self.pending_lap_time = self.ir["SessionTime"] - self.lap_start_time
                     self.lap_start_time = self.ir["SessionTime"]
-                    self.prev_lap = current_lap
+                    self.prev_lap = lap
 
-                lap_time = self.ir["LapLastLapTime"]
-                last_lap = self.ir["LapCompleted"]
+                if self.prev_recorded_lap != lap_completed and lap_dist_pct > 0.05:
 
-                if (
-                    (lap_time != self.prev_lap_time or self.prev_manual_time)
-                    and last_lap != self.prev_recorded_lap
-                    and lap_time != 0.0
-                ):
-                    # print(f"last lap = {last_lap}")
+                    lap_time = self.ir["LapLastLapTime"]
+
                     if lap_time == -1.0:
-                        lap_time = self.ir["SessionTime"] - self.prev_lap_start_time
-                        self.prev_manual_time = True
-                        print(f"Lap {last_lap}: {lap_time}")
-                        self.current_stint.laps.append(lap_time)
-                        self.prev_recorded_lap = last_lap
-                    elif self.prev_manual_time:
-                        self.prev_manual_time = False
-                    else:
-                        print(f"Lap {last_lap}: {lap_time}")
-                        self.current_stint.laps.append(lap_time)
-                        self.prev_recorded_lap = last_lap
+                        lap_time = self.pending_lap_time
 
-                self.prev_lap_time = lap_time
+                    if lap_time != 0.0:
+                        print(f"Lap {self.ir['LapCompleted']}: {format_time(lap_time)}")
+                        self.current_stint.laps.append(lap_time)
+
+                    self.prev_recorded_lap = lap_completed
+
                 if self.end_stint:
                     self.current_stint = self._end_stint(self.current_stint)
                     self.stints.append(self.current_stint)

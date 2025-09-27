@@ -17,17 +17,17 @@ class Stint:
     start_fast_repairs: int
 
     """Stint End Values:"""
-    stint_length: Optional[float] = None
-    incidents: Optional[int] = None
-    in_lap: Optional[float] = None
-    out_lap: Optional[float] = None
-    avg_lap: Optional[float] = None
-    laps_completed: Optional[int] = None
-    end_position: Optional[int] = None
+    stint_length: Optional[float] = -1.0
+    incidents: Optional[int] = -1
+    in_lap: Optional[float] = -1.0
+    out_lap: Optional[float] = -1.0
+    avg_lap: Optional[float] = -1.0
+    laps_completed: Optional[int] = -1
+    end_position: Optional[int] = -1
 
     """Pit Values:"""
 
-    end_fuel: Optional[float] = 0.0
+    end_fuel: Optional[float] = -1.0
     refuel_amount: Optional[float] = 0.0
     required_repair_time: Optional[float] = 0.0
     optional_repair_time: Optional[float] = 0.0
