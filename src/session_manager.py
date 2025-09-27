@@ -143,8 +143,9 @@ class SessionManager:
         stint.required_repair_time = self.ir["PitRepairLeft"]
         stint.optional_repair_time = self.ir["PitOptRepairLeft"]
         stint.end_fuel = self.ir["FuelLevel"]
-        stint.refuel_amount = max(self.ir["dpFuelAddKg"] - stint.end_fuel, 0.0)
-
+        fuel_add = self.ir["dpFuelAddKg"]
+        max_fuel = stint.end_fuel / self.ir["FuelLevelPct"]
+        stint.refuel_amount = min(fuel_add, max_fuel - stint.end_fuel)
         stint.tire_change = self._check_tires()
         stint.pit_service_start_time = self.ir["SessionTime"]
         return stint
