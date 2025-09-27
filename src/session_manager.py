@@ -13,7 +13,6 @@ class SessionManager:
         self.stints: List[Stint] = []
         self.prev_pit_active: bool = False
         self.current_stint: Stint = None
-        self.stint_end_ready = False
         self.prev_lap = 0
         self.prev_recorded_lap = 0
         self.started = False
@@ -57,6 +56,7 @@ class SessionManager:
         return False
 
     def process_race(self) -> None:
+        pending_stint_end = False
         self.ir.freeze_var_buffer_latest()
         self.started = self.check_start()
         self.ended = self.check_end()
@@ -103,7 +103,7 @@ class SessionManager:
                 )
 
             elif not pit_active and self.prev_pit_active:
-                self.stint_end_ready = True
+                pending_stint_end = True
 
             if self.current_stint:
 
@@ -129,12 +129,11 @@ class SessionManager:
 
                     self.prev_recorded_lap = lap_completed
 
-                if self.stint_end_ready:
+                if pending_stint_end:
 
                     self._end_stint(self.current_stint)
                     self.stints.append(self.current_stint)
                     self.current_stint = None
-                    self.stint_end_ready = False
 
             self.prev_pit_active = pit_active
 
