@@ -86,8 +86,6 @@ class SessionManager:
 
     def check_end(self) -> bool:
         flags = self.ir["SessionFlags"]
-        session_state = self.ir["SessionState"]
-        # session_type = self.get_session_type()
         if flags & irsdk.Flags.checkered:
             if self.final_lap == -999:
                 self.final_lap = self.ir["Lap"]
