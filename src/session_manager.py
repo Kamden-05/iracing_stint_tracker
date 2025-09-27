@@ -20,6 +20,7 @@ class SessionManager:
         self.ended = False
         self.final_lap = -999
         self.lap_start_time = 0.0
+        self.lap_start_tick = 0
         self.pending_lap_time = 0.0
 
     def connect(self) -> bool:
@@ -71,30 +72,34 @@ class SessionManager:
         return "Race"
 
     def check_start(self) -> bool:
-        return (
-            not self.started
-            and self.ir["SessionState"] == irsdk.SessionState.racing
-            and self.ir["PlayerCarClassPosition"] > 0
-        )
+        if not self.started:
+            return (
+                self.ir["SessionState"] == irsdk.SessionState.racing
+                and self.ir["PlayerCarClassPosition"] > 0
+            )
+        else:
+            return True
 
     def check_end(self) -> bool:
         flags = self.ir["SessionFlags"]
-        session_type = self.get_session_type()
-        if (flags & irsdk.Flags.checkered) and session_type == "Race":
+        session_state = self.ir["SessionState"]
+        # session_type = self.get_session_type()
+        if flags & irsdk.Flags.checkered:
             if self.final_lap == -999:
                 self.final_lap = self.ir["Lap"]
-            elif self.final_lap == self.prev_recorded_lap:
+            elif self.final_lap <= self.prev_recorded_lap:
+                print("Race Ended")
                 return True
         return False
 
     def process_race(self) -> None:
         self.ir.freeze_var_buffer_latest()
-
         self.started = self.check_start()
         self.ended = self.check_end()
         # TODO: if not started and not ended: start stint at the next pit stop then started=true
 
         if self.started and not self.ended:
+            tick = self.ir["SessionTick"]
             pending_stint_end = False
             pit_active = self.ir["PitstopActive"]
             session_time = self.ir["SessionTime"]
@@ -147,14 +152,17 @@ class SessionManager:
 
                 lap = self.ir["Lap"]
                 lap_completed = self.ir["LapCompleted"]
-                lap_dist_pct = self.ir["LapDistPct"]
 
                 if lap > self.prev_lap:
                     self.pending_lap_time = session_time - self.lap_start_time
                     self.lap_start_time = session_time
+                    self.lap_start_tick = tick
                     self.prev_lap = lap
 
-                if self.prev_recorded_lap != lap_completed and lap_dist_pct > 0.075:
+                if (
+                    self.prev_recorded_lap != lap_completed
+                    and tick >= self.lap_start_tick + 120
+                ):
 
                     lap_time = self.ir["LapLastLapTime"]
 
