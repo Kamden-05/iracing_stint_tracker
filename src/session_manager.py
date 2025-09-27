@@ -84,7 +84,7 @@ class SessionManager:
                     self.lap_start_time = self.ir["SessionTime"]
                     self.prev_lap = lap
 
-                if self.prev_recorded_lap != lap_completed and lap_dist_pct > 0.05:
+                if self.prev_recorded_lap != lap_completed and lap_dist_pct > 0.075:
 
                     lap_time = self.ir["LapLastLapTime"]
 
