@@ -13,17 +13,17 @@ class SessionManager:
         self.stints: List[Stint] = []
         self.prev_pit_active: bool = False
         self.current_stint: Stint = None
-        self.end_stint = False
+        self.stint_end_ready = False
         self.prev_lap = 0
         self.prev_recorded_lap = 0
-        self.race_started = False
-        self.race_ended = False
+        self.started = False
+        self.ended = False
         self.final_lap = -999
         self.lap_start_time = 0.0
         self.pending_lap_time = 0.0
 
     def connect(self) -> bool:
-        if not self.is_connected and not self.race_ended:
+        if not self.is_connected:
             self.is_connected = self.ir.startup()
             if self.is_connected:
                 print("Connected to iRacing")
@@ -32,39 +32,39 @@ class SessionManager:
     def disconnect(self) -> None:
         if self.is_connected:
             if self.current_stint:
-                self.current_stint.end_stint()
+                self._end_stint(self.current_stint)
                 self.stints.append(self.current_stint)
+                self.current_stint = None
 
             self.ir.shutdown()
             self.is_connected = False
             logging.info("Disconnected from iRacing")
 
-    def check_race_status(self) -> None:
-
-        # TODO: set race started to True when we start/end a pitstop
-        session_state = self.ir["SessionState"]
-        if (
-            not self.race_started
-            and session_state == irsdk.SessionState.racing
+    def check_start(self) -> bool:
+        return (
+            not self.started
+            and self.ir["SessionState"] == irsdk.SessionState.racing
             and self.ir["PlayerCarClassPosition"] > 0
-        ):
-            self.race_started = True
-            self.race_ended = False
+        )
 
+    def check_end(self) -> bool:
         flags = self.ir["SessionFlags"]
         if flags & irsdk.Flags.checkered:
             if self.final_lap == -999:
                 self.final_lap = self.ir["Lap"]
             elif self.final_lap == self.prev_recorded_lap:
-                self.race_ended = True
-                self.disconnect()
+                return True
+        return False
 
     def process_race(self) -> None:
         self.ir.freeze_var_buffer_latest()
-        self.check_race_status()
-        if self.race_started and not self.race_ended:
+        self.started = self.check_start()
+        self.ended = self.check_end()
+        # TODO: if not started and not ended: start stint at the next pit stop then started=true
+
+        if self.started and not self.ended:
             pit_active = self.ir["PitstopActive"]
-            time = self.ir["SessionTime"]
+            session_time = self.ir["SessionTime"]
             position = self.ir["PlayerCarClassPosition"]
             incidents = self.ir["PlayerCarMyIncidentCount"]
             fuel = self.ir["FuelLevel"]
@@ -78,7 +78,7 @@ class SessionManager:
                 self.current_stint = Stint(
                     stint_id=len(self.stints) + 1,
                     driver=driver,
-                    start_time=time,
+                    start_time=session_time,
                     start_position=position,
                     start_incidents=incidents,
                     start_fuel=fuel,
@@ -99,11 +99,11 @@ class SessionManager:
                     end_fuel=fuel,
                     reufel_amount=refuel,
                     tires=self._check_tires(),
-                    session_time=time,
+                    session_time=session_time,
                 )
 
             elif not pit_active and self.prev_pit_active:
-                self.end_stint = True
+                self.stint_end_ready = True
 
             if self.current_stint:
 
@@ -112,8 +112,8 @@ class SessionManager:
                 lap_dist_pct = self.ir["LapDistPct"]
 
                 if lap > self.prev_lap:
-                    self.pending_lap_time = self.ir["SessionTime"] - self.lap_start_time
-                    self.lap_start_time = self.ir["SessionTime"]
+                    self.pending_lap_time = session_time - self.lap_start_time
+                    self.lap_start_time = session_time
                     self.prev_lap = lap
 
                 if self.prev_recorded_lap != lap_completed and lap_dist_pct > 0.075:
@@ -124,22 +124,17 @@ class SessionManager:
                         lap_time = self.pending_lap_time
 
                     if lap_time != 0.0:
-                        print(f"Lap {self.ir['LapCompleted']}: {format_time(lap_time)}")
-                        self.current_stint.laps.append(lap_time)
+                        print(f"Lap {lap_completed}: {format_time(lap_time)}")
+                        self.current_stint.record_lap(lap_time)
 
                     self.prev_recorded_lap = lap_completed
 
-                if self.end_stint:
+                if self.stint_end_ready:
 
-                    self.current_stint.end_stint(
-                        time=time,
-                        position=position,
-                        incidents=incidents,
-                        fast_repairs=fast_repairs,
-                    )
+                    self._end_stint(self.current_stint)
                     self.stints.append(self.current_stint)
                     self.current_stint = None
-                    self.end_stint = False
+                    self.stint_end_ready = False
 
             self.prev_pit_active = pit_active
 
@@ -149,4 +144,12 @@ class SessionManager:
             or self.ir["dpRFTireChange"]
             or self.ir["dpLRTireChange"]
             or self.ir["dpRRTireChange"]
+        )
+
+    def _end_stint(self, stint: Stint) -> None:
+        stint.end_stint(
+            time=self.ir["SessionTime"],
+            position=self.ir["PlayerCarClassPosition"],
+            incidents=self.ir["PlayerCarMyIncidentCount"],
+            fast_repairs=self.ir["FastRepairUsed"],
         )

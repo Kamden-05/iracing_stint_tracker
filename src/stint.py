@@ -84,6 +84,9 @@ class Stint:
         else:
             return False
 
+    def record_lap(self, lap_time) -> None:
+        self.laps.append(lap_time)
+
     def display(self):
         """Print all values in the stint for easy review."""
         print(f"{' '*17}Stint {self.stint_id}")

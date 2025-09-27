@@ -14,7 +14,7 @@ def main():
             if manager.is_connected:
                 while manager.is_connected:
                     manager.process_race()
-                    if manager.race_ended:
+                    if manager.ended:
                         manager.disconnect()
                         return
                     time.sleep(1 / 60)
