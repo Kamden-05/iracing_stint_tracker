@@ -44,14 +44,14 @@ class Stint:
     # TODO: handle final stint logic for pit_service_duration and in_lap
     def end_stint(
         self,
-        time: float,
+        session_time: float,
         position: float,
         incidents: int,
         fast_repairs: int,
         end_fuel: float,
         final: bool,
     ) -> None:
-        self.stint_length = time - self.start_time
+        self.stint_length = session_time - self.start_time
         self.end_position = position
         self.incidents = incidents - self.start_incidents
         self.end_fast_repairs = fast_repairs
@@ -61,7 +61,7 @@ class Stint:
         else:
             self.in_lap = self.laps[-1] if self.laps else 0.0
             self.repairs = self._check_repairs()
-            self.pit_service_duration = time - self.pit_service_start_time
+            self.pit_service_duration = session_time - self.pit_service_start_time
 
         self.out_lap = self.laps[0] if self.laps else 0.0
 

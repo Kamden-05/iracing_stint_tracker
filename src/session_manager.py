@@ -211,7 +211,7 @@ class SessionManager:
 
     def _end_stint(self, stint: Stint, final_stint=False) -> None:
         stint.end_stint(
-            time=self.ir["SessionTime"],
+            session_time=self.ir["SessionTime"],
             position=self.ir["PlayerCarClassPosition"],
             incidents=self.ir["PlayerCarMyIncidentCount"],
             fast_repairs=self.ir["FastRepairUsed"],
