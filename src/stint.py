@@ -36,8 +36,8 @@ class Stint:
     refuel_amount: Optional[float] = "N/A"
     required_repair_time: Optional[float] = -1.0
     optional_repair_time: Optional[float] = -1.0
-    pit_service_duration: Optional[float] = -1.0
-    pit_service_start_time: Optional[float] = -1.0
+    pit_service_duration: Optional[float] = 0.0
+    pit_service_start_time: Optional[float] = 0.0
     tire_change: Optional[bool] = "N/A"
     repairs: Optional[bool] = "N/A"
 
@@ -61,6 +61,7 @@ class Stint:
         else:
             self.in_lap = self.laps[-1] if self.laps else 0.0
             self.repairs = self._check_repairs()
+            self.pit_service_duration = time - self.pit_service_start_time
 
         self.out_lap = self.laps[0] if self.laps else 0.0
 
@@ -68,7 +69,6 @@ class Stint:
             float(sum(self.laps)) / float(len(self.laps)) if self.laps else 0.0
         )
         self.laps_completed = len(self.laps)
-        self.pit_service_duration = time - self.pit_service_start_time
 
         self.display()
 
@@ -123,10 +123,18 @@ class Stint:
         print(f"{'-'*40}")
         print(f"End Fuel: {self.end_fuel}")
         print(f"Refuel Amount: {self.refuel_amount}")
-        print(f"Required Repair Time: {format_time(self.required_repair_time)}")
-        print(f"Optional Repair Time: {format_time(self.optional_repair_time)}")
-        print(f"Service Start Time: {format_time(self.pit_service_start_time)}")
-        print(f"Service Time: {format_time(self.pit_service_duration)}")
+        print(
+            f"Required Repair Time: {format_time(self.required_repair_time) if self.required_repair_time > 0.0 else 'N/A'}"
+        )
+        print(
+            f"Optional Repair Time: {format_time(self.optional_repair_time) if self.optional_repair_time > 0.0 else 'N/A'}"
+        )
+        print(
+            f"Service Start Time: {format_time(self.pit_service_start_time) if self.pit_service_start_time > 0.0 else 'N/A'}"
+        )
+        print(
+            f"Service Time: {format_time(self.pit_service_duration) if self.pit_service_duration > 0.0 else 'N/A'}"
+        )
         print(f"Tire Change: {self.tire_change}")
         print(f"Repairs: {self.repairs}")
         print(f"{'='*40}\n")
