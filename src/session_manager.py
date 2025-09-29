@@ -37,7 +37,7 @@ class SessionManager:
     def disconnect(self) -> None:
         if self.is_connected:
             if self.current_stint:
-                self._end_stint(self.current_stint, final_stint=True)
+                self._end_stint(self.current_stint, final_stint=self.ended)
                 self.stints.append(self.current_stint)
                 self.current_stint = None
 
@@ -130,7 +130,7 @@ class SessionManager:
 
                 self.current_stint = Stint(
                     stint_id=len(self.stints) + 1,
-                    driver=driver,
+                    driver_name=driver,
                     start_time=session_time,
                     start_position=position,
                     start_incidents=incidents,
@@ -174,7 +174,7 @@ class SessionManager:
 
                 if (
                     self.prev_recorded_lap < lap_completed
-                    and tick >= self.lap_start_tick + 120
+                    and tick >= self.lap_start_tick + 300
                 ):
 
                     lap_time = self.ir["LapLastLapTime"]
@@ -193,7 +193,7 @@ class SessionManager:
                         self.pit_active_lap > self.pit_road_lap
                         and self.prev_recorded_lap == self.pit_road_lap
                     ):
-                        self._end_stint(self.current_stint)
+                        self._end_stint(self.current_stint, self.ended)
                         self.stints.append(self.current_stint)
                         self.current_stint = None
                         self.pending_stint_end = False
@@ -209,7 +209,7 @@ class SessionManager:
             or self.ir["dpRRTireChange"]
         )
 
-    def _end_stint(self, stint: Stint, final_stint=False) -> None:
+    def _end_stint(self, stint: Stint, final_stint) -> None:
         stint.end_stint(
             session_time=self.ir["SessionTime"],
             position=self.ir["PlayerCarClassPosition"],
