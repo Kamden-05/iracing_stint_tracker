@@ -6,8 +6,6 @@ from src.utils import format_time
 @dataclass
 class Stint:
     """Stint Start Values:"""
-
-    # TODO: add a final_stint flag to indicate whether or not this is the last stint in the race
     stint_id: int
     driver_name: str
     start_time: float
