@@ -113,7 +113,6 @@ class Stint:
 
     def to_dict(self) -> dict:
         return {
-            "stint_id": self.stint_id,
             "driver": self.driver_name,
             "start_time": self.start_time,
             "stint_length": self.stint_length,

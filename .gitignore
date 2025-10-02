@@ -2,3 +2,6 @@ test.py
 old.py
 races/
 tests/
+keys.json
+.env
+iracing-stint-logger-b2a997df777f.json
