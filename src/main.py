@@ -4,8 +4,6 @@ from src.session_manager import SessionManager
 from src.sheets import Sheets
 from dotenv import load_dotenv
 import os
-from tests.mock_stints import test_stints
-
 
 def main():
     load_dotenv()
@@ -36,10 +34,8 @@ def main():
          if manager:
              manager.disconnect()
 
-    # df = pd.DataFrame([stint.to_dict() for stint in manager.stints])
-    # print(df)
-    # df.to_csv(r"C:\Users\kmdnw\iracing_stint_tracker\races\output.csv", index=False)
-    df = pd.DataFrame(test_stints)
+    df = pd.DataFrame([stint.to_dict() for stint in manager.stints])
+    df.to_csv(r"C:\Users\kmdnw\iracing_stint_tracker\races\output.csv", index=False)
     sheets.append_row(
         range_name="Race", value_input_option="RAW", values=df.values.tolist()
     )
