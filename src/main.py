@@ -1,4 +1,5 @@
 import pandas as pd
+import time
 from src.session_manager import SessionManager
 from src.sheets import Sheets
 from dotenv import load_dotenv
@@ -14,26 +15,26 @@ def main():
     )
     manager = SessionManager()
     finished = False
-    # try:
-    #     while True:
-    #         if not manager.is_connected:
-    #             manager.connect()
+    try:
+         while True:
+             if not manager.is_connected:
+                 manager.connect()
 
-    #         if manager.is_connected:
-    #             while manager.is_connected:
-    #                 session_type = manager.get_session_type()
-    #                 if session_type == "Race":
-    #                     manager.process_race()
-    #                 if manager.ended:
-    #                     manager.disconnect()
-    #                     finished = True
-    #                 time.sleep(1 / 60)
+             if manager.is_connected:
+                 while manager.is_connected:
+                     session_type = manager.get_session_type()
+                     if session_type == "Race":
+                         manager.process_race()
+                     if manager.ended:
+                         manager.disconnect()
+                         finished = True
+                     time.sleep(1 / 60)
 
-    #         if finished:
-    #             break
-    # except KeyboardInterrupt:
-    #     if manager:
-    #         manager.disconnect()
+             if finished:
+                 break
+    except KeyboardInterrupt:
+         if manager:
+             manager.disconnect()
 
     # df = pd.DataFrame([stint.to_dict() for stint in manager.stints])
     # print(df)
