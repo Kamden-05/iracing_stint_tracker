@@ -100,7 +100,7 @@ class Stint:
 
     def _check_repairs(self) -> bool:
         if (
-            self.required_repair_time + self.optional_repair_time > 0
+            self.required_repair_time + self.optional_repair_time > 0.0
         ) or self.end_fast_repairs - self.start_fast_repairs > 0:
             return True
         else:
