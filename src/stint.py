@@ -36,12 +36,12 @@ class Stint:
     repairs: Optional[bool] = False
 
     def get_avg_lap(self) -> float:
-        if len(self.laps) > 0.0:
+        if len(self.laps) > 0:
             return sum(self.laps) / len(self.laps)
         return None
 
     def get_fastest_lap(self) -> float:
-        if len(self.laps) > 0.0:
+        if len(self.laps) > 0:
             return min(self.laps)
         return None
 
@@ -54,7 +54,7 @@ class Stint:
         return None 
 
     def get_out_lap(self) -> float:
-        if len(self.laps) > 0.0:
+        if len(self.laps) > 0:
             return self.laps[0]
         return None
 
