@@ -12,6 +12,7 @@ def main():
         sheet_id="1y24KbjufqwZ5NB4ka7r9D8ddXdq-Vg2ZYPkmRb33k1k",
     )
     manager = SessionManager()
+    stint_count = 0
     finished = False
     try:
          while True:
@@ -23,6 +24,9 @@ def main():
                      session_type = manager.get_session_type()
                      if session_type == "Race":
                          manager.process_race()
+                         if len(manager.stints) > stint_count:
+                            sheets.append_row(range_name='Raw',value_input_option='RAW', values=[list(manager.stints[stint_count].to_dict().values())])
+                            stint_count += 1 
                      if manager.ended:
                          manager.disconnect()
                          finished = True
@@ -36,9 +40,9 @@ def main():
 
     df = pd.DataFrame([stint.to_dict() for stint in manager.stints])
     df.to_csv(r"C:\Users\kmdnw\iracing_stint_tracker\races\output.csv", index=False)
-    sheets.append_row(
-        range_name="Race", value_input_option="RAW", values=df.values.tolist()
-    )
+    # sheets.append_row(
+    #     range_name="Race", value_input_option="RAW", values=df.values.tolist()
+    # )
 
 
 if __name__ == "__main__":

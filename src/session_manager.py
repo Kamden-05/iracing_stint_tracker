@@ -36,11 +36,6 @@ class SessionManager:
 
     def disconnect(self) -> None:
         if self.is_connected:
-            if self.current_stint:
-                self._end_stint(self.current_stint, final_stint=self.ended)
-                self.stints.append(self.current_stint)
-                self.current_stint = None
-
             self.ir.shutdown()
             self.is_connected = False
             logging.info("Disconnected from iRacing")
@@ -92,6 +87,7 @@ class SessionManager:
         if flags & irsdk.Flags.checkered:
             if self.final_lap is None:
                 self.final_lap = self.ir["Lap"]
+                return False
             elif self.final_lap <= self.prev_recorded_lap or not on_track:
                 return True
         elif session_state == irsdk.SessionState.checkered and (
@@ -201,6 +197,12 @@ class SessionManager:
             self.prev_pit_road = on_pit_road
             self.prev_pit_active = pit_active
 
+        elif self.ended:
+            if self.current_stint:
+                self._end_stint(self.current_stint, final_stint=self.ended)
+                self.stints.append(self.current_stint)
+                self.current_stint = None
+
     def _check_tires(self) -> bool:
         return bool(
             self.ir["dpLFTireChange"]
@@ -218,21 +220,3 @@ class SessionManager:
             end_fuel=self.ir["FuelLevel"],
             final=final_stint,
         )
-
-    def _get_tick_data(self) -> dict:
-
-        return {
-            "pit_active": self.ir["PitstopActive"],
-            "session_time": self.ir["SessionTime"],
-            "position": self.ir["PlayerCarClassPosition"],
-            "incidents": self.ir["PlayerCarMyIncidentCount"],
-            "fuel_level": self.ir["FuelLevel"],
-            "fast_repairs": self.ir["FastRepairUsed"],
-            "lap": self.ir["Lap"],
-            "lap_completed": self.ir["LapCompleted"],
-            "lap_dist_pct": self.ir["LapDistPct"],
-            "lap_time": self.ir["LapLastLapTime"],
-            "required_repair": self.ir["PitRepairLeft"],
-            "optional_repair": self.ir["PitOptRepairLeft"],
-            "fuel_add": self.ir["dpFuelAddKg"],
-        }

@@ -80,8 +80,6 @@ class Stint:
             self.pit_service_duration = session_time - self.pit_service_start_time
         self.laps_completed = len(self.laps)
 
-        self.display()
-
     def record_pit(
         self,
         required_repair_time: float,
@@ -99,11 +97,9 @@ class Stint:
         self.pit_service_start_time = session_time
 
     def _check_repairs(self) -> bool:
-        if (
-            self.required_repair_time + self.optional_repair_time > 0.0
-        ) or self.end_fast_repairs - self.start_fast_repairs > 0:
+        if self.end_fast_repairs - self.start_fast_repairs > 0:
             return True
-        else:
+        elif self.optional_repair_time or self.required_repair_time:
             return False
 
     def record_lap(self, lap_time: float) -> None:
@@ -130,6 +126,7 @@ class Stint:
             "end_position": self.end_position,
         }
 
+    #TODO: fix display output to work with None
     def display(self):
         """Print all values in the stint for easy review."""
         print(f"{' '*17}Stint {self.stint_id}")
