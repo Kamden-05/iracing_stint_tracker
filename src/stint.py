@@ -26,24 +26,24 @@ class Stint:
         self.end_fast_repairs = self.start_fast_repairs
 
     """Pit Values:"""
-    end_fuel: Optional[float] = -1.0
-    refuel_amount: Optional[float] = "N/A"
-    required_repair_time: Optional[float] = -1.0
-    optional_repair_time: Optional[float] = -1.0
-    pit_service_duration: Optional[float] = 0.0
-    pit_service_start_time: Optional[float] = 0.0
+    end_fuel: Optional[float] = None
+    refuel_amount: Optional[float] = None
+    required_repair_time: Optional[float] = None 
+    optional_repair_time: Optional[float] = None 
+    pit_service_duration: Optional[float] = None 
+    pit_service_start_time: Optional[float] = None 
     tire_change: Optional[bool] = False
     repairs: Optional[bool] = False
 
     def get_avg_lap(self) -> float:
         if len(self.laps) > 0.0:
             return sum(self.laps) / len(self.laps)
-        return -1.0
+        return None
 
     def get_fastest_lap(self) -> float:
         if len(self.laps) > 0.0:
             return min(self.laps)
-        return -1.0
+        return None
 
     def get_laps_completed(self) -> int:
         return len(self.laps)
@@ -51,12 +51,12 @@ class Stint:
     def get_in_lap(self) -> float:
         if len(self.laps) > 0 and not self.final:
             return self.laps[-1]
-        return -1.0
+        return None 
 
     def get_out_lap(self) -> float:
         if len(self.laps) > 0.0:
             return self.laps[0]
-        return -1.0
+        return None
 
     def end_stint(
         self,
@@ -106,7 +106,7 @@ class Stint:
         else:
             return False
 
-    def record_lap(self, lap_time) -> None:
+    def record_lap(self, lap_time: float) -> None:
         self.laps.append(lap_time)
 
     def to_dict(self) -> dict:
