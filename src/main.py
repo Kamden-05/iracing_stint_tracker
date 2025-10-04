@@ -4,6 +4,7 @@ from src.session_manager import SessionManager
 from src.sheets import Sheets
 from dotenv import load_dotenv
 import os
+import re
 
 def main():
     load_dotenv()
@@ -26,6 +27,7 @@ def main():
                          manager.process_race()
                          if len(manager.stints) > stint_count:
                             sheets.append_row(range_name='Raw',value_input_option='RAW', values=[list(manager.stints[stint_count].to_dict().values())])
+                            sheets.append_row(range_name='Laps',value_input_option='RAW', values=[[lap] for lap in manager.stints[stint_count].laps])
                             stint_count += 1 
                      if manager.ended:
                          manager.disconnect()
@@ -44,6 +46,9 @@ def main():
     #     range_name="Race", value_input_option="RAW", values=df.values.tolist()
     # )
 
+
+def get_sheet_id(url: str) -> str:
+    return None
 
 if __name__ == "__main__":
     main()

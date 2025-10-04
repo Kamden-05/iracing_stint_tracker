@@ -6,6 +6,7 @@ from src.utils import format_time
 @dataclass
 class Stint:
     """Stint Start Values:"""
+
     stint_id: int
     driver_name: str
     start_time: float
@@ -28,10 +29,10 @@ class Stint:
     """Pit Values:"""
     end_fuel: Optional[float] = None
     refuel_amount: Optional[float] = None
-    required_repair_time: Optional[float] = None 
-    optional_repair_time: Optional[float] = None 
-    pit_service_duration: Optional[float] = None 
-    pit_service_start_time: Optional[float] = None 
+    required_repair_time: Optional[float] = None
+    optional_repair_time: Optional[float] = None
+    pit_service_duration: Optional[float] = 0.0
+    pit_service_start_time: Optional[float] = None
     tire_change: Optional[bool] = False
     repairs: Optional[bool] = False
 
@@ -51,7 +52,7 @@ class Stint:
     def get_in_lap(self) -> float:
         if self.laps and not self.final:
             return self.laps[-1]
-        return None 
+        return None
 
     def get_out_lap(self) -> float:
         if self.laps:
@@ -99,8 +100,12 @@ class Stint:
     def _check_repairs(self) -> bool:
         if self.end_fast_repairs - self.start_fast_repairs > 0:
             return True
-        elif self.optional_repair_time or self.required_repair_time:
-            return False
+        elif self.optional_repair_time is None and self.required_repair_time is None:
+            return None
+        else:
+            return (
+                (self.optional_repair_time or 0.0) + (self.required_repair_time + 0.0)
+            ) > 0.0
 
     def record_lap(self, lap_time: float) -> None:
         self.laps.append(lap_time)
@@ -126,7 +131,7 @@ class Stint:
             "end_position": self.end_position,
         }
 
-    #TODO: fix display output to work with None
+    # TODO: fix display output to work with None
     def display(self):
         """Print all values in the stint for easy review."""
         print(f"{' '*17}Stint {self.stint_id}")
