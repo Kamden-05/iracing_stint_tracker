@@ -48,7 +48,12 @@ def main():
 
 
 def get_sheet_id(url: str) -> str:
-    return None
+    match = re.search(r'd/([^/]+)/edit', url)
+    print(match.group()) 
+    if match:
+        return match.group(1)
+    else:
+        return ""
 
 if __name__ == "__main__":
     main()
