@@ -42,10 +42,6 @@ def main():
 
     df = pd.DataFrame([stint.to_dict() for stint in manager.stints])
     df.to_csv(r"C:\Users\kmdnw\iracing_stint_tracker\races\output.csv", index=False)
-    # sheets.append_row(
-    #     range_name="Race", value_input_option="RAW", values=df.values.tolist()
-    # )
-
 
 def get_sheet_id(url: str) -> str:
     match = re.search(r'd/([^/]+)/edit', url)
