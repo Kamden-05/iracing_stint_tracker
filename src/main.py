@@ -1,6 +1,6 @@
 import pandas as pd
 import time
-from src.session_manager import SessionManager
+from src.session_manager import SessionManager, SessionStatus
 from src.sheets import Sheets
 from dotenv import load_dotenv
 import os
@@ -18,7 +18,8 @@ def get_sheet_id(url: str) -> str:
 
 def manage_race(manager: SessionManager, q: Queue):
     finished = False
-    last_sent = 0 
+    last_sent = 0
+    current_stint_id = 0
 
     while not finished:
         if not manager.is_connected:
@@ -28,11 +29,11 @@ def manage_race(manager: SessionManager, q: Queue):
             while manager.is_connected:
                 session_type = manager.get_session_type()
                 if session_type == "Race":
-                    manager.process_race()
+                    manager.process_race(stint_id=current_stint_id)
                     if len(manager.stints) > last_sent:
                         q.put(manager.stints[last_sent])
                         last_sent += 1
-                if manager.ended:
+                if manager.status == SessionStatus.FINISHED:
                     manager.disconnect()
                     finished = True
                 time.sleep(1 / 60)

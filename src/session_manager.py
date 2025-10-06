@@ -1,9 +1,16 @@
 from src.stint import Stint
 from src.utils import format_time
 from typing import List
+from enum import Enum
 import irsdk
 import logging
 import yaml
+
+
+class SessionStatus(Enum):
+    NOT_STARTED = 0
+    IN_PROGRESS = 1
+    FINISHED = 2
 
 
 class SessionManager:
@@ -16,8 +23,6 @@ class SessionManager:
         self.current_stint: Stint = None
         self.prev_lap = 0
         self.prev_recorded_lap = 0
-        self.started = False
-        self.ended = False
         self.final_lap = None
         self.lap_start_time = 0.0
         self.lap_start_tick = 0
@@ -26,6 +31,7 @@ class SessionManager:
         self.prev_pit_road = False
         self.pit_active_lap = -1
         self.pending_stint_end = False
+        self.status: SessionStatus = SessionStatus.NOT_STARTED
 
     def connect(self) -> bool:
         if not self.is_connected:
@@ -71,7 +77,7 @@ class SessionManager:
         return "Race"
 
     def check_start(self) -> bool:
-        if not self.started:
+        if self.status == SessionStatus.NOT_STARTED:
             return (
                 self.ir["SessionState"] == irsdk.SessionState.racing
                 and self.ir["PlayerCarClassPosition"] > 0
@@ -97,11 +103,15 @@ class SessionManager:
 
         return False
 
-    def process_race(self) -> None:
-        self.ir.freeze_var_buffer_latest()
-        self.started = self.check_start()
-        self.ended = self.check_end()
+    def update_session_status(self):
+        if self.status == SessionStatus.NOT_STARTED and self.check_start():
+            self.status = SessionStatus.IN_PROGRESS
+        elif self.status == SessionStatus.IN_PROGRESS and self.check_end():
+            self.status = SessionStatus.FINISHED
 
+    def process_race(self, stint_id: int) -> None:
+        self.ir.freeze_var_buffer_latest()
+        self.update_session_status()
         tick = self.ir["SessionTick"]
         lap = self.ir["Lap"]
         lap_completed = self.ir["LapCompleted"]
@@ -114,7 +124,7 @@ class SessionManager:
         fast_repairs = self.ir["FastRepairUsed"]
 
         # TODO: if not started and not ended: start stint at the next pit stop then started=true
-        if self.started and not self.ended:
+        if self.status == SessionStatus.IN_PROGRESS:
 
             if on_pit_road and not self.prev_pit_road:
                 self.pit_road_lap = lap
@@ -125,7 +135,7 @@ class SessionManager:
                 driver = self.ir["DriverInfo"]["Drivers"][car_id]["UserName"]
 
                 self.current_stint = Stint(
-                    stint_id=len(self.stints) + 1,
+                    stint_id=stint_id,
                     driver_name=driver,
                     start_time=session_time,
                     start_position=position,
@@ -189,7 +199,7 @@ class SessionManager:
                         self.pit_active_lap > self.pit_road_lap
                         and self.prev_recorded_lap == self.pit_road_lap
                     ):
-                        self._end_stint(self.current_stint, self.ended)
+                        self._end_stint(self.current_stint, final_stint=False)
                         self.stints.append(self.current_stint)
                         self.current_stint = None
                         self.pending_stint_end = False
@@ -197,9 +207,9 @@ class SessionManager:
             self.prev_pit_road = on_pit_road
             self.prev_pit_active = pit_active
 
-        elif self.ended:
+        elif self.status == SessionStatus.FINISHED:
             if self.current_stint:
-                self._end_stint(self.current_stint, final_stint=self.ended)
+                self._end_stint(self.current_stint, final_stint=True)
                 self.stints.append(self.current_stint)
                 self.current_stint = None
 
