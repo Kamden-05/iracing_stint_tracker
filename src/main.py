@@ -16,7 +16,6 @@ def get_sheet_id(url: str) -> str:
         return match.group(1)
     return ""
 
-
 def manage_race(manager: SessionManager, q: Queue):
     finished = False
     last_sent = 0 
@@ -39,7 +38,6 @@ def manage_race(manager: SessionManager, q: Queue):
                 time.sleep(1 / 60)
 
     print('Race Finished')
-
 
 def main():
     load_dotenv()
@@ -79,7 +77,6 @@ def main():
 
     df = pd.DataFrame([stint.to_dict() for stint in manager.stints])
     df.to_csv(r"C:\Users\kmdnw\iracing_stint_tracker\races\output.csv", index=False)
-
 
 if __name__ == "__main__":
     main()
