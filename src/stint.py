@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
 from src.utils import format_time
-
+import json
 
 @dataclass
 class Stint:
@@ -130,6 +130,10 @@ class Stint:
             "start_position": self.start_position,
             "end_position": self.end_position,
         }
+    
+    def to_json(self) -> str:
+        return json.dumps(self.to_dict())
+    
 
     # TODO: fix display output to work with None
     def display(self):
