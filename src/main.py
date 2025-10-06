@@ -5,6 +5,41 @@ from src.sheets import Sheets
 from dotenv import load_dotenv
 import os
 import re
+import threading
+from queue import Queue, Empty
+
+
+def get_sheet_id(url: str) -> str:
+    match = re.search(r"d/([^/]+)/edit", url)
+    print(match.group())
+    if match:
+        return match.group(1)
+    return ""
+
+
+def manage_race(manager: SessionManager, q: Queue):
+    finished = False
+    last_sent = 0 
+
+    while not finished:
+        if not manager.is_connected:
+            manager.connect()
+
+        if manager.is_connected:
+            while manager.is_connected:
+                session_type = manager.get_session_type()
+                if session_type == "Race":
+                    manager.process_race()
+                    if len(manager.stints) > last_sent:
+                        q.put(manager.stints[last_sent])
+                        last_sent += 1
+                if manager.ended:
+                    manager.disconnect()
+                    finished = True
+                time.sleep(1 / 60)
+
+    print('Race Finished')
+
 
 def main():
     load_dotenv()
@@ -12,44 +47,39 @@ def main():
         service_account_file=os.getenv("service_account_file"),
         sheet_id="1y24KbjufqwZ5NB4ka7r9D8ddXdq-Vg2ZYPkmRb33k1k",
     )
+    q = Queue()
     manager = SessionManager()
-    stint_count = 0
-    finished = False
-    try:
-         while True:
-             if not manager.is_connected:
-                 manager.connect()
-
-             if manager.is_connected:
-                 while manager.is_connected:
-                     session_type = manager.get_session_type()
-                     if session_type == "Race":
-                         manager.process_race()
-                         if len(manager.stints) > stint_count:
-                            sheets.append_row(range_name='Raw',value_input_option='RAW', values=[list(manager.stints[stint_count].to_dict().values())])
-                            sheets.append_row(range_name='Laps',value_input_option='RAW', values=[[lap] for lap in manager.stints[stint_count].laps])
-                            stint_count += 1 
-                     if manager.ended:
-                         manager.disconnect()
-                         finished = True
-                     time.sleep(1 / 60)
-
-             if finished:
-                 break
-    except KeyboardInterrupt:
-         if manager:
-             manager.disconnect()
+    manager_thread = threading.Thread(
+        target=manage_race, daemon=True, args=(manager, q)
+    )
+    manager_thread.start()
+    while True:
+        try:
+            stint = q.get(timeout=1)
+            stint_data = [list(stint.to_dict().values())]
+            laps = [[lap] for lap in stint.laps]
+            sheets.append_row(
+                range_name="Raw",
+                value_input_option="RAW",
+                values=stint_data,
+            )
+            sheets.append_row(
+                range_name="Laps",
+                value_input_option="RAW",
+                values=laps
+            )
+            if not manager_thread.is_alive():
+                break
+        except Empty:
+            continue
+        except KeyboardInterrupt:
+            if manager:
+                manager.disconnect()
+            break
 
     df = pd.DataFrame([stint.to_dict() for stint in manager.stints])
     df.to_csv(r"C:\Users\kmdnw\iracing_stint_tracker\races\output.csv", index=False)
 
-def get_sheet_id(url: str) -> str:
-    match = re.search(r'd/([^/]+)/edit', url)
-    print(match.group()) 
-    if match:
-        return match.group(1)
-    else:
-        return ""
 
 if __name__ == "__main__":
     main()
