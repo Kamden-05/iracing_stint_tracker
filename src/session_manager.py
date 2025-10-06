@@ -2,9 +2,16 @@ from src.stint import Stint
 from src.utils import format_time
 from typing import List
 from enum import Enum
+from enum import Enum
 import irsdk
 import logging
 import yaml
+
+
+class SessionStatus(Enum):
+    NOT_STARTED = 0
+    IN_PROGRESS = 1
+    FINISHED = 2
 
 
 class SessionStatus(Enum):
@@ -40,8 +47,7 @@ class SessionManager:
         self.prev_pit_road = False
         self.pit_active_lap = -1
         self.pending_stint_end = False
-        self.status: SessionStatus = SessionStatus.WAITING
-        self.pit_status: PitStatus = PitStatus.NOT_IN_PIT
+        self.status: SessionStatus = SessionStatus.NOT_STARTED
 
     def connect(self) -> bool:
         if not self.is_connected:
@@ -87,7 +93,7 @@ class SessionManager:
         return "Race"
 
     def check_start(self) -> bool:
-        if self.status == SessionStatus.WAITING:
+        if self.status == SessionStatus.NOT_STARTED:
             return (
                 self.ir["SessionState"] == irsdk.SessionState.racing
                 and self.ir["PlayerCarClassPosition"] > 0
@@ -114,42 +120,10 @@ class SessionManager:
         return False
 
     def update_session_status(self):
-        if self.status == SessionStatus.WAITING and self.check_start():
+        if self.status == SessionStatus.NOT_STARTED and self.check_start():
             self.status = SessionStatus.IN_PROGRESS
         elif self.status == SessionStatus.IN_PROGRESS and self.check_end():
             self.status = SessionStatus.FINISHED
-
-    def get_pit_status(self):
-        tow_time = self.ir["PlayerCarTowTime"]
-        on_pit_road = self.ir["OnPitRoad"]
-        pit_active = self.ir["PitStopActive"]
-        prev_status = self.pit_status
-
-        if tow_time > 0.0:
-            return PitStatus.TOWING
-
-        # entering pit
-        if on_pit_road and prev_status == PitStatus.NOT_IN_PIT:
-            return PitStatus.ENTERING_PIT
-
-        # on pit road not receiving service
-        if on_pit_road and not pit_active:
-            return PitStatus.ON_PIT_ROAD
-
-        # sercive active
-        if pit_active and prev_status != PitStatus.SERVICING:
-            return PitStatus.SERVICING
-
-        if not on_pit_road and prev_status in {
-            PitStatus.ON_PIT_ROAD,
-            PitStatus.SERVICING,
-        }:
-            return PitStatus.EXITING_PIT
-
-        if not on_pit_road or prev_status == PitStatus.EXITING_PIT:
-            return PitStatus.NOT_IN_PIT
-
-        return prev_status
 
     def process_race(self, stint_id: int) -> None:
         self.ir.freeze_var_buffer_latest()
@@ -165,8 +139,6 @@ class SessionManager:
 
         # TODO: if not started and not ended: start stint at the next pit stop then started=true
         if self.status == SessionStatus.IN_PROGRESS:
-
-            new_pit_status = self.get_pit_status()
 
             if (
                 new_pit_status == PitStatus.ENTERING_PIT
