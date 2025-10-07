@@ -3,6 +3,7 @@ from typing import List, Optional
 from src.utils import format_time
 import json
 
+
 @dataclass
 class Stint:
     """Stint Start Values:"""
@@ -86,14 +87,14 @@ class Stint:
         required_repair_time: float,
         optional_repair_time: float,
         end_fuel: float,
-        reufel_amount: float,
+        refuel_amount: float,
         tires: bool,
         session_time: float,
     ) -> None:
         self.required_repair_time = required_repair_time
         self.optional_repair_time = optional_repair_time
         self.end_fuel = end_fuel
-        self.refuel_amount = reufel_amount
+        self.refuel_amount = refuel_amount
         self.tire_change = tires
         self.pit_service_start_time = session_time
 
@@ -130,10 +131,9 @@ class Stint:
             "start_position": self.start_position,
             "end_position": self.end_position,
         }
-    
+
     def to_json(self) -> str:
         return json.dumps(self.to_dict())
-    
 
     # TODO: fix display output to work with None
     def display(self):

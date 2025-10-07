@@ -8,7 +8,7 @@ import yaml
 
 
 class SessionStatus(Enum):
-    NOT_STARTED = 0
+    WAITING = 0
     IN_PROGRESS = 1
     FINISHED = 2
 
@@ -31,7 +31,7 @@ class SessionManager:
         self.prev_pit_road = False
         self.pit_active_lap = -1
         self.pending_stint_end = False
-        self.status: SessionStatus = SessionStatus.NOT_STARTED
+        self.status: SessionStatus = SessionStatus.WAITING
 
     def connect(self) -> bool:
         if not self.is_connected:
@@ -77,7 +77,7 @@ class SessionManager:
         return "Race"
 
     def check_start(self) -> bool:
-        if self.status == SessionStatus.NOT_STARTED:
+        if self.status == SessionStatus.WAITING:
             return (
                 self.ir["SessionState"] == irsdk.SessionState.racing
                 and self.ir["PlayerCarClassPosition"] > 0
@@ -104,7 +104,7 @@ class SessionManager:
         return False
 
     def update_session_status(self):
-        if self.status == SessionStatus.NOT_STARTED and self.check_start():
+        if self.status == SessionStatus.WAITING and self.check_start():
             self.status = SessionStatus.IN_PROGRESS
         elif self.status == SessionStatus.IN_PROGRESS and self.check_end():
             self.status = SessionStatus.FINISHED
@@ -159,7 +159,7 @@ class SessionManager:
                     required_repair_time=required_repair,
                     optional_repair_time=optional_repair,
                     end_fuel=fuel,
-                    reufel_amount=refuel,
+                    refuel_amount=refuel,
                     tires=self._check_tires(),
                     session_time=session_time,
                 )
