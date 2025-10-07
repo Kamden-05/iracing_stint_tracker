@@ -8,14 +8,14 @@ import yaml
 
 
 class SessionStatus(Enum):
-    NOT_STARTED = 0
+    WAITING = 0
     IN_PROGRESS = 1
     FINISHED = 2
 
 
 class PitStatus(Enum):
-    NOT_IN_PIT: 0
-    ENTERING_PIT: 1
+    NOT_IN_PIT = 0
+    ENTERING_PIT = 1
     ON_PIT_ROAD = 2
     SERVICING = 3
     EXITING_PIT = 4
@@ -40,7 +40,7 @@ class SessionManager:
         self.prev_pit_road = False
         self.pit_active_lap = -1
         self.pending_stint_end = False
-        self.status: SessionStatus = SessionStatus.NOT_STARTED
+        self.status: SessionStatus = SessionStatus.WAITING
         self.pit_status: PitStatus = PitStatus.NOT_IN_PIT
 
     def connect(self) -> bool:
@@ -87,7 +87,7 @@ class SessionManager:
         return "Race"
 
     def check_start(self) -> bool:
-        if self.status == SessionStatus.NOT_STARTED:
+        if self.status == SessionStatus.WAITING:
             return (
                 self.ir["SessionState"] == irsdk.SessionState.racing
                 and self.ir["PlayerCarClassPosition"] > 0
@@ -114,7 +114,7 @@ class SessionManager:
         return False
 
     def update_session_status(self):
-        if self.status == SessionStatus.NOT_STARTED and self.check_start():
+        if self.status == SessionStatus.WAITING and self.check_start():
             self.status = SessionStatus.IN_PROGRESS
         elif self.status == SessionStatus.IN_PROGRESS and self.check_end():
             self.status = SessionStatus.FINISHED
@@ -146,7 +146,7 @@ class SessionManager:
         }:
             return PitStatus.EXITING_PIT
 
-        if not on_pit_road and prev_status == PitStatus.EXITING_PIT:
+        if not on_pit_road or prev_status == PitStatus.EXITING_PIT:
             return PitStatus.NOT_IN_PIT
 
         return prev_status
