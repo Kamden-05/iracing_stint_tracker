@@ -137,7 +137,6 @@ class Stint:
     def to_json(self) -> str:
         return json.dumps(self.to_dict())
 
-    # TODO: fix display output to work with None
     def display(self):
         """Print all values in the stint for easy review."""
         print(f"{' '*17}Stint {self.stint_id}")
