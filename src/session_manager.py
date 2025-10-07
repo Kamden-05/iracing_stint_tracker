@@ -12,6 +12,13 @@ class SessionStatus(Enum):
     IN_PROGRESS = 1
     FINISHED = 2
 
+class PitStatus(Enum):
+    NOT_IN_PIT: 0
+    ENTERING_PIT: 1
+    ON_PIT_ROAD = 2
+    SERVICING = 3
+    EXITING_PIT = 4
+    TOWING = 5
 
 class SessionManager:
 
@@ -32,6 +39,7 @@ class SessionManager:
         self.pit_active_lap = -1
         self.pending_stint_end = False
         self.status: SessionStatus = SessionStatus.NOT_STARTED
+        self.pit_status: PitStatus = PitStatus.NOT_IN_PIT
 
     def connect(self) -> bool:
         if not self.is_connected:
@@ -109,14 +117,41 @@ class SessionManager:
         elif self.status == SessionStatus.IN_PROGRESS and self.check_end():
             self.status = SessionStatus.FINISHED
 
+    def get_pit_status(self):
+        tow_time = self.ir["PlayerCarTowTime"]
+        on_pit_road = self.ir['OnPitRoad']
+        pit_active = self.ir['PitStopActive']
+        prev_status = self.pit_status
+
+        if tow_time > 0.0:
+            return PitStatus.TOWING
+
+        # entering pit
+        if on_pit_road and prev_status == PitStatus.NOT_IN_PIT:
+            return PitStatus.ENTERING_PIT
+        
+        # on pit road not receiving service
+        if on_pit_road and not pit_active:
+            return PitStatus.ON_PIT_ROAD
+        
+        # sercive active
+        if pit_active and prev_status != PitStatus.SERVICING:
+            return PitStatus.SERVICING
+        
+        if not on_pit_road and prev_status in {PitStatus.ON_PIT_ROAD, PitStatus.SERVICING}:
+            return PitStatus.EXITING_PIT
+        
+        if not on_pit_road and prev_status == PitStatus.EXITING_PIT:
+            return PitStatus.NOT_IN_PIT
+        
+        return prev_status
+
     def process_race(self, stint_id: int) -> None:
         self.ir.freeze_var_buffer_latest()
         self.update_session_status()
         tick = self.ir["SessionTick"]
         lap = self.ir["Lap"]
         lap_completed = self.ir["LapCompleted"]
-        on_pit_road = self.ir["OnPitRoad"]
-        pit_active = self.ir["PitstopActive"]
         session_time = self.ir["SessionTime"]
         position = self.ir["PlayerCarClassPosition"]
         incidents = self.ir["PlayerCarMyIncidentCount"]
@@ -126,10 +161,16 @@ class SessionManager:
         # TODO: if not started and not ended: start stint at the next pit stop then started=true
         if self.status == SessionStatus.IN_PROGRESS:
 
-            if on_pit_road and not self.prev_pit_road:
-                self.pit_road_lap = lap
+            new_pit_status = self.get_pit_status()
 
-            if not pit_active and self.current_stint is None:
+            if (
+                new_pit_status == PitStatus.ENTERING_PIT
+                and self.pit_status != PitStatus.ENTERING_PIT
+            ):
+                self.pit_road_lap = lap
+                #TODO: record pit road entry time
+
+            if new_pit_status != PitStatus.SERVICING and self.current_stint is None:
 
                 car_id = self.ir["PlayerCarIdx"]
                 driver = self.ir["DriverInfo"]["Drivers"][car_id]["UserName"]
@@ -144,7 +185,7 @@ class SessionManager:
                     start_fast_repairs=fast_repairs,
                 )
 
-            elif pit_active and not self.prev_pit_active:
+            elif new_pit_status == PitStatus.SERVICING and self.pit_status != PitStatus.SERVICING:
                 self.pit_active_lap = lap
 
                 required_repair = self.ir["PitRepairLeft"]
@@ -164,8 +205,12 @@ class SessionManager:
                     session_time=session_time,
                 )
 
-            elif not pit_active and self.prev_pit_active:
+            elif new_pit_status != PitStatus.SERVICING and self.pit_status == PitStatus.SERVICING:
                 self.pending_stint_end = True
+            
+            elif new_pit_status == PitStatus.EXITING_PIT:
+                pass
+                #TODO: record pit road exit time
 
             if self.current_stint:
 
@@ -204,8 +249,7 @@ class SessionManager:
                         self.current_stint = None
                         self.pending_stint_end = False
 
-            self.prev_pit_road = on_pit_road
-            self.prev_pit_active = pit_active
+            self.pit_status = new_pit_status
 
         elif self.status == SessionStatus.FINISHED:
             if self.current_stint:
