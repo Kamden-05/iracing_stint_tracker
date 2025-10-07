@@ -82,6 +82,8 @@ class Stint:
             self.pit_service_duration = session_time - self.pit_service_start_time
         self.laps_completed = len(self.laps)
 
+        self.display()
+
     def record_pit(
         self,
         required_repair_time: float,
@@ -152,26 +154,26 @@ class Stint:
         print(f"End Position: {self.end_position}")
         print(f"Incidents in Stint: {self.incidents}")
         out = self.get_out_lap()
-        print(f"Out Lap: {format_time(out) if out > 0.0 else 'N/A'}")
+        print(f"Out Lap: {format_time(out) if out else 'N/A'}")
         inl = self.get_in_lap()
-        print(f"In Lap: {format_time(inl) if inl > 0.0 else 'N/A'}")
+        print(f"In Lap: {format_time(inl) if inl else 'N/A'}")
         avg = self.get_avg_lap()
-        print(f"Average Lap: {format_time(avg) if avg > 0.0 else 'N/A'}")
+        print(f"Average Lap: {format_time(avg) if avg else 'N/A'}")
         print(f"Laps Completed: {self.get_laps_completed()}")
         print(f"{'-'*40}")
         print(f"End Fuel: {self.end_fuel}")
         print(f"Refuel Amount: {self.refuel_amount}")
         print(
-            f"Required Repair Time: {format_time(self.required_repair_time) if self.required_repair_time > 0.0 else 'N/A'}"
+            f"Required Repair Time: {format_time(self.required_repair_time) if self.required_repair_time else 'N/A'}"
         )
         print(
-            f"Optional Repair Time: {format_time(self.optional_repair_time) if self.optional_repair_time > 0.0 else 'N/A'}"
+            f"Optional Repair Time: {format_time(self.optional_repair_time) if self.optional_repair_time else 'N/A'}"
         )
         print(
-            f"Service Start Time: {format_time(self.pit_service_start_time) if self.pit_service_start_time > 0.0 else 'N/A'}"
+            f"Service Start Time: {format_time(self.pit_service_start_time) if self.pit_service_start_time else 'N/A'}"
         )
         print(
-            f"Service Time: {format_time(self.pit_service_duration) if self.pit_service_duration > 0.0 else 'N/A'}"
+            f"Service Time: {format_time(self.pit_service_duration) if self.pit_service_duration else 'N/A'}"
         )
         print(f"Tire Change: {self.tire_change}")
         print(f"Repairs: {self.repairs}")
