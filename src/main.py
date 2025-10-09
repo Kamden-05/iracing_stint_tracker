@@ -57,7 +57,7 @@ def main():
     while True:
         try:
             stint = q.get(timeout=1)
-            stint_data = [list(stint.to_dict().values())]
+            stint_data = [list(stint.model_dump().values())]
             laps = [[lap] for lap in stint.laps]
             sheets.append_row(
                 range_name="Raw",
@@ -78,7 +78,7 @@ def main():
                 manager.disconnect()
             break
 
-    df = pd.DataFrame([stint.to_dict() for stint in manager.stints])
+    df = pd.DataFrame([stint.model_dump() for stint in manager.stints])
     df.to_csv(r"C:\Users\kmdnw\iracing_stint_tracker\races\output.csv", index=False)
 
 if __name__ == "__main__":
