@@ -79,7 +79,7 @@ def main():
             break
 
     df = pd.DataFrame([stint.model_dump() for stint in manager.stints])
-    df.to_csv(r"C:\Users\kmdnw\iracing_stint_tracker\races\output.csv", index=False)
+    df.to_csv(r"C:\Users\kmdnw\Projects\iRacing\iracing_stint_tracker\races\output.csv", index=False)
 
 if __name__ == "__main__":
     main()
