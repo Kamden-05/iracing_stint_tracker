@@ -16,6 +16,7 @@ class SessionStatus(Enum):
 class SessionManager:
 
     def __init__(self, ir=None):
+        self.session_id: int
         self.ir = ir or irsdk.IRSDK()
         self.is_connected: bool = False
         self.stints: List[Stint] = []
@@ -38,6 +39,7 @@ class SessionManager:
             self.is_connected = self.ir.startup()
             if self.is_connected:
                 print("Connected to iRacing")
+                self.session_id = self.ir['SessionUniqueID'] 
         return self.is_connected
 
     def disconnect(self) -> None:
@@ -135,6 +137,7 @@ class SessionManager:
                 driver = self.ir["DriverInfo"]["Drivers"][car_id]["UserName"]
 
                 self.current_stint = Stint(
+                    session_id=self.session_id,
                     stint_id=stint_id,
                     driver_name=driver,
                     start_time=session_time,
