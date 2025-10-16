@@ -1,9 +1,6 @@
 import pandas as pd
 import time
 from src.session_manager import SessionManager, SessionStatus
-from src.sheets import Sheets
-from dotenv import load_dotenv
-import os
 import re
 import threading
 from queue import Queue, Empty
@@ -43,11 +40,6 @@ def manage_race(manager: SessionManager, q: Queue):
     print('Race Finished')
 
 def main():
-    load_dotenv()
-    sheets = Sheets(
-        service_account_file=os.getenv("service_account_file"),
-        sheet_id="1y24KbjufqwZ5NB4ka7r9D8ddXdq-Vg2ZYPkmRb33k1k",
-    )
     q = Queue()
     manager = SessionManager()
     manager_thread = threading.Thread(
@@ -56,19 +48,7 @@ def main():
     manager_thread.start()
     while True:
         try:
-            stint = q.get(timeout=1)
-            stint_data = [list(stint.model_dump(exclude={'laps'}).values())]
-            laps = [[lap] for lap in stint.laps]
-            sheets.append_row(
-                range_name="Raw",
-                value_input_option="RAW",
-                values=stint_data,
-            )
-            sheets.append_row(
-                range_name="Laps",
-                value_input_option="RAW",
-                values=laps
-            )
+           #TODO: send data to server as we get laps/stints  
             if not manager_thread.is_alive():
                 break
         except Empty:
