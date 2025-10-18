@@ -1,5 +1,6 @@
 from typing import List, Optional
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from pydantic import BaseModel, Field, computed_field
 
 
 @dataclass
@@ -8,18 +9,17 @@ class Lap:
     lap_time: float
     lap_number: int
 
-
-@dataclass
-class Stint:
+class Stint(BaseModel):
     """Stint Start Values:"""
 
+    stint_id: int
     driver_name: str
     start_time: float
     start_position: int
     start_incidents: int
     start_fuel: float
     start_fast_repairs: int
-    laps: List[Lap] = field(default_factory=list)
+    laps: List[Lap] = Field(default_factory=list)
 
     """Stint End Values:"""
     end_incidents: int = -1
@@ -28,7 +28,7 @@ class Stint:
     stint_length: Optional[float] = None
     final: bool = False
 
-    def __post_init__(self):
+    def model_post_init(self, __context):
         self.end_incidents = self.start_incidents
         self.end_fast_repairs = self.start_fast_repairs
 
@@ -41,33 +41,33 @@ class Stint:
     pit_service_start_time: Optional[float] = None
     tire_change: Optional[bool] = None
 
-    @property
+    @computed_field
     def avg_lap(self) -> Optional[float]:
         return (
             (sum(lap.time for lap in self.laps) / len(self.laps)) if self.laps else None
         )
 
-    @property
+    @computed_field
     def fastest_lap(self) -> Optional[float]:
         return (min(lap.time for lap in self.laps)) if self.laps else None
 
-    @property
+    @computed_field
     def laps_completed(self) -> int:
         return len(self.laps)
 
-    @property
+    @computed_field
     def in_lap(self) -> Optional[float]:
         if self.laps and not self.final:
             return self.laps[-1].time
         return None
 
-    @property
+    @computed_field
     def out_lap(self) -> Optional[float]:
         if self.laps:
             return self.laps[0].time
         return None
 
-    @property
+    @computed_field
     def repairs(self) -> Optional[bool]:
         if self.end_fast_repairs - self.start_fast_repairs > 0:
             return True
@@ -78,7 +78,7 @@ class Stint:
                 (self.optional_repair_time or 0.0) + (self.required_repair_time or 0.0)
             ) > 0.0
 
-    @property
+    @computed_field
     def incidents(self) -> int:
         return self.end_incidents - self.start_incidents
 
@@ -97,7 +97,7 @@ class Stint:
         self.refuel_amount = refuel_amount
         self.tire_change = tires
         self.pit_service_start_time = session_time
-    
+
     def record_lap(self, time: float, lap_number: int) -> None:
         lap = Lap(stint_id=self.stint_id, lap_time=time, lap_number=lap_number)
         self.laps.append(lap)
