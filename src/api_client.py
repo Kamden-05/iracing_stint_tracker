@@ -1,0 +1,9 @@
+import requests
+base_url = 'http://127.0.0.1:8000'
+
+session_id= 0
+stint_id= 68
+
+r = requests.get(f'{base_url}/sessions/{session_id}/stints/{stint_id}')
+
+print(r.text)
