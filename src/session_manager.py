@@ -193,7 +193,7 @@ class SessionManager:
 
                     if lap_time != 0.0:
                         print(f"Lap {lap_completed}: {format_time(lap_time)}")
-                        self.current_stint.record_lap(lap_time)
+                        self.current_stint.record_lap(time=lap_time, lap_number=lap_completed)
 
                     self.prev_recorded_lap = lap_completed
 
