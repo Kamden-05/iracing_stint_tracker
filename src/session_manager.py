@@ -1,4 +1,4 @@
-from stint_core.stint_base import Stint
+from stint import Stint
 from src.utils import format_time
 from typing import List
 from enum import Enum

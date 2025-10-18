@@ -4,7 +4,9 @@ from dataclasses import dataclass, field
 
 @dataclass
 class Lap:
-    pass
+    stint_id: int
+    lap_time: float
+    lap_number: int
 
 
 @dataclass
@@ -26,7 +28,7 @@ class Stint:
     stint_length: Optional[float] = None
     final: bool = False
 
-    def model_post_init(self):
+    def __post_init__(self):
         self.end_incidents = self.start_incidents
         self.end_fast_repairs = self.start_fast_repairs
 
@@ -65,8 +67,39 @@ class Stint:
             return self.laps[0].time
         return None
 
+    @property
+    def repairs(self) -> Optional[bool]:
+        if self.end_fast_repairs - self.start_fast_repairs > 0:
+            return True
+        elif self.optional_repair_time is None and self.required_repair_time is None:
+            return None
+        else:
+            return (
+                (self.optional_repair_time or 0.0) + (self.required_repair_time or 0.0)
+            ) > 0.0
+
+    @property
+    def incidents(self) -> int:
+        return self.end_incidents - self.start_incidents
+
+    def record_pit(
+        self,
+        required_repair_time: float,
+        optional_repair_time: float,
+        end_fuel: float,
+        refuel_amount: float,
+        tires: bool,
+        session_time: float,
+    ) -> None:
+        self.required_repair_time = required_repair_time
+        self.optional_repair_time = optional_repair_time
+        self.end_fuel = end_fuel
+        self.refuel_amount = refuel_amount
+        self.tire_change = tires
+        self.pit_service_start_time = session_time
+    
     def record_lap(self, time: float, lap_number: int) -> None:
-        lap = Lap(stint_id=self.stint_id, time=time, number=lap_number)
+        lap = Lap(stint_id=self.stint_id, lap_time=time, lap_number=lap_number)
         self.laps.append(lap)
 
     def end_stint(
@@ -88,34 +121,3 @@ class Stint:
             self.end_fuel = end_fuel
         else:
             self.pit_service_duration = session_time - self.pit_service_start_time
-
-    def record_pit(
-        self,
-        required_repair_time: float,
-        optional_repair_time: float,
-        end_fuel: float,
-        refuel_amount: float,
-        tires: bool,
-        session_time: float,
-    ) -> None:
-        self.required_repair_time = required_repair_time
-        self.optional_repair_time = optional_repair_time
-        self.end_fuel = end_fuel
-        self.refuel_amount = refuel_amount
-        self.tire_change = tires
-        self.pit_service_start_time = session_time
-
-    @property
-    def repairs(self) -> Optional[bool]:
-        if self.end_fast_repairs - self.start_fast_repairs > 0:
-            return True
-        elif self.optional_repair_time is None and self.required_repair_time is None:
-            return None
-        else:
-            return (
-                (self.optional_repair_time or 0.0) + (self.required_repair_time or 0.0)
-            ) > 0.0
-
-    @property
-    def incidents(self) -> int:
-        return self.end_incidents - self.start_incidents
