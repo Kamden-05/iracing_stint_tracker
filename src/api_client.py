@@ -1,4 +1,5 @@
 import requests
+import json
 from stint import Stint, Lap
 
 base_url = "http://127.0.0.1:8000"
@@ -9,6 +10,14 @@ stint_id = 68
 r = requests.get(f"{base_url}/sessions/{session_id}/stints/{stint_id}")
 
 print(r.text)
+
+def post_session(url: str, session_info: dict):
+    payload = json.dumps(session_info)
+
+    r = requests.post(f'{url}/sessions/', data=payload)
+
+    print(r.text)
+
 
 def post_stint(url: str, session_id: int, stint: Stint):
     payload = stint.model_dump(
