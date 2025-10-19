@@ -98,7 +98,7 @@ class SessionManager:
         sim_date, sim_time = sim_dt.date(), sim_dt.time()
 
         return {
-            'session_id': getattr(self, 'session_id', None),
+            'id': getattr(self, 'session_id', None),
             'session_date': session_date,
             'track': weekend_info.get('TrackDisplayName', 'Unknown Track'),
             'car_class': driver_info.get('CarClassShortName', 'Unknown'),
