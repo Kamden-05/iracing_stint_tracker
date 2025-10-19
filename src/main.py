@@ -23,6 +23,7 @@ def manage_race(manager: SessionManager, q: Queue):
             manager.connect()
 
         if manager.is_connected:
+            print(manager.get_session_info())
             while manager.is_connected:
                 session_type = manager.get_session_type()
                 if session_type == "Race":

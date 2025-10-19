@@ -1,11 +1,11 @@
-from stint import Stint
+from src.stint import Stint
 from src.utils import format_time
 from typing import List
 from enum import Enum
 import irsdk
 import logging
 import yaml
-from datetime import datetime
+from datetime import date
 
 
 class SessionStatus(Enum):
@@ -80,33 +80,19 @@ class SessionManager:
         return "Race"
 
     def get_session_info(self) -> dict:
-        weekend_info = self.ir.get('WeekendInfo', {})
-        driver_info_data = self.ir.get('DriverInfo', {})
-        session_info = self.ir.get('SessionInfo', {})
-
-        car_id = self.ir.get('PlayerCarIdx', -1)
-        drivers = driver_info_data.get('Drivers', [])
-        driver_info = drivers[car_id] if 0 <= car_id < len(drivers) else {}
-
-        # Real-world date
-        start_date = weekend_info.get('StartDate', datetime.date.today().isoformat())
-        session_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
-
-        # Simulated date/time
-        sim_timestamp = session_info.get('SessionStartTime', 0)
-        sim_dt = datetime.datetime.fromtimestamp(sim_timestamp)
-        sim_date, sim_time = sim_dt.date(), sim_dt.time()
+        weekend_info = self.ir["WeekendInfo"]
+        driver_info_data = self.ir["DriverInfo"]
+        car_id = self.ir["PlayerCarIdx"]
+        drivers = driver_info_data["Drivers"]
+        driver_info = drivers[car_id]
 
         return {
-            'id': getattr(self, 'session_id', None),
-            'session_date': session_date,
-            'track': weekend_info.get('TrackDisplayName', 'Unknown Track'),
-            'car_class': driver_info.get('CarClassShortName', 'Unknown'),
-            'car': driver_info.get('CarScreenName', 'Unknown'),
-            'sim_date': sim_date,
-            'sim_time': sim_time,
+            "id": self.session_id,
+            "track": weekend_info["TrackDisplayName"],
+            "car_class": driver_info["CarClassShortName"],
+            "car": driver_info["CarScreenName"],
+            "sim_time": self.ir["SessionTimeOfDay"],
         }
-
 
     def check_start(self) -> bool:
         if self.status == SessionStatus.WAITING:
@@ -154,7 +140,6 @@ class SessionManager:
         incidents = self.ir["PlayerCarMyIncidentCount"]
         fuel = self.ir["FuelLevel"]
         fast_repairs = self.ir["FastRepairUsed"]
-        
 
         # TODO: if not started and not ended: start stint at the next pit stop then started=true
         if self.status == SessionStatus.IN_PROGRESS:
@@ -170,6 +155,7 @@ class SessionManager:
                 self.current_stint = Stint(
                     session_id=self.session_id,
                     stint_id=stint_id,
+                    number=len(self.stints) + 1,
                     driver_name=driver,
                     start_time=session_time,
                     start_position=position,
