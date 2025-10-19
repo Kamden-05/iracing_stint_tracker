@@ -5,8 +5,6 @@ from enum import Enum
 import irsdk
 import logging
 import yaml
-from datetime import date
-
 
 class SessionStatus(Enum):
     WAITING = 0
