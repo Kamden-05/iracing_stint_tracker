@@ -6,8 +6,8 @@ from pydantic import BaseModel, Field, computed_field
 @dataclass
 class Lap:
     stint_id: int
-    lap_time: float
-    lap_number: int
+    time: float
+    number: int
 
 
 class Stint(BaseModel):
@@ -101,8 +101,8 @@ class Stint(BaseModel):
         self.tire_change = tires
         self.pit_service_start_time = session_time
 
-    def record_lap(self, time: float, lap_number: int) -> None:
-        lap = Lap(stint_id=self.stint_id, lap_time=time, lap_number=lap_number)
+    def record_lap(self, lap_time: float, lap_number: int) -> None:
+        lap = Lap(stint_id=self.stint_id, time=lap_time, number=lap_number)
         self.laps.append(lap)
 
     def end_stint(
@@ -124,29 +124,29 @@ class Stint(BaseModel):
             self.end_fuel = end_fuel
         else:
             self.pit_service_duration = session_time - self.pit_service_start_time
-    
+
     def post_json(self) -> dict:
         return self.model_dump(
             include={
-                'session_id',
-                'number',
-                'driver_name',
-                'start_time',
-                'start_position',
-                'start_fuel',
+                "session_id",
+                "number",
+                "driver_name",
+                "start_time",
+                "start_position",
+                "start_fuel",
             }
         )
-    
+
     def put_json(self) -> dict:
         return self.model_dump(
             include={
-                'end_position',
-                'end_fuel',
-                'refuel_amount',
-                'tire_change',
-                'repairs',
-                'pit_service_duration',
-                'incidents',
-                'length',
+                "end_position",
+                "end_fuel",
+                "refuel_amount",
+                "tire_change",
+                "repairs",
+                "pit_service_duration",
+                "incidents",
+                "length",
             }
         )
