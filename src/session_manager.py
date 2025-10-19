@@ -76,7 +76,7 @@ class SessionManager:
 
         # default if we can't find it
         return "Race"
-
+    
     def get_session_info(self) -> dict:
         weekend_info = self.ir["WeekendInfo"]
         driver_info_data = self.ir["DriverInfo"]
