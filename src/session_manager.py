@@ -1,6 +1,6 @@
 from src.stint import Stint
 from src.utils import format_time
-from typing import List
+from typing import List, Optional
 from enum import Enum
 import irsdk
 import logging
@@ -20,6 +20,7 @@ class SessionManager:
         self.is_connected: bool = False
         self.stints: List[Stint] = []
         self.prev_pit_active: bool = False
+        self.stint_number: int = 0
         self.current_stint: Stint = None
         self.prev_lap = 0
         self.prev_recorded_lap = 0
@@ -125,7 +126,7 @@ class SessionManager:
         elif self.status == SessionStatus.IN_PROGRESS and self.check_end():
             self.status = SessionStatus.FINISHED
 
-    def process_race(self, stint_id: int) -> None:
+    def process_race(self, stint_id: int) -> Optional[Stint]:
         self.ir.freeze_var_buffer_latest()
         self.update_session_status()
         tick = self.ir["SessionTick"]
@@ -150,10 +151,12 @@ class SessionManager:
                 car_id = self.ir["PlayerCarIdx"]
                 driver = self.ir["DriverInfo"]["Drivers"][car_id]["UserName"]
 
+                self.stint_number += 1
+
                 self.current_stint = Stint(
                     session_id=self.session_id,
                     stint_id=stint_id,
-                    number=len(self.stints) + 1,
+                    number=self.stint_number,
                     driver_name=driver,
                     start_time=session_time,
                     start_position=position,
