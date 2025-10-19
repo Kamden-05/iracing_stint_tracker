@@ -6,6 +6,7 @@ import irsdk
 import logging
 import yaml
 
+
 class SessionStatus(Enum):
     WAITING = 0
     IN_PROGRESS = 1
@@ -20,7 +21,6 @@ class SessionManager:
         self.is_connected: bool = False
         self.stints: List[Stint] = []
         self.prev_pit_active: bool = False
-        self.stint_number: int = 0
         self.current_stint: Stint = None
         self.prev_lap = 0
         self.prev_recorded_lap = 0
@@ -77,7 +77,7 @@ class SessionManager:
 
         # default if we can't find it
         return "Race"
-    
+
     def get_session_info(self) -> dict:
         weekend_info = self.ir["WeekendInfo"]
         driver_info_data = self.ir["DriverInfo"]
@@ -126,7 +126,7 @@ class SessionManager:
         elif self.status == SessionStatus.IN_PROGRESS and self.check_end():
             self.status = SessionStatus.FINISHED
 
-    def process_race(self, stint_id: int) -> Optional[Stint]:
+    def process_race(self, stint_id: int, stint_number: int) -> Optional[Stint]:
         self.ir.freeze_var_buffer_latest()
         self.update_session_status()
         tick = self.ir["SessionTick"]
@@ -151,12 +151,10 @@ class SessionManager:
                 car_id = self.ir["PlayerCarIdx"]
                 driver = self.ir["DriverInfo"]["Drivers"][car_id]["UserName"]
 
-                self.stint_number += 1
-
                 self.current_stint = Stint(
                     session_id=self.session_id,
                     stint_id=stint_id,
-                    number=self.stint_number,
+                    number=stint_number,
                     driver_name=driver,
                     start_time=session_time,
                     start_position=position,
