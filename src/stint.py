@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Any
 from dataclasses import dataclass
 from pydantic import BaseModel, Field, computed_field
 
@@ -8,6 +8,9 @@ class Lap:
     stint_id: int
     time: float
     number: int
+
+    def to_dict(self) -> dict:
+        return {"stint_id": self.stint_id, "time": self.time, "number": self.number}
 
 
 class Stint(BaseModel):
@@ -125,8 +128,8 @@ class Stint(BaseModel):
         else:
             self.pit_service_duration = session_time - self.pit_service_start_time
 
-    def post_json(self) -> dict:
-        return self.model_dump(
+    def post_json(self) -> dict[str, Any]:
+        return self.model_dump_json(
             include={
                 "session_id",
                 "number",
@@ -137,8 +140,8 @@ class Stint(BaseModel):
             }
         )
 
-    def put_json(self) -> dict:
-        return self.model_dump(
+    def put_json(self) -> dict[str, Any]:
+        return self.model_dump_json(
             include={
                 "end_position",
                 "end_fuel",

@@ -1,25 +1,41 @@
 import requests
 import json
 from .stint import Stint, Lap
+from typing import Any
 
 base_url = "http://127.0.0.1:8000"
 
+
 def post_session(url: str, session_info: dict):
     payload = json.dumps(session_info)
-    r = requests.post(f'{url}/sessions/', data=payload)
+    r = requests.post(f"{url}/sessions/", data=payload)
     print(r.text)
 
 
-def post_stint(url: str, session_id: int, stint: Stint):
-    payload = stint.model_dump(
-        include={'stint_number','driver_name','start_time'}
-    )
+def post_stint(url: str, session_id: int, stint_json: dict[str, Any]):
+    data = {
+        "session_id": 71,
+        "number": 1,
+        "driver_name": 'Kam',
+        "start_time": 17,
+        "start_position": 2,
+        "start_fuel": 56.497,
+    }
+    stint_json = json.dumps(data)
+    r = requests.post(f"{url}/sessions/{session_id}/stints/", data=stint_json)
+    print(r.text)
 
-def put_stint(url: str, session_id: int, stint: Stint):
-    pass
+
+def put_stint(url: str, session_id: int, stint_json: dict[str, Any]):
+    r = requests.put(f"{url}/{session_id}/stints/", data=stint_json)
+    print(r.text)
+
 
 def post_lap(url: str, stint_id: int, lap: Lap):
-    pass
+    lap = Lap(stint_id=10, time=60.5, number=1)
+    payload = json.dumps(lap.to_dict())
+    r = requests.post(f"{url}/stints/{stint_id}/laps/", data=payload)
+    print(r.text)
 
-
-post_session(base_url, {})
+#post_stint(base_url, 71, None)
+post_lap(base_url, 10, None)
