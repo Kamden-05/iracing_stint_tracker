@@ -1,10 +1,7 @@
 import requests
 import json
-from .stint import Stint, Lap
+from .stint import Lap
 from typing import Any
-
-base_url = "http://127.0.0.1:8000"
-
 
 def post_session(url: str, session_info: dict):
     payload = json.dumps(session_info)
@@ -36,6 +33,3 @@ def post_lap(url: str, stint_id: int, lap: Lap):
     payload = json.dumps(lap.to_dict())
     r = requests.post(f"{url}/stints/{stint_id}/laps/", data=payload)
     print(r.text)
-
-#post_stint(base_url, 71, None)
-post_lap(base_url, 10, None)
