@@ -27,7 +27,7 @@ def manage_race(manager: SessionManager, q: Queue):
             while manager.is_connected:
                 session_type = manager.get_session_type()
                 if session_type == "Race":
-                    manager.process_race(stint_id=current_stint_id)
+                    manager.process_race(stint_id=current_stint_id, stint_number=1)
                     if manager.prev_pit_active and current_stint_id == manager.current_stint.stint_id:
                         current_stint_id += 1
                     if len(manager.stints) > last_sent:

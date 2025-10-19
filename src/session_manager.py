@@ -48,6 +48,9 @@ class SessionManager:
             self.is_connected = False
             logging.info("Disconnected from iRacing")
 
+    def client_is_driver(self) -> bool:
+        return self.ir['PlayerCarIdx'] >= 0
+
     def get_session_type(self) -> str:
         """
         Returns the current session type as a string: "Race", "Practice", "Qualify", "Warmup"
