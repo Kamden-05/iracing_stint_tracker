@@ -10,15 +10,6 @@ def post_session(url: str, session_info: dict):
 
 
 def post_stint(url: str, session_id: int, stint_json: dict[str, Any]):
-    data = {
-        "session_id": 71,
-        "number": 1,
-        "driver_name": 'Kam',
-        "start_time": 17,
-        "start_position": 2,
-        "start_fuel": 56.497,
-    }
-    stint_json = json.dumps(data)
     r = requests.post(f"{url}/sessions/{session_id}/stints/", data=stint_json)
     print(r.text)
 
