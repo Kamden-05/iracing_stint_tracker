@@ -17,6 +17,7 @@ class SessionManager:
 
     def __init__(self, ir=None):
         self.session_id: int
+        self.car_id: int
         self.ir = ir or irsdk.IRSDK()
         self.is_connected: bool = False
         self.stints: List[Stint] = []
@@ -39,7 +40,6 @@ class SessionManager:
             self.is_connected = self.ir.startup()
             if self.is_connected:
                 print("Connected to iRacing")
-                self.session_id = self.ir["SessionUniqueID"]
         return self.is_connected
 
     def disconnect(self) -> None:
@@ -47,6 +47,11 @@ class SessionManager:
             self.ir.shutdown()
             self.is_connected = False
             logging.info("Disconnected from iRacing")
+    
+    def init_session(self) -> None:
+        if self.is_connected:
+            self.session_id = self.ir['WeekendInfo']['SubSessionId']
+            self.car_id = self.ir['PlayerCarIdx']
 
     def client_is_driver(self) -> bool:
         return self.ir['PlayerCarIdx'] >= 0
@@ -84,9 +89,8 @@ class SessionManager:
     def get_session_info(self) -> dict:
         weekend_info = self.ir["WeekendInfo"]
         driver_info_data = self.ir["DriverInfo"]
-        car_id = self.ir["PlayerCarIdx"]
         drivers = driver_info_data["Drivers"]
-        driver_info = drivers[car_id]
+        driver_info = drivers[self.car_id]
 
         return {
             "id": self.session_id,
@@ -151,8 +155,7 @@ class SessionManager:
 
             if not pit_active and self.current_stint is None:
 
-                car_id = self.ir["PlayerCarIdx"]
-                driver = self.ir["DriverInfo"]["Drivers"][car_id]["UserName"]
+                driver = self.ir["DriverInfo"]["Drivers"][self.car_id]["UserName"]
 
                 self.current_stint = Stint(
                     session_id=self.session_id,
