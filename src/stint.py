@@ -9,10 +9,13 @@ class Lap:
     lap_time: float
     lap_number: int
 
+
 class Stint(BaseModel):
     """Stint Start Values:"""
 
+    session_id: int
     stint_id: int
+    number: int
     driver_name: str
     start_time: float
     start_position: int
@@ -25,7 +28,7 @@ class Stint(BaseModel):
     end_incidents: int = -1
     end_fast_repairs: int = -1
     end_position: Optional[int] = None
-    stint_length: Optional[float] = None
+    length: Optional[float] = None
     final: bool = False
 
     def model_post_init(self, __context):
@@ -112,7 +115,7 @@ class Stint(BaseModel):
         final: bool,
     ) -> None:
         self.final = final
-        self.stint_length = session_time - self.start_time
+        self.length = session_time - self.start_time
         self.end_position = position
         self.end_incidents = incidents
         self.end_fast_repairs = fast_repairs
@@ -121,3 +124,29 @@ class Stint(BaseModel):
             self.end_fuel = end_fuel
         else:
             self.pit_service_duration = session_time - self.pit_service_start_time
+    
+    def post_json(self) -> dict:
+        return self.model_dump(
+            include={
+                'session_id',
+                'number',
+                'driver_name',
+                'start_time',
+                'start_position',
+                'start_fuel',
+            }
+        )
+    
+    def put_json(self) -> dict:
+        return self.model_dump(
+            include={
+                'end_position',
+                'end_fuel',
+                'refuel_amount',
+                'tire_change',
+                'repairs',
+                'pit_service_duration',
+                'incidents',
+                'length',
+            }
+        )
