@@ -1,11 +1,15 @@
+import logging
+import time
+from enum import Enum
+from queue import Queue
+from typing import List, Optional
+
+import irsdk
+import yaml
+
 from src.stint import Stint
 from src.utils import format_time
-from typing import List, Optional
-from enum import Enum
-import irsdk
-import logging
-import yaml
-from queue import Queue
+
 
 class SessionStatus(Enum):
     WAITING = 0
@@ -50,11 +54,11 @@ class SessionManager:
 
     def init_session(self) -> None:
         if self.is_connected:
-            self.session_id = self.ir['WeekendInfo']['SubSessionId']
-            self.car_id = self.ir['PlayerCarIdx']
+            self.session_id = self.ir["WeekendInfo"]["SubSessionId"]
+            self.car_id = self.ir["PlayerCarIdx"]
 
     def client_is_driver(self) -> bool:
-        return self.ir['PlayerCarIdx'] >= 0
+        return self.ir["PlayerCarIdx"] >= 0
 
     def get_session_type(self) -> str:
         """

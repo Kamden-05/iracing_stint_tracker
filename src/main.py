@@ -1,9 +1,11 @@
-import pandas as pd
-import time
-from src.session_manager import SessionManager, SessionStatus, manage_race
-from src.api_client import APIClient, process_api_queue
 import threading
-from queue import Queue, Empty
+from queue import Empty, Queue
+
+import pandas as pd
+
+from src.api_client import APIClient, process_api_queue
+from src.session_manager import SessionManager, SessionStatus, manage_race
+
 
 def main():
     q = Queue()
