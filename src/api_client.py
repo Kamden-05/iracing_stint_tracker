@@ -12,6 +12,12 @@ class APIClient:
         self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.session.close()
+
     def get_latest_stint(self, session_id: int):
         r = requests.get(f"{self.base_url}/sessions/{session_id}/stints/latest")
         print(r.text)
@@ -36,9 +42,6 @@ class APIClient:
         payload = json.dumps(lap.to_dict())
         r = requests.post(f"{self.base_url}/stints/{stint_id}/laps/", data=payload)
         print(r.text)
-
-    def close(self):
-        self.session.close()
 
 
 url = "http://127.0.0.1:8000"
