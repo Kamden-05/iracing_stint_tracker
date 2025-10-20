@@ -2,6 +2,7 @@ import requests
 import json
 from src.stint import Lap
 from typing import Any
+from queue import Queue
 
 
 class APIClient:
@@ -42,3 +43,7 @@ class APIClient:
         payload = json.dumps(lap.to_dict())
         r = self.s.post(f"{self.base_url}/stints/{stint_id}/laps/", data=payload)
         print(r.text)
+
+
+def process_api_queue():
+    pass
