@@ -38,15 +38,7 @@ class APIClient:
         print(r.text)
 
     def post_lap(self, stint_id: int, lap: Lap):
-        lap = Lap(stint_id=10, time=60.5, number=1)
+        lap = Lap(stint_id=1, time=60.5, number=2)
         payload = json.dumps(lap.to_dict())
         r = self.s.post(f"{self.base_url}/stints/{stint_id}/laps/", data=payload)
         print(r.text)
-
-
-url = "http://127.0.0.1:8000"
-id = 0
-
-client = APIClient(base_url=url)
-
-client.get_latest_stint(session_id=id)
