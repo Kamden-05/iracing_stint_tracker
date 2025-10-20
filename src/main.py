@@ -1,17 +1,11 @@
 import pandas as pd
 import time
 from src.session_manager import SessionManager, SessionStatus
-import re
 import threading
 from queue import Queue, Empty
 
 
-def get_sheet_id(url: str) -> str:
-    match = re.search(r"d/([^/]+)/edit", url)
-    print(match.group())
-    if match:
-        return match.group(1)
-    return ""
+
 
 def manage_race(manager: SessionManager, q: Queue):
     finished = False
