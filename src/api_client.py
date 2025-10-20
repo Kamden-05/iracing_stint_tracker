@@ -1,7 +1,13 @@
 import requests
 import json
-from .stint import Lap
+from src.stint import Lap
 from typing import Any
+
+
+def get_latest_stint(url: str, session_id: int):
+    r = requests.get(f"{url}/sessions/{session_id}/latest")
+    print(r.text)
+
 
 def post_session(url: str, session_info: dict):
     payload = json.dumps(session_info)
