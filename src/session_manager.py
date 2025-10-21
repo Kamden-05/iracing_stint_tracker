@@ -9,6 +9,7 @@ import yaml
 
 from src.stint import Stint
 from src.utils import format_time
+from src.api_client import APIClient
 
 
 class SessionStatus(Enum):
@@ -263,30 +264,33 @@ class SessionManager:
         )
 
 
-def manage_race(manager: SessionManager, q: Queue):
+def manage_race(manager: SessionManager, client: APIClient, q: Queue, stop_event):
     finished = False
     last_sent = 0
     current_stint_id = 0
 
-    while not finished:
-        if not manager.is_connected:
-            manager.connect()
+    try:
+        while not stop_event.is_set() and not finished:
+            if not manager.is_connected:
+                manager.connect()
 
-        if manager.is_connected:
-            print(manager.get_session_info())
-            while manager.is_connected:
-                session_type = manager.get_session_type()
-                if session_type == "Race":
-                    manager.process_race(stint_id=current_stint_id, stint_number=1)
-                    if (
-                        manager.prev_pit_active
-                        and current_stint_id == manager.current_stint.stint_id
-                    ):
-                        current_stint_id += 1
-                    if len(manager.stints) > last_sent:
-                        q.put(manager.stints[last_sent])
-                        last_sent += 1
-                if manager.status == SessionStatus.FINISHED:
-                    manager.disconnect()
-                    finished = True
-                time.sleep(1 / 60)
+            if manager.is_connected:
+                print(manager.get_session_info())
+                while not stop_event.is_set() and manager.is_connected:
+                    session_type = manager.get_session_type()
+                    if session_type == "Race":
+                        manager.process_race(stint_id=current_stint_id, stint_number=1)
+                        if (
+                            manager.prev_pit_active
+                            and current_stint_id == manager.current_stint.stint_id
+                        ):
+                            current_stint_id += 1
+                        if len(manager.stints) > last_sent:
+                            q.put(manager.stints[last_sent])
+                            last_sent += 1
+                    if manager.status == SessionStatus.FINISHED:
+                        finished = True
+                    time.sleep(1 / 60)
+    finally:
+        manager.disconnect()
+        q.put(None)
