@@ -2,8 +2,10 @@ import requests
 import json
 from src.stint import Lap
 from typing import Any
-from queue import Queue
+from queue import Queue, Empty
+import logging
 
+logger = logging.getLogger(__name__)
 
 class APIClient:
     def __init__(
@@ -19,13 +21,14 @@ class APIClient:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.s.close()
 
-    def get_latest_stint(self, session_id: int):
-        r = self.s.get(f"{self.base_url}/sessions/{session_id}/stints/latest")
-        print(r.text)
-
+    '''Session Methods'''
     def post_session(self, session_info: dict):
         payload = json.dumps(session_info)
         r = self.s.post(f"{self.base_url}/sessions/", data=payload)
+        print(r.text)
+
+    def get_latest_stint(self, session_id: int):
+        r = self.s.get(f"{self.base_url}/sessions/{session_id}/stints/latest")
         print(r.text)
 
     def post_stint(self, session_id: int, stint_json: dict[str, Any]):
@@ -45,5 +48,21 @@ class APIClient:
         print(r.text)
 
 
-def process_api_queue():
-    pass
+def process_api_queue(client: APIClient, q: Queue):
+    
+    while True:
+        try:
+            task = q.get(timeout=1)
+
+            match task['type']:
+                case 'Session':
+                    pass
+                case 'Stint':
+                    pass
+                case 'Lap':
+                    pass
+                case _:
+                    logger.error('No valid type in task')
+
+        except Empty:
+            continue
