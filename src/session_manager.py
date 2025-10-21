@@ -54,7 +54,7 @@ class SessionManager:
 
     def init_session(self) -> None:
         if self.is_connected:
-            self.session_id = self.ir["WeekendInfo"]["SubSessionId"]
+            self.session_id = self.ir["WeekendInfo"]["SubSessionID"]
             self.car_id = self.ir["PlayerCarIdx"]
 
     def client_is_driver(self) -> bool:
@@ -95,12 +95,14 @@ class SessionManager:
         driver_info_data = self.ir["DriverInfo"]
         drivers = driver_info_data["Drivers"]
         driver_info = drivers[self.car_id]
+        car_class = driver_info["CarClassShortName"]
+        car = driver_info["CarScreenName"]
 
         return {
             "id": self.session_id,
             "track": weekend_info["TrackDisplayName"],
-            "car_class": driver_info["CarClassShortName"],
-            "car": driver_info["CarScreenName"],
+            "car_class": car_class if car_class else car,
+            "car": car,
             "sim_time": self.ir["SessionTimeOfDay"],
         }
 
@@ -277,6 +279,7 @@ def manage_race(manager: SessionManager, q: Queue, stop_event):
 
             if manager.is_connected:
                 manager.init_session()
+                print(manager.get_session_info())
                 session_task = get_task_dict(
                     task_type="Session", data=manager.get_session_info()
                 )

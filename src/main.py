@@ -13,14 +13,11 @@ def main():
     client = APIClient()
     stop_event = threading.Event()
 
-    manager_thread = threading.Thread(
-        target=manage_race, args=(manager, q, stop_event)
-    )
-    api_thread = threading.Thread(
-        target=process_api_queue, args=(client, q, stop_event)
-    )
-    manager_thread.start()
+    manager_thread = threading.Thread(target=manage_race, args=(manager, q, stop_event))
+    api_thread = threading.Thread(target=process_api_queue, args=(client, q))
+
     api_thread.start()
+    manager_thread.start()
 
     while True:
         try:
