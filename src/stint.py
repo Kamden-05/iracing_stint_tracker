@@ -17,7 +17,7 @@ class Stint(BaseModel):
     """Stint Start Values:"""
 
     session_id: int
-    stint_id: int
+
     number: int
     driver_name: str
     start_time: float
@@ -26,6 +26,7 @@ class Stint(BaseModel):
     start_fuel: float
     start_fast_repairs: int
     laps: List[Lap] = Field(default_factory=list)
+    stint_id: int = None
 
     """Stint End Values:"""
     end_incidents: int = -1
