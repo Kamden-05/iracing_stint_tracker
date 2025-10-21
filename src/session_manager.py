@@ -21,8 +21,8 @@ class SessionStatus(Enum):
 class SessionManager:
 
     def __init__(self, ir=None):
-        self.session_id: int
         self.car_id: int
+        self.session_id: int = None
         self.ir = ir or irsdk.IRSDK()
         self.is_connected: bool = False
         self.stints: List[Stint] = []
