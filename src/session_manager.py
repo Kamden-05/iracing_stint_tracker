@@ -1,14 +1,12 @@
 import logging
-import time
 from enum import Enum
-from queue import Queue
-from typing import List, Optional
+from typing import Optional
 
 import irsdk
 import yaml
 
 from src.stint import Stint
-from src.utils import format_time, get_task_dict
+from src.utils import format_time
 
 
 class SessionStatus(Enum):
@@ -266,43 +264,4 @@ class SessionManager:
         )
 
 
-def manage_race(manager: SessionManager, q: Queue, stop_event):
-    finished = False
 
-    try:
-        while not stop_event.is_set() and not finished:
-            if not manager.is_connected:
-                manager.connect()
-
-            if manager.is_connected:
-                manager.init_session()
-                print(manager.get_session_info())
-                session_task = get_task_dict(
-                    task_type="Session", data=manager.get_session_info()
-                )
-                q.put(session_task)
-
-                while not stop_event.is_set() and manager.is_connected:
-
-                    session_type = manager.get_session_type()
-
-                    if session_type == "Race":
-                        completed_stint = manager.process_race()
-
-                        if completed_stint:
-                            stint_task = get_task_dict(
-                                task_type="Stint",
-                                data={
-                                    "stint": completed_stint,
-                                    "session_id": manager.session_id,
-                                },
-                            )
-                            q.put(stint_task)
-
-                    if manager.status == SessionStatus.FINISHED:
-                        finished = True
-                        manager.disconnect()
-                    time.sleep(1 / 60)
-    finally:
-        manager.disconnect()
-        q.put(None)
