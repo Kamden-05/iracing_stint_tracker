@@ -8,7 +8,7 @@ import irsdk
 import yaml
 
 from src.stint import Stint
-from src.utils import format_time
+from src.utils import format_time, get_task_dict
 from src.api_client import APIClient
 
 
@@ -22,7 +22,7 @@ class SessionManager:
 
     def __init__(self, ir=None):
         self.car_id: int
-        self.session_id: int = None
+        self.session_id: int
         self.ir = ir or irsdk.IRSDK()
         self.is_connected: bool = False
         self.stints: List[Stint] = []
@@ -152,6 +152,8 @@ class SessionManager:
         fuel = self.ir["FuelLevel"]
         fast_repairs = self.ir["FastRepairUsed"]
 
+        completed_stint = None
+
         # TODO: if not started and not ended: start stint at the next pit stop then started=true
         if self.status == SessionStatus.IN_PROGRESS:
 
@@ -233,6 +235,7 @@ class SessionManager:
                     ):
                         self._end_stint(self.current_stint, final_stint=False)
                         self.stints.append(self.current_stint)
+                        completed_stint = self.current_stint
                         self.current_stint = None
                         self.pending_stint_end = False
 
@@ -243,7 +246,10 @@ class SessionManager:
             if self.current_stint:
                 self._end_stint(self.current_stint, final_stint=True)
                 self.stints.append(self.current_stint)
+                completed_stint = self.current_stint
                 self.current_stint = None
+
+        return completed_stint
 
     def _check_tires(self) -> bool:
         return bool(
@@ -275,21 +281,34 @@ def manage_race(manager: SessionManager, client: APIClient, q: Queue, stop_event
                 manager.connect()
 
             if manager.is_connected:
-                print(manager.get_session_info())
+                manager.init_session()
+                q.put(manager.get_session_info())
+
                 while not stop_event.is_set() and manager.is_connected:
+
                     session_type = manager.get_session_type()
+
                     if session_type == "Race":
-                        manager.process_race(stint_id=current_stint_id, stint_number=1)
-                        if (
-                            manager.prev_pit_active
-                            and current_stint_id == manager.current_stint.stint_id
-                        ):
-                            current_stint_id += 1
-                        if len(manager.stints) > last_sent:
-                            q.put(manager.stints[last_sent])
-                            last_sent += 1
+                        stint = manager.process_race(
+                            stint_id=current_stint_id, stint_number=1
+                        )
+
+                        if stint:
+                            stint_task = get_task_dict(
+                                task_type="Stint",
+                                action="create",
+                                data=stint.post_dict(),
+                            )
+                            q.put(stint_task)
+                            for lap in stint.laps:
+                                lap_task = get_task_dict(
+                                    task_type="Lap", action="create", data=lap.to_dict()
+                                )
+                                q.put(lap_task)
+
                     if manager.status == SessionStatus.FINISHED:
                         finished = True
+                        manager.disconnect()
                     time.sleep(1 / 60)
     finally:
         manager.disconnect()
