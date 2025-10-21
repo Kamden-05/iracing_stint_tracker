@@ -5,9 +5,9 @@ from pydantic import BaseModel, Field, computed_field
 
 @dataclass
 class Lap:
-    stint_id: int
     time: float
     number: int
+    stint_id: int = None
 
     def to_dict(self) -> dict:
         return {"stint_id": self.stint_id, "time": self.time, "number": self.number}
@@ -18,7 +18,6 @@ class Stint(BaseModel):
 
     session_id: int
 
-    number: int
     driver_name: str
     start_time: float
     start_position: int
@@ -26,7 +25,6 @@ class Stint(BaseModel):
     start_fuel: float
     start_fast_repairs: int
     laps: List[Lap] = Field(default_factory=list)
-    stint_id: int = None
 
     """Stint End Values:"""
     end_incidents: int = -1
@@ -106,7 +104,7 @@ class Stint(BaseModel):
         self.pit_service_start_time = session_time
 
     def record_lap(self, lap_time: float, lap_number: int) -> None:
-        lap = Lap(stint_id=self.stint_id, time=lap_time, number=lap_number)
+        lap = Lap(time=lap_time, number=lap_number)
         self.laps.append(lap)
 
     def end_stint(
