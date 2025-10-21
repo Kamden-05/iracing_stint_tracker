@@ -22,7 +22,7 @@ class APIClient:
 
     def post_session(self, session_data: dict):
         r = self.s.post(f"{self.base_url}/sessions/", json=session_data)
-        print(r.text)
+        return r.json()
 
     """Stint Methods"""
 
@@ -38,12 +38,13 @@ class APIClient:
         r = self.s.post(
             f"{self.base_url}/sessions/{session_id}/stints/", json=stint_data
         )
-        print(r.text)
+        
+        return r.json()
 
     def put_stint(self, stint_data: dict):
         session_id = stint_data["session_id"]
         r = self.s.put(f"{self.base_url}/{session_id}/stints/", json=stint_data)
-        print(r.text)
+        return r.json()
 
     """Lap Methods"""
 
@@ -52,7 +53,7 @@ class APIClient:
         r = self.s.post(
             f"{self.base_url}/stints/{stint_id}/laps/", json=lap_data.to_dict()
         )
-        print(r.text)
+        return r.json()
 
 
 def process_api_queue(client: APIClient, q: Queue):
