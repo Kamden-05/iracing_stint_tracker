@@ -128,8 +128,8 @@ class Stint(BaseModel):
         else:
             self.pit_service_duration = session_time - self.pit_service_start_time
 
-    def post_json(self) -> dict[str, Any]:
-        return self.model_dump_json(
+    def post_dict(self) -> dict:
+        return self.model_dump(
             include={
                 "session_id",
                 "number",
@@ -140,8 +140,8 @@ class Stint(BaseModel):
             }
         )
 
-    def put_json(self) -> dict[str, Any]:
-        return self.model_dump_json(
+    def put_dict(self) -> dict:
+        return self.model_dump(
             include={
                 "end_position",
                 "end_fuel",
