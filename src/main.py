@@ -29,11 +29,11 @@ def main():
             stop_event.set()
             break
 
-    df = pd.DataFrame([stint.model_dump(exclude={"laps"}) for stint in manager.stints])
-    df.to_csv(
-        r"C:\Users\kmdnw\Projects\iRacing\iracing_stint_tracker\races\output.csv",
-        index=False,
-    )
+    # df = pd.DataFrame([stint.model_dump(exclude={"laps"}) for stint in manager.stints])
+    # df.to_csv(
+    #     r"C:\Users\kmdnw\Projects\iRacing\iracing_stint_tracker\races\output.csv",
+    #     index=False,
+    # )
 
 
 if __name__ == "__main__":
