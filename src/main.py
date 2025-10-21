@@ -14,6 +14,7 @@ import time
 
 logger = logging.getLogger(__name__)
 
+
 def manage_race(manager: SessionManager, q: Queue, stop_event):
     finished = False
 
@@ -99,25 +100,26 @@ def process_api_queue(client: APIClient, q: Queue):
 
 def main():
     q = Queue()
-    manager = SessionManager()
     client = APIClient()
     stop_event = threading.Event()
-
-    manager_thread = threading.Thread(target=manage_race, args=(manager, q, stop_event))
     api_thread = threading.Thread(target=process_api_queue, args=(client, q))
-
     api_thread.start()
-    manager_thread.start()
+    manager_thread = None
 
-    while True:
+    while not stop_event.is_set():
         try:
-            if not manager_thread.is_alive():
-                break
-        except Empty:
-            continue
+            if manager_thread is None or not manager_thread.is_alive():
+                manager = SessionManager()
+                manager_thread = threading.Thread(
+                    target=manage_race, args=(manager, q, stop_event)
+                )
+                manager_thread.start()
+            
+            time.sleep(1)
         except KeyboardInterrupt:
             stop_event.set()
-            break
+            manager_thread.join()
+            api_thread.join()
 
             # TODO: append stints to df or csv one at a time since manager no longer keeps track of a list
     # df = pd.DataFrame([stint.model_dump(exclude={"laps"}) for stint in manager.stints])
