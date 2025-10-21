@@ -1,13 +1,18 @@
 import threading
-import time
 from queue import Empty, Queue
 
 import pandas as pd
+import logging
 
 from src.api_client import APIClient, process_api_queue
 from src.session_manager import SessionManager, SessionStatus, manage_race
-from src.utils import get_task_dict
 
+from src.utils import get_task_dict
+from queue import Queue
+import time
+
+
+logger = logging.getLogger(__name__)
 
 def manage_race(manager: SessionManager, q: Queue, stop_event):
     finished = False
@@ -49,6 +54,47 @@ def manage_race(manager: SessionManager, q: Queue, stop_event):
     finally:
         manager.disconnect()
         q.put(None)
+
+
+def process_api_queue(client: APIClient, q: Queue):
+
+    while True:
+        try:
+            task = q.get(timeout=1)
+
+            if task is None:
+                break
+
+            task_type = task["type"]
+            data = task["data"]
+
+            match task_type:
+                case "Session":
+                    print("Session case")
+                    client.post_session(session_data=data)
+                case "Stint":
+                    print("stint case")
+                    stint = data["stint"]
+                    session_id = data["session_id"]
+                    response = client.get_latest_stint(session_id=session_id)
+                    if response:
+                        stint.number = response["number"] + 1
+                    else:
+                        stint.number = 1
+
+                    response = client.post_stint(stint_data=stint.post_dict())
+                    current_stint_id = response["id"]
+
+                    for lap in stint.laps:
+                        lap.stint_id = current_stint_id
+                        response = client.post_lap(lap_data=lap.to_dict())
+                case _:
+                    raise ValueError(f"Ivalid task type: {task_type}")
+
+        except Empty:
+            continue
+        except Exception as e:
+            logger.exception(f"Error processing taskL {e}")
 
 
 def main():
