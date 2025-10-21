@@ -29,6 +29,7 @@ def main():
             stop_event.set()
             break
 
+            # TODO: append stints to df or csv one at a time since manager no longer keeps track of a list
     # df = pd.DataFrame([stint.model_dump(exclude={"laps"}) for stint in manager.stints])
     # df.to_csv(
     #     r"C:\Users\kmdnw\Projects\iRacing\iracing_stint_tracker\races\output.csv",

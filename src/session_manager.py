@@ -24,7 +24,6 @@ class SessionManager:
         self.session_id: int
         self.ir = ir or irsdk.IRSDK()
         self.is_connected: bool = False
-        self.stints: List[Stint] = []
         self.prev_pit_active: bool = False
         self.current_stint: Stint = None
         self.prev_lap = 0
@@ -233,7 +232,6 @@ class SessionManager:
                         and self.prev_recorded_lap == self.pit_road_lap
                     ):
                         self._end_stint(self.current_stint, final_stint=False)
-                        self.stints.append(self.current_stint)
                         completed_stint = self.current_stint
                         self.current_stint = None
                         self.pending_stint_end = False
@@ -244,7 +242,6 @@ class SessionManager:
         elif self.status == SessionStatus.FINISHED:
             if self.current_stint:
                 self._end_stint(self.current_stint, final_stint=True)
-                self.stints.append(self.current_stint)
                 completed_stint = self.current_stint
                 self.current_stint = None
 
