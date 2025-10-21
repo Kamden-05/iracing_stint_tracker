@@ -138,7 +138,7 @@ class SessionManager:
         elif self.status == SessionStatus.IN_PROGRESS and self.check_end():
             self.status = SessionStatus.FINISHED
 
-    def process_race(self, stint_id: int, stint_number: int) -> Optional[Stint]:
+    def process_race(self) -> Optional[Stint]:
         self.ir.freeze_var_buffer_latest()
         self.update_session_status()
         tick = self.ir["SessionTick"]
@@ -166,8 +166,6 @@ class SessionManager:
 
                 self.current_stint = Stint(
                     session_id=self.session_id,
-                    stint_id=stint_id,
-                    number=stint_number,
                     driver_name=driver,
                     start_time=session_time,
                     start_position=position,
@@ -272,8 +270,6 @@ class SessionManager:
 
 def manage_race(manager: SessionManager, client: APIClient, q: Queue, stop_event):
     finished = False
-    last_sent = 0
-    current_stint_id = 0
 
     try:
         while not stop_event.is_set() and not finished:
@@ -289,18 +285,17 @@ def manage_race(manager: SessionManager, client: APIClient, q: Queue, stop_event
                     session_type = manager.get_session_type()
 
                     if session_type == "Race":
-                        stint = manager.process_race(
-                            stint_id=current_stint_id, stint_number=1
-                        )
+                        completed_stint = manager.process_race()
 
-                        if stint:
-                            stint_task = get_task_dict(
-                                task_type="Stint",
-                                action="create",
-                                data=stint.post_dict(),
-                            )
-                            q.put(stint_task)
-                            for lap in stint.laps:
+                        if completed_stint:
+                            response = client.get_latest_stint(session_id=manager.session_id)
+                            completed_stint.number = response['number']
+
+                            response = client.post_stint(stint_data=completed_stint.post_dict())
+                            current_stint_id = response['id']
+
+                            for lap in completed_stint.laps:
+                                lap.stint_id = current_stint_id
                                 lap_task = get_task_dict(
                                     task_type="Lap", action="create", data=lap.to_dict()
                                 )

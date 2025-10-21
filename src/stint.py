@@ -17,13 +17,13 @@ class Stint(BaseModel):
     """Stint Start Values:"""
 
     session_id: int
-
     driver_name: str
     start_time: float
     start_position: int
     start_incidents: int
     start_fuel: float
     start_fast_repairs: int
+    number: int = None
     laps: List[Lap] = Field(default_factory=list)
 
     """Stint End Values:"""
