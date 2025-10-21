@@ -1,6 +1,7 @@
 import requests
 from queue import Queue, Empty
 import logging
+from src.utils import get_task_dict
 
 logger = logging.getLogger(__name__)
 
@@ -44,6 +45,7 @@ class APIClient:
     def put_stint(self, stint_data: dict):
         session_id = stint_data["session_id"]
         r = self.s.put(f"{self.base_url}/{session_id}/stints/", json=stint_data)
+        
         return r.json()
 
     """Lap Methods"""
@@ -66,21 +68,26 @@ def process_api_queue(client: APIClient, q: Queue):
                 break
 
             task_type = task["type"]
-            action = task["action"]
             data = task["data"]
 
             match task_type:
                 case "Session":
-                    if action == "create":
-                        client.post_session(session_data=data)
+                    client.post_session(session_data=data)
                 case "Stint":
-                    if action == "create":
-                        client.post_stint(stint_data=data)
-                    elif action == "update":
-                        client.put_stint(stint_data=data)
-                case "Lap":
-                    if action == "create":
-                        client.post_lap(lap_data=data)
+                    stint = data['stint']
+                    session_id = data['session_id']
+                    response = client.get_latest_stint(session_id=session_id)
+                    stint.number = response['number'] + 1
+
+                    response = client.post_stint(stint_data=stint.post_dict())
+                    current_stint_id = response['id']
+
+                    for lap in stint.laps:
+                        lap.stint_id = current_stint_id
+                        lap_task = get_task_dict(
+                            task_type="Lap", action="create", data=lap.to_dict()
+                        )
+                        q.put(lap_task)
                 case _:
                     raise ValueError(f'Ivalid task type: {task_type}')
 

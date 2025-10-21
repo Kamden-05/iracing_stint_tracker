@@ -9,7 +9,6 @@ import yaml
 
 from src.stint import Stint
 from src.utils import format_time, get_task_dict
-from src.api_client import APIClient
 
 
 class SessionStatus(Enum):
@@ -268,7 +267,7 @@ class SessionManager:
         )
 
 
-def manage_race(manager: SessionManager, client: APIClient, q: Queue, stop_event):
+def manage_race(manager: SessionManager, q: Queue, stop_event):
     finished = False
 
     try:
@@ -278,7 +277,10 @@ def manage_race(manager: SessionManager, client: APIClient, q: Queue, stop_event
 
             if manager.is_connected:
                 manager.init_session()
-                q.put(manager.get_session_info())
+                session_task = get_task_dict(
+                    task_type="Session", data=manager.get_session_info()
+                )
+                q.put(session_task)
 
                 while not stop_event.is_set() and manager.is_connected:
 
@@ -288,18 +290,14 @@ def manage_race(manager: SessionManager, client: APIClient, q: Queue, stop_event
                         completed_stint = manager.process_race()
 
                         if completed_stint:
-                            response = client.get_latest_stint(session_id=manager.session_id)
-                            completed_stint.number = response['number']
-
-                            response = client.post_stint(stint_data=completed_stint.post_dict())
-                            current_stint_id = response['id']
-
-                            for lap in completed_stint.laps:
-                                lap.stint_id = current_stint_id
-                                lap_task = get_task_dict(
-                                    task_type="Lap", action="create", data=lap.to_dict()
-                                )
-                                q.put(lap_task)
+                            stint_task = get_task_dict(
+                                task_type="Stint",
+                                data={
+                                    "stint": completed_stint,
+                                    "session_id": manager.session_id,
+                                },
+                            )
+                            q.put(stint_task)
 
                     if manager.status == SessionStatus.FINISHED:
                         finished = True

@@ -14,7 +14,7 @@ def main():
     stop_event = threading.Event()
 
     manager_thread = threading.Thread(
-        target=manage_race, args=(manager, client, q, stop_event)
+        target=manage_race, args=(manager, q, stop_event)
     )
     api_thread = threading.Thread(
         target=process_api_queue, args=(client, q, stop_event)

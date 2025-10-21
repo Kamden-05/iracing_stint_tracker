@@ -15,9 +15,8 @@ def get_sheet_id(url: str) -> str:
         return match.group(1)
     return ""
 
-def get_task_dict(task_type: str, action: str, data: Any) -> dict:
+def get_task_dict(task_type: str, data: Any) -> dict:
     return {
         'type': task_type,
-        'action': action,
         'data': data
     }
