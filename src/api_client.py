@@ -28,7 +28,10 @@ class APIClient:
 
     def get_latest_stint(self, session_id: int):
         r = self.s.get(f"{self.base_url}/sessions/{session_id}/stints/latest")
-        print(r.text)
+        if r.status_code == 204:
+            return None
+        else: 
+            return r.json()
 
     def post_stint(self, stint_data: dict):
         session_id = stint_data["session_id"]
