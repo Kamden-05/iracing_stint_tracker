@@ -7,6 +7,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class APIClient:
     def __init__(
         self,
@@ -21,11 +22,14 @@ class APIClient:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.s.close()
 
-    '''Session Methods'''
+    """Session Methods"""
+
     def post_session(self, session_info: dict):
         payload = json.dumps(session_info)
         r = self.s.post(f"{self.base_url}/sessions/", data=payload)
         print(r.text)
+
+    """Stint Methods"""
 
     def get_latest_stint(self, session_id: int):
         r = self.s.get(f"{self.base_url}/sessions/{session_id}/stints/latest")
@@ -41,6 +45,8 @@ class APIClient:
         r = self.s.put(f"{self.base_url}/{session_id}/stints/", data=stint_json)
         print(r.text)
 
+    """Lap Methods"""
+
     def post_lap(self, stint_id: int, lap: Lap):
         lap = Lap(stint_id=1, time=60.5, number=2)
         payload = json.dumps(lap.to_dict())
@@ -49,20 +55,20 @@ class APIClient:
 
 
 def process_api_queue(client: APIClient, q: Queue):
-    
+
     while True:
         try:
             task = q.get(timeout=1)
 
-            match task['type']:
-                case 'Session':
+            match task["type"]:
+                case "Session":
                     pass
-                case 'Stint':
+                case "Stint":
                     pass
-                case 'Lap':
+                case "Lap":
                     pass
                 case _:
-                    logger.error('No valid type in task')
+                    logger.error("No valid type in task")
 
         except Empty:
             continue
