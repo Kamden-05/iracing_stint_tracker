@@ -136,6 +136,14 @@ class Stint(BaseModel):
                 "start_time",
                 "start_position",
                 "start_fuel",
+                "end_position",
+                "end_fuel",
+                "refuel_amount",
+                "tire_change",
+                "repairs",
+                "pit_service_duration",
+                "incidents",
+                "length",
             }
         )
 
