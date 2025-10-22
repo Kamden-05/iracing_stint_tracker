@@ -4,8 +4,8 @@ from queue import Empty, Queue
 import pandas as pd
 import logging
 
-from src.api_client import APIClient, process_api_queue
-from src.session_manager import SessionManager, SessionStatus, manage_race
+from src.api_client import APIClient
+from src.session_manager import SessionManager, SessionStatus
 
 from src.utils import get_task_dict
 from queue import Queue
