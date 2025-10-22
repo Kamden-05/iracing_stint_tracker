@@ -15,7 +15,7 @@ import time
 logger = logging.getLogger(__name__)
 
 
-def manage_race(manager: SessionManager, q: Queue, stop_event):
+def manage_race(manager: SessionManager, name: str, q: Queue, stop_event):
     finished = False
 
     try:
@@ -38,7 +38,7 @@ def manage_race(manager: SessionManager, q: Queue, stop_event):
                     if session_type == "Race":
                         completed_stint = manager.process_race()
 
-                        if completed_stint:
+                        if completed_stint and completed_stint.driver_name == name:
                             stint_task = get_task_dict(
                                 task_type="Stint",
                                 data={
@@ -99,6 +99,9 @@ def process_api_queue(client: APIClient, q: Queue):
 
 
 def main():
+
+    user_name = input("Enter your iRacing username: ")
+
     q = Queue()
     client = APIClient()
     stop_event = threading.Event()
@@ -111,7 +114,7 @@ def main():
             if manager_thread is None or not manager_thread.is_alive():
                 manager = SessionManager()
                 manager_thread = threading.Thread(
-                    target=manage_race, args=(manager, q, stop_event)
+                    target=manage_race, args=(manager, user_name, q, stop_event)
                 )
                 manager_thread.start()
             
