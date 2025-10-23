@@ -10,6 +10,7 @@ from dotenv import load_dotenv
 from src.api_client import APIClient
 from src.session_manager import SessionManager, SessionStatus
 from src.utils import get_task_dict
+from gui.app_gui import StintTrackerGUI
 
 logger = logging.getLogger(__name__)
 
@@ -19,38 +20,39 @@ def manage_race(manager: SessionManager, name: str, q: Queue, stop_event):
 
     try:
         while not stop_event.is_set() and not finished:
-            if not manager.is_connected:
-                manager.connect()
+            manager.check_iracing()
 
-            if manager.is_connected:
+            if not manager.is_connected:
+                time.sleep(1)
+                continue
+
+            if manager.session_id is None:
                 manager.init_session()
-                print(manager.get_session_info())
                 session_task = get_task_dict(
                     task_type="Session", data=manager.get_session_info()
                 )
                 q.put(session_task)
 
-                while not stop_event.is_set() and manager.is_connected:
+            session_type = manager.get_session_type()
 
-                    session_type = manager.get_session_type()
+            if session_type == "Race":
+                completed_stint = manager.process_race()
 
-                    if session_type == "Race":
-                        completed_stint = manager.process_race()
+                if completed_stint and completed_stint.driver_name == name:
+                    stint_task = get_task_dict(
+                        task_type="Stint",
+                        data={
+                            "stint": completed_stint,
+                            "session_id": manager.session_id,
+                        },
+                    )
+                    q.put(stint_task)
 
-                        if completed_stint and completed_stint.driver_name == name:
-                            stint_task = get_task_dict(
-                                task_type="Stint",
-                                data={
-                                    "stint": completed_stint,
-                                    "session_id": manager.session_id,
-                                },
-                            )
-                            q.put(stint_task)
+            if manager.status == SessionStatus.FINISHED:
+                finished = True
+                manager.disconnect()
 
-                    if manager.status == SessionStatus.FINISHED:
-                        finished = True
-                        manager.disconnect()
-                    time.sleep(1 / 60)
+            time.sleep(1 / 60)
     finally:
         manager.disconnect()
         q.put(None)
@@ -100,33 +102,32 @@ def process_api_queue(client: APIClient, q: Queue):
 def main():
 
     load_dotenv()
-    api_url = os.getenv('TEST_URL')
-
-    user_name = input("Enter your iRacing username: ")
+    user_name = "Kam"
 
     q = Queue()
-    client = APIClient(base_url=api_url)
     stop_event = threading.Event()
+
+    api_url = os.getenv("TEST_URL")
+    client = APIClient(base_url=api_url)
     api_thread = threading.Thread(target=process_api_queue, args=(client, q))
     api_thread.start()
-    manager_thread = None
 
-    while not stop_event.is_set():
-        try:
-            if manager_thread is None or not manager_thread.is_alive():
-                manager = SessionManager()
-                manager_thread = threading.Thread(
-                    target=manage_race, args=(manager, user_name, q, stop_event)
-                )
-                manager_thread.start()
-            
-            time.sleep(1)
-        except KeyboardInterrupt:
-            stop_event.set()
-            manager_thread.join()
-            api_thread.join()
+    manager = SessionManager()
+    manager_thread = threading.Thread(
+        target=manage_race, args=(manager, user_name, q, stop_event)
+    )
+    manager_thread.start()
 
-            # TODO: append stints to df or csv one at a time since manager no longer keeps track of a list
+    gui = StintTrackerGUI(
+        client=client, manager=manager, stop_event=stop_event, driver_name=user_name
+    )
+    gui.run()
+
+    stop_event.set()
+    manager_thread.join()
+    api_thread.join()
+
+    # TODO: append stints to df or csv one at a time since manager no longer keeps track of a list
     # df = pd.DataFrame([stint.model_dump(exclude={"laps"}) for stint in manager.stints])
     # df.to_csv(
     #     r"C:\Users\kmdnw\Projects\iRacing\iracing_stint_tracker\races\output.csv",
