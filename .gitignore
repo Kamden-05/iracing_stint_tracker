@@ -7,3 +7,5 @@ keys.json
 src/__pycache__
 __pycache__
 .venv
+.vscode
+.pytest_cache
