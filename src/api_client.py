@@ -1,5 +1,6 @@
 import requests
 
+
 class APIClient:
 
     def __init__(
@@ -30,7 +31,7 @@ class APIClient:
         print(r.text)
         if r.status_code == 204:
             return None
-        else: 
+        else:
             return r.json()
 
     def post_stint(self, stint_data: dict):
@@ -53,8 +54,10 @@ class APIClient:
 
     def post_lap(self, lap_data: dict):
         stint_id = lap_data["stint_id"]
-        r = self.s.post(
-            f"{self.base_url}/stints/{stint_id}/laps", json=lap_data
-        )
+        r = self.s.post(f"{self.base_url}/stints/{stint_id}/laps", json=lap_data)
         print(r.text)
         return r.json()
+
+    def check_connection(self):
+        r = self.s.get(f"{self.base_url}/health")
+        return r.status_code
