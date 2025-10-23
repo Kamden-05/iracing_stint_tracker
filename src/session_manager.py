@@ -18,8 +18,8 @@ class SessionStatus(Enum):
 class SessionManager:
 
     def __init__(self, ir=None):
-        self.car_id: int
-        self.session_id: int
+        self.car_id: int = None
+        self.session_id: int = None
         self.ir = ir or irsdk.IRSDK()
         self.is_connected: bool = False
         self.prev_pit_active: bool = False
@@ -36,18 +36,45 @@ class SessionManager:
         self.pending_stint_end = False
         self.status: SessionStatus = SessionStatus.WAITING
 
-    def connect(self) -> bool:
-        if not self.is_connected:
-            self.is_connected = self.ir.startup()
-            if self.is_connected:
-                print("Connected to iRacing")
-        return self.is_connected
+    def reset_state(self):
+        self.car_id = None
+        self.session_id = None
+        self.is_connected = False
+        self.prev_pit_active = False
+        self.current_stint = None
+        self.prev_lap = 0
+        self.prev_recorded_lap = 0
+        self.final_lap = None
+        self.lap_start_time = 0.0
+        self.lap_start_tick = 0
+        self.pending_lap_time = 0.0
+        self.pit_road_lap = -1
+        self.prev_pit_road = False
+        self.pit_active_lap = -1
+        self.pending_stint_end = False
+        self.status: SessionStatus = SessionStatus.WAITING
+
+    def check_iracing(self):
+        if self.is_connected and not (self.ir.is_initialized and self.ir.is_connected):
+            self.disconnect()
+        elif (
+            not self.is_connected
+            and self.ir.startup()
+            and self.ir.is_initialized
+            and self.ir.is_connected
+        ):
+            self.is_connected = True
+
+    def connect(self) -> None:
+        self.is_connected = self.ir.startup()
+        if self.is_connected:
+            print("Connected to iRacing")
 
     def disconnect(self) -> None:
-        if self.is_connected:
-            self.ir.shutdown()
-            self.is_connected = False
-            logging.info("Disconnected from iRacing")
+        self.reset_state()
+        self.ir.shutdown()
+        self.is_connected = False
+        logging.info("Disconnected from iRacing")
 
     def init_session(self) -> None:
         if self.is_connected:
@@ -262,6 +289,3 @@ class SessionManager:
             end_fuel=self.ir["FuelLevel"],
             final=final_stint,
         )
-
-
-
