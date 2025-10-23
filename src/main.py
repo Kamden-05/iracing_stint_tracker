@@ -1,16 +1,15 @@
 import logging
 import os
+import sys
 import threading
 import time
 from queue import Empty, Queue
-
-import pandas as pd
-from dotenv import load_dotenv
-
 from src.api_client import APIClient
 from src.session_manager import SessionManager, SessionStatus
 from src.utils import get_task_dict
 from gui.app_gui import StintTrackerGUI
+
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -99,15 +98,40 @@ def process_api_queue(client: APIClient, q: Queue):
             logger.exception(f"Error processing taskL {e}")
 
 
+def get_config_path(filename="settings.json"):
+    # Folder where the .exe is located
+    if getattr(sys, "frozen", False):
+        # Running as PyInstaller bundle
+        base_path = os.path.dirname(sys.executable)
+    else:
+        # Running as normal Python script
+        base_path = os.path.dirname(os.path.abspath(__file__))
+    return os.path.join(base_path, filename)
+
+
+def load_data(config_path):
+    try:
+        with open(config_path, "r") as f:
+            return json.load(f)
+    except FileNotFoundError:
+        return {"url": "", "username": ""}  # defaults
+    except json.JSONDecodeError:
+        return {"url": "", "username": ""}  # defaults
+
+
 def main():
 
-    load_dotenv()
-    user_name = "Kam"
+    config_path = get_config_path()
+    config = load_data(config_path)
+
+    api_url = config.get("url", "")
+    user_name = config.get("username", "")
+
+    print(api_url, user_name)
 
     q = Queue()
     stop_event = threading.Event()
 
-    api_url = os.getenv("TEST_URL")
     client = APIClient(base_url=api_url)
     api_thread = threading.Thread(target=process_api_queue, args=(client, q))
     api_thread.start()
@@ -126,13 +150,6 @@ def main():
     stop_event.set()
     manager_thread.join()
     api_thread.join()
-
-    # TODO: append stints to df or csv one at a time since manager no longer keeps track of a list
-    # df = pd.DataFrame([stint.model_dump(exclude={"laps"}) for stint in manager.stints])
-    # df.to_csv(
-    #     r"C:\Users\kmdnw\Projects\iRacing\iracing_stint_tracker\races\output.csv",
-    #     index=False,
-    # )
 
 
 if __name__ == "__main__":
