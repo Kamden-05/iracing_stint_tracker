@@ -1,16 +1,15 @@
+import logging
+import os
 import threading
+import time
 from queue import Empty, Queue
 
 import pandas as pd
-import logging
+from dotenv import load_dotenv
 
 from src.api_client import APIClient
 from src.session_manager import SessionManager, SessionStatus
-
 from src.utils import get_task_dict
-from queue import Queue
-import time
-
 
 logger = logging.getLogger(__name__)
 
@@ -100,10 +99,13 @@ def process_api_queue(client: APIClient, q: Queue):
 
 def main():
 
+    load_dotenv()
+    api_url = os.getenv('TEST_URL')
+
     user_name = input("Enter your iRacing username: ")
 
     q = Queue()
-    client = APIClient()
+    client = APIClient(base_url=api_url)
     stop_event = threading.Event()
     api_thread = threading.Thread(target=process_api_queue, args=(client, q))
     api_thread.start()

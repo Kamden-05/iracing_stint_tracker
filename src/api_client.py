@@ -4,7 +4,7 @@ class APIClient:
 
     def __init__(
         self,
-        base_url: str = "https://35102z32gi.execute-api.us-east-2.amazonaws.com",
+        base_url: str,
     ):
         self.base_url = base_url.rstrip("/")
         self.s = requests.Session()
