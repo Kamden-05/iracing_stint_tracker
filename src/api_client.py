@@ -9,7 +9,7 @@ class APIClient:
     ):
         self.base_url = base_url.rstrip("/")
         self.s = requests.Session()
-        print(base_url)
+        self.is_connected = self.check_connection()
 
     def __enter__(self):
         return self
@@ -58,6 +58,8 @@ class APIClient:
         print(r.text)
         return r.json()
 
-    def check_connection(self):
+    def check_connection(self) -> bool:
         r = self.s.get(f"{self.base_url}/health")
-        return r.status_code
+        if r.status_code == 200:
+            return True
+        return False
