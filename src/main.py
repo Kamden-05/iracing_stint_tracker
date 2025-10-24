@@ -142,8 +142,10 @@ def main():
     )
     manager_thread.start()
 
+    gui_user_name= user_name.split()[0]
+
     gui = StintTrackerGUI(
-        client=client, manager=manager, stop_event=stop_event, driver_name=user_name
+        client=client, manager=manager, stop_event=stop_event, driver_name=gui_user_name
     )
     gui.run()
 
