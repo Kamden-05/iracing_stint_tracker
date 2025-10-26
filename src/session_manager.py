@@ -78,8 +78,11 @@ class SessionManager:
 
     def init_session(self) -> None:
         if self.is_connected:
-            self.session_id = self.ir["WeekendInfo"]["SubSessionID"]
+            self.session_id = self.get_ir_session_id()
             self.car_id = self.ir["PlayerCarIdx"]
+
+    def get_ir_session_id(self) -> int:
+        return self.ir['WeekendInfo']['SubSessionID']
 
     def client_is_driver(self) -> bool:
         return self.ir["PlayerCarIdx"] >= 0

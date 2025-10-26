@@ -25,7 +25,7 @@ def manage_race(manager: SessionManager, name: str, q: Queue, stop_event):
                 time.sleep(1)
                 continue
 
-            if manager.session_id is None:
+            if manager.session_id is None or manager.session_id != manager.get_ir_session_id():
                 manager.init_session()
                 session_task = get_task_dict(
                     task_type="Session", data=manager.get_session_info()
