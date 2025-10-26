@@ -78,6 +78,7 @@ class SessionManager:
 
     def init_session(self) -> None:
         if self.is_connected:
+            self.reset_state()
             self.session_id = self.get_ir_session_id()
             self.car_id = self.ir["PlayerCarIdx"]
 
