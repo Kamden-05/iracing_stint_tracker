@@ -43,3 +43,9 @@ This app **does not include dashboards or visualizations**; its purpose is relia
    - `POST /laps` → send lap data
    - `POST /pitstops` → send pit stop events
 
+---
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
+
