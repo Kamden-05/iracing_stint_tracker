@@ -22,6 +22,9 @@ It connects to the **[iRacing SDK](https://sajax.github.io/irsdkdocs/)** to capt
 - Offline data exporting
 - User/team authentication
 
+**Known Issues**
+- stints end prematurely if client temporarily disconnects from iRacing session
+
 This app **does not include dashboards or visualizations**; its purpose is reliable data capture and transmission.
 
 ---
