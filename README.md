@@ -18,6 +18,10 @@ It connects to the **[iRacing SDK](https://sajax.github.io/irsdkdocs/)** to capt
   - Connection status to the backend API
 - Designed for personal use by a single iRacing team, with plans to extend to multiple teams in the future.
 
+**Future Plans:**
+- Offline data exporting
+- User/team authentication
+
 This app **does not include dashboards or visualizations**; its purpose is reliable data capture and transmission.
 
 ---
