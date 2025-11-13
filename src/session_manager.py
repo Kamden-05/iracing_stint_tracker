@@ -5,8 +5,8 @@ from typing import Optional
 import irsdk
 import yaml
 
-from src.stint import Stint
-from src.utils import format_time
+from src.models.stint import Stint
+from src.utils.utils import format_time
 
 
 class SessionStatus(Enum):

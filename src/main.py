@@ -4,9 +4,9 @@ import sys
 import threading
 import time
 from queue import Empty, Queue
-from src.api_client import APIClient
+from src.utils.api import APIClient
 from src.session_manager import SessionManager, SessionStatus
-from src.utils import get_task_dict
+from src.utils.utils import get_task_dict
 from gui.app_gui import StintTrackerGUI
 
 import json
