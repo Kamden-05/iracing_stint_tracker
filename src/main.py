@@ -53,76 +53,8 @@ def manage_race(manager: SessionManager, name: str, q: Queue, stop_event):
         manager.disconnect()
         q.put(None)
 
-
-def process_api_queue(client: APIClient, q: Queue):
-
-    while True:
-        try:
-            task = q.get(timeout=1)
-
-            if task is None:
-                break
-
-            task_type = task["type"]
-            data = task["data"]
-
-            match task_type:
-                case "Session":
-                    print("Session case")
-                    client.post_session(session_data=data)
-                case "Stint":
-                    print("stint case")
-                    stint = data["stint"]
-                    session_id = data["session_id"]
-                    response = client.get_latest_stint(session_id=session_id)
-                    if response:
-                        stint.number = response["number"] + 1
-                    else:
-                        stint.number = 1
-
-                    response = client.post_stint(stint_data=stint.post_dict())
-                    current_stint_id = response["id"]
-
-                    for lap in stint.laps:
-                        lap.stint_id = current_stint_id
-                        response = client.post_lap(lap_data=lap.to_dict())
-                case _:
-                    raise ValueError(f"Ivalid task type: {task_type}")
-
-        except Empty:
-            continue
-        except Exception as e:
-            logger.exception(f"Error processing taskL {e}")
-
 def main():
-    load_dotenv()
-
-    api_url = os.getenv("TEST_URL")
-    user_name = "Kam Wilson"
-
-    q = Queue()
-    stop_event = threading.Event()
-
-    client = APIClient(base_url=api_url)
-    api_thread = threading.Thread(target=process_api_queue, args=(client, q))
-    api_thread.start()
-
-    manager = SessionManager()
-    manager_thread = threading.Thread(
-        target=manage_race, args=(manager, user_name, q, stop_event)
-    )
-    manager_thread.start()
-
-    gui_user_name= user_name.split()[0]
-
-    gui = StintTrackerGUI(
-        client=client, manager=manager, stop_event=stop_event, driver_name=gui_user_name
-    )
-    gui.run()
-
-    stop_event.set()
-    manager_thread.join()
-    api_thread.join()
+    pass
 
 
 if __name__ == "__main__":
