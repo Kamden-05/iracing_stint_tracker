@@ -1,0 +1,36 @@
+[MASTER]
+py-version=3.14
+
+# Load any additional plugins here
+load-plugins=
+
+[MESSAGES CONTROL]
+# Disable docstring warnings and too many attributes for telemetry classes
+disable=
+    C0114,  # missing module docstring
+    C0115,  # missing class docstring
+    C0116,  # missing function/method docstring
+
+[FORMAT]
+# Maximum allowed line length
+max-line-length=120
+
+[TYPECHECK]
+# Ignore optional modules if you use third-party telemetry libraries
+ignored-modules=
+ignored-classes=
+
+[DESIGN]
+# Max number of arguments per function (optional tweak)
+max-args=10
+
+# Max number of attributes per class (already disabled R0902)
+max-attributes=15
+
+[REPORTS]
+# Disable the full report; just show messages
+reports=no
+
+[SIMILARITIES]
+# Ignore docstrings when checking similarities
+ignore-docstrings=yes

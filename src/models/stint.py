@@ -1,162 +1,77 @@
-from typing import List, Optional, Any
-from dataclasses import dataclass
-from pydantic import BaseModel, Field, computed_field
+from typing import Optional
+from dataclasses import dataclass, field
+from src.models.lap import Lap
 
 
 @dataclass
-class Lap:
-    time: float
-    number: int
-    stint_id: int = None
+class Stint:
 
-    def to_dict(self) -> dict:
-        return {"stint_id": self.stint_id, "time": self.time, "number": self.number}
-
-
-class Stint(BaseModel):
-    """Stint Start Values:"""
-
+    # required
     session_id: int
+    number: int
     driver_name: str
     start_time: float
     start_position: int
     start_incidents: int
     start_fuel: float
-    start_fast_repairs: int
-    number: int = None
-    laps: List[Lap] = Field(default_factory=list)
 
-    """Stint End Values:"""
-    end_incidents: int = -1
-    end_fast_repairs: int = -1
+    # meta data
+    id: Optional[int] = None
+    laps: list[Lap] = field(default_factory=list)
+    is_complete: bool = False
+
+    # end of stint values
+    end_time: Optional[float] = None
     end_position: Optional[int] = None
-    length: Optional[float] = None
-    final: bool = False
-
-    def model_post_init(self, __context):
-        self.end_incidents = self.start_incidents
-        self.end_fast_repairs = self.start_fast_repairs
-
-    """Pit Values:"""
+    end_incidents: Optional[float] = None
     end_fuel: Optional[float] = None
-    refuel_amount: Optional[float] = None
-    required_repair_time: Optional[float] = None
-    optional_repair_time: Optional[float] = None
-    pit_service_duration: Optional[float] = None
-    pit_service_start_time: Optional[float] = None
-    tire_change: Optional[bool] = None
 
-    @computed_field
-    def avg_lap(self) -> Optional[float]:
-        return (
-            (sum(lap.time for lap in self.laps) / len(self.laps)) if self.laps else None
-        )
-
-    @computed_field
-    def fastest_lap(self) -> Optional[float]:
-        return (min(lap.time for lap in self.laps)) if self.laps else None
-
-    @computed_field
-    def laps_completed(self) -> int:
-        return len(self.laps)
-
-    @computed_field
-    def in_lap(self) -> Optional[float]:
-        if self.laps and not self.final:
-            return self.laps[-1].time
-        return None
-
-    @computed_field
-    def out_lap(self) -> Optional[float]:
-        if self.laps:
-            return self.laps[0].time
-        return None
-
-    @computed_field
-    def repairs(self) -> Optional[bool]:
-        if self.end_fast_repairs - self.start_fast_repairs > 0:
-            return True
-        elif self.optional_repair_time is None and self.required_repair_time is None:
+    @property
+    def duration(self) -> Optional[float]:
+        if self.end_time is None:
             return None
-        else:
-            return (
-                (self.optional_repair_time or 0.0) + (self.required_repair_time or 0.0)
-            ) > 0.0
 
-    @computed_field
-    def incidents(self) -> int:
+        end = self.end_time
+
+        if end < self.start_time:
+            end += 86400
+
+        return end - self.start_time
+
+    @property
+    def incidents(self) -> Optional[int]:
+        if self.end_incidents is None:
+            return None
         return self.end_incidents - self.start_incidents
 
-    def record_pit(
-        self,
-        required_repair_time: float,
-        optional_repair_time: float,
-        end_fuel: float,
-        refuel_amount: float,
-        tires: bool,
-        session_time: float,
-    ) -> None:
-        self.required_repair_time = required_repair_time
-        self.optional_repair_time = optional_repair_time
-        self.end_fuel = end_fuel
-        self.refuel_amount = refuel_amount
-        self.tire_change = tires
-        self.pit_service_start_time = session_time
-
-    def record_lap(self, lap_time: float, lap_number: int) -> None:
-        lap = Lap(time=lap_time, number=lap_number)
-        self.laps.append(lap)
-
-    def end_stint(
-        self,
-        session_time: float,
-        position: float,
-        incidents: int,
-        fast_repairs: int,
-        end_fuel: float,
-        final: bool,
-    ) -> None:
-        self.final = final
-        self.length = session_time - self.start_time
-        self.end_position = position
-        self.end_incidents = incidents
-        self.end_fast_repairs = fast_repairs
-
-        if self.final:
-            self.end_fuel = end_fuel
-        else:
-            self.pit_service_duration = session_time - self.pit_service_start_time
+    @property
+    def fuel_used(self) -> Optional[float]:
+        if self.end_fuel is None:
+            return None
+        return self.end_fuel - self.start_fuel
 
     def post_dict(self) -> dict:
-        return self.model_dump(
-            include={
-                "session_id",
-                "number",
-                "driver_name",
-                "start_time",
-                "start_position",
-                "start_fuel",
-                "end_position",
-                "end_fuel",
-                "refuel_amount",
-                "tire_change",
-                "repairs",
-                "pit_service_duration",
-                "incidents",
-                "length",
-            }
-        )
+        """
+        Dictionary for creating a new stint in the backend
+        """
+        return {
+            "session_id": self.session_id,
+            "number": self.number,
+            "driver_name": self.driver_name,
+            "start_time": self.start_time,
+            "start_position": self.start_position,
+            "start_incidents": self.start_incidents,
+            "start_fuel": self.start_fuel,
+        }
 
-    def put_dict(self) -> dict:
-        return self.model_dump(
-            include={
-                "end_position",
-                "end_fuel",
-                "refuel_amount",
-                "tire_change",
-                "repairs",
-                "pit_service_duration",
-                "incidents",
-                "length",
-            }
-        )
+    def patch_dict(self) -> dict:
+        """
+        Dictionary for updating an existing stint in the backend
+        """
+        return {
+            "is_complete": self.is_complete,
+            "end_time": self.end_time,
+            "end_position": self.end_position,
+            "end_incidents": self.end_incidents,
+            "end_fuel": self.end_fuel,
+        }
