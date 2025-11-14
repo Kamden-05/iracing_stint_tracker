@@ -1,4 +1,3 @@
-import re
 from typing import Any
 
 def format_time(seconds: float) -> str:
