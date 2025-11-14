@@ -2,7 +2,6 @@ from typing import Optional
 from dataclasses import dataclass, field
 from src.models.lap import Lap
 
-
 @dataclass
 class Stint:
 
