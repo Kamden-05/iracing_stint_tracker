@@ -8,6 +8,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 
+
 class APIClient:
     """Synchronous API client for interacting with telemetry backend."""
 
@@ -33,6 +34,7 @@ class APIClient:
             r.raise_for_status()
             if r.status_code == 204:
                 return None
+            logger.debug("%s %s -> %s", method, url, r.status_code)
             return r.json()
         except requests.RequestException as e:
             logger.exception("API request failed: %s %s -> %s", method, url, e)
@@ -64,7 +66,7 @@ class APIClient:
     def patch_stint(self, stint_data: dict):
         session_id = stint_data["session_id"]
         return self.patch(f"sessions/{session_id}/stints", stint_data)
-    
+
     def post_pits(self, pit_data: dict):
         stint_id = pit_data["stint_id"]
         return self.post(f"stints/{stint_id}/pits", pit_data)
