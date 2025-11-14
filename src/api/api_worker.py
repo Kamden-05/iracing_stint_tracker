@@ -2,7 +2,7 @@ import threading
 from typing import Optional
 from queue import Queue, Empty
 import logging
-from src.utils.api_client import APIClient
+from src.api.api_client import APIClient
 from src.models.stint import Stint
 
 logger = logging.getLogger(__name__)
