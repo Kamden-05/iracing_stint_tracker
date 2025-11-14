@@ -1,18 +1,15 @@
 import logging
 import os
-import sys
 import threading
 import time
 from queue import Empty, Queue
+from dotenv import load_dotenv
 from src.utils.api import APIClient
 from src.session_manager import SessionManager, SessionStatus
 from src.utils.utils import get_task_dict
-from gui.app_gui import StintTrackerGUI
-
-import json
+from src.gui.app_gui import StintTrackerGUI
 
 logger = logging.getLogger(__name__)
-
 
 def manage_race(manager: SessionManager, name: str, q: Queue, stop_event):
     finished = False
@@ -97,37 +94,11 @@ def process_api_queue(client: APIClient, q: Queue):
         except Exception as e:
             logger.exception(f"Error processing taskL {e}")
 
-
-def get_config_path(filename="settings.json"):
-    # Folder where the .exe is located
-    if getattr(sys, "frozen", False):
-        # Running as PyInstaller bundle
-        base_path = os.path.dirname(sys.executable)
-    else:
-        # Running as normal Python script
-        base_path = os.path.dirname(os.path.abspath(__file__))
-    return os.path.join(base_path, filename)
-
-
-def load_data(config_path):
-    try:
-        with open(config_path, "r") as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return {"url": "", "username": ""}  # defaults
-    except json.JSONDecodeError:
-        return {"url": "", "username": ""}  # defaults
-
-
 def main():
+    load_dotenv()
 
-    config_path = get_config_path()
-    config = load_data(config_path)
-
-    api_url = config.get("url", "")
-    user_name = config.get("username", "")
-
-    print(api_url, user_name)
+    api_url = os.getenv("TEST_URL")
+    user_name = "Kam Wilson"
 
     q = Queue()
     stop_event = threading.Event()
