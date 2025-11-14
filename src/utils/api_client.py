@@ -8,7 +8,6 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 
-
 class APIClient:
     """Synchronous API client for interacting with telemetry backend."""
 
