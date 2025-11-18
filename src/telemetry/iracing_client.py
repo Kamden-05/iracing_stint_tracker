@@ -19,13 +19,13 @@ class IRacingClient:
     def update(self):
         self.ir.freeze_var_buffer_latest()
 
-    def get(self, key) -> any:
+    def get(self, key: str, default: any = None) -> any:
         try:
             return self.ir[key]
         except KeyError:
-            return None
+            return default
 
-    def get_yaml(self, key):
+    def get_yaml(self, key: str) -> dict:
         raw = self.get(key)
 
         if isinstance(raw, dict):
