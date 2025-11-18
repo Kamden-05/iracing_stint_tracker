@@ -18,7 +18,7 @@ TRANSITIONS = [
     
     # pre-session / idle
     ["session_start", States.IDLE, States.ON_TRACK],
-    ["driver_swap_in", States.IN_PIT_BOX, States.IDLE],
+    ["driver_swap_out", States.IN_PIT_BOX, States.IDLE],
     ["driver_swap_in", States.IDLE, States.IN_PIT_BOX],
 
     # on track
@@ -29,10 +29,12 @@ TRANSITIONS = [
     ["enter_pit_box", States.ON_PIT_ROAD, States.IN_PIT_BOX],
     ["exit_pit_box", States.IN_PIT_BOX, States.ON_PIT_ROAD],
 
-    
+    # post-session
+    ["finish_session", [States.ON_TRACK, States.ON_PIT_ROAD, States.IN_PIT_BOX, States.IDLE], States.FINISHED]
 ]
-
 
 class DriverMachine(object):
 
-    states = ['']
+    def __init__(self):
+        self.machine = Machine(model=self, states=States, transitions=TRANSITIONS, initial=States.DISCONNECTED)
+    
