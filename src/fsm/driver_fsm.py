@@ -61,6 +61,7 @@ class DriverFSM(object):
 
         self.last_state: Optional[States] = None
         self.managers: list[BaseManager] = []
+        self.required_fields: set[str] = set()
 
     def save_state(self):
         if self.state != States.DISCONNECTED:
@@ -73,7 +74,11 @@ class DriverFSM(object):
             self.set_state(States.IDLE)
 
     def attach_managers(self, managers: list[BaseManager]):
-        self.managers.extend(managers)
+        self.managers = managers
+        self.required_fields = set()
+
+        for m in self.managers:
+            self.required_fields.update(m.required_fields)
 
     def _broadcast(self, event_name: str, event: EventData):
         ctx = {
