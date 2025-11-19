@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Optional
 from transitions import Machine
 
 
@@ -36,8 +37,10 @@ TRANSITIONS = [
     ],
 ]
 
-
 class DriverFSM(object):
+
+    state: States
+    set_state: callable
 
     def __init__(self):
         self.machine = Machine(
@@ -46,3 +49,16 @@ class DriverFSM(object):
             transitions=TRANSITIONS,
             initial=States.DISCONNECTED,
         )
+
+        self.last_state: Optional[States] = None
+
+
+    def save_state(self):
+        if self.state != States.DISCONNECTED:
+            self.last_state = self.state
+    
+    def reconnect(self):
+        if self.last_state:
+            self.set_state(self.last_state)
+        else:
+            self.set_state(States.IDLE)

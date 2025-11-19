@@ -40,13 +40,17 @@ class TelemetryLoop:
             if not self.connected:
                 if self.ir.connect():
                     self.connected = True
-                    self.fsm.connect()
+                    if self.fsm.last_state:
+                        self.fsm.reconnect()
+                    else:
+                        self.fsm.connect()
                 else:
                     time.sleep(self.interval)
                     continue
 
             if not self.ir.is_connected:
                 self.connected = False
+                self.fsm.save_state()
                 self.fsm.disconnect()
                 # TODO: self.manager.handle_disconnect
                 time.sleep(self.interval)
