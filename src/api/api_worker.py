@@ -42,7 +42,8 @@ class APIWorker(threading.Thread):
             TaskType.STINT_CREATE.value: self._process_stint_create,
             TaskType.STINT_UPDATE.value: self._process_stint_update,
             TaskType.LAP.value: self._process_lap,
-            TaskType.PITSTOP.value: self._process_pitstop,
+            TaskType.PITSTOP_CREATE.value: self._process_pitstop_create,
+            TaskType.PITSTOP_UPDATE.value: self._process_pitstop_update,
         }
 
         handler = handlers.get(task_type)
@@ -109,7 +110,7 @@ class APIWorker(threading.Thread):
         else:
             logger.info("Lap %s posted successfully for stint %s", lap_number, stint_id)
 
-    def _process_pitstop(self, pit_data: dict):
+    def _process_pitstop_create(self, pit_data: dict):
         stint_id = pit_data.get("stint_id")
         logger.info("Posting pitstop for stint %s", stint_id)
 
@@ -119,3 +120,15 @@ class APIWorker(threading.Thread):
             logger.warning("Failed to post pitstop for stint %s", stint_id)
         else:
             logger.info("Pitstop posted successfully for stint %s", stint_id)
+
+    def _process_pitstop_update(self, pit_data: dict):
+        pitstop_id = pit_data.get("pitstop_id")
+        if not pitstop_id:
+            logger.warning("Cannot update pitstop without ID")
+
+        logger.info("Updating pitstop %s", pitstop_id)
+        response = self.client.patch_pitstop(pit_data)
+        if response is None:
+            logger.warning("Failed to update pitstop %s", pitstop_id)
+        else:
+            logger.info("Pitstop %s updated succesfully", pitstop_id)

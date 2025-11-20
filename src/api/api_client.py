@@ -8,6 +8,7 @@ logging.basicConfig(
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
 )
 
+
 class APIClient:
     """Synchronous API client for interacting with telemetry backend."""
 
@@ -66,13 +67,13 @@ class APIClient:
         session_id = stint_data["session_id"]
         return self.patch(f"sessions/{session_id}/stints", stint_data)
 
-    def post_pits(self, pit_data: dict):
+    def post_pitstop(self, pit_data: dict):
         stint_id = pit_data["stint_id"]
-        return self.post(f"stints/{stint_id}/pits", pit_data)
-    
-    def patch_pits(self, pit_data: dict):
-        stint_id = pit_data["stint_id"]
-        return self.patch(f"stints/{stint_id}/pits", pit_data)
+        return self.post(f"stints/{stint_id}/pitstops", pit_data)
+
+    def patch_pitstop(self, pit_data: dict):
+        pitstop_id = pit_data["pitstop_id"]
+        return self.patch(f"pitstops/{pitstop_id}", pit_data)
 
     def post_lap(self, lap_data: dict):
         stint_id = lap_data["stint_id"]
