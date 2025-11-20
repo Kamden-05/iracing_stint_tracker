@@ -1,14 +1,15 @@
 from queue import Queue
 from datetime import date
 from src.managers.base_manager import BaseManager
-from src.context.session_context import SessionContext
+from src.context.race_context import RaceContext
 from src.models.session import Session
 from src.api.task_types import get_task_dict, TaskType
+
 
 class SessionManager(BaseManager):
     required_fields = {"SessionInfo", "WeekendInfo", "DriverInfo", "PlayerCarIdx"}
 
-    def __init__(self, context: SessionContext, queue: Queue):
+    def __init__(self, context: RaceContext, queue: Queue):
         super().__init__(context, queue)
         self.session_info = None
         self.weekend_info = None
@@ -27,7 +28,7 @@ class SessionManager(BaseManager):
             self.set_context()
             self._send_session_info()
             self.session_sent = True
-    
+
     def set_context(self):
         self.context.session_id = self.weekend_info["SubSessionID"]
         self.context.car_id = self.car_id
@@ -43,7 +44,7 @@ class SessionManager(BaseManager):
             car_class=car_class_name if car_class_name else car_name,
             car=car_name,
             race_duration=self._get_race_duration(),
-            session_date= date.today()
+            session_date=date.today(),
         )
 
         self.queue.put(get_task_dict(TaskType.SESSION, data))

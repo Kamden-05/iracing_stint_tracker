@@ -1,12 +1,13 @@
 from queue import Queue
 from typing import Any
 from src.fsm.driver_fsm import States
-from src.context.session_context import SessionContext
+from src.context.race_context import RaceContext
+
 
 class BaseManager:
     required_fields: set[str] = set()
 
-    def __init__(self, context: SessionContext, queue: Queue):
+    def __init__(self, context: RaceContext, queue: Queue):
         self.context = context
         self.queue = queue
 
