@@ -7,7 +7,6 @@ class Stint:
 
     # required
     session_id: int
-    number: int
     driver_name: str
     start_time: float
     start_position: int
@@ -15,6 +14,7 @@ class Stint:
     start_fuel: float
 
     # meta data
+    number: Optional[int] = None
     id: Optional[int] = None
     laps: list[Lap] = field(default_factory=list)
     is_complete: bool = False
