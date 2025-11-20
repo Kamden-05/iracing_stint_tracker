@@ -72,11 +72,8 @@ class StintManager(BaseManager):
         self.pending_stint_end = False
 
     def _start_stint(self):
-        number = self.context.stint_number if self.context.stint_number else 1
-
         self.current_stint = Stint(
             session_id=self.context.session_id,
-            number=number,
             driver_name=self.context.user_name,
             start_time=self.session_time,
             start_position=self.position,
@@ -84,7 +81,7 @@ class StintManager(BaseManager):
             start_fuel=self.fuel_level,
         )
 
-        data = self.current_stint.post_dict()
+        data = {"session_id": self.context.session_id, "stint_obj": self.current_stint}
 
         self._send_data(TaskType.STINT_CREATE, data)
     
