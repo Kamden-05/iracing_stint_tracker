@@ -1,5 +1,6 @@
 from queue import Queue
 from datetime import date
+from typing import Optional
 from src.managers.base_manager import BaseManager
 from src.context.race_context import RaceContext
 from src.models.session import Session
@@ -14,6 +15,11 @@ class SessionManager(BaseManager):
         "PlayerCarIdx": "car_id"
     }
 
+    session_info: Optional[dict]
+    weekend_info: Optional[dict]
+    driver_info: Optional[dict]
+    car_id: Optional[int]
+
     def __init__(self, context: RaceContext, queue: Queue):
         super().__init__(context, queue)
 
@@ -25,14 +31,14 @@ class SessionManager(BaseManager):
     def handle_event(self, event, telem, ctx):
         if event == "session_start" and not self.session_sent:
             self.set_context()
-            self._send_session_info()
+            self._post_session_info()
             self.session_sent = True
 
     def set_context(self):
         self.context.session_id = self.weekend_info["SubSessionID"]
         self.context.car_id = self.car_id
 
-    def _send_session_info(self):
+    def _post_session_info(self):
         car_info = self.driver_info["Drivers"][self.car_id]
         car_class_name = car_info["CarClassShortName"]
         car_name = car_info["CarScreenName"]
