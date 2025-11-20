@@ -5,6 +5,7 @@ import logging
 from src.api.task_types import TaskType
 from src.api.api_client import APIClient
 from src.models.stint import Stint
+from src.context.race_context import RaceContext
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -14,8 +15,9 @@ logging.basicConfig(
 
 
 class APIWorker(threading.Thread):
-    def __init__(self, client: APIClient, queue: Queue, stop_event: threading.Event):
+    def __init__(self, context: RaceContext, client: APIClient, queue: Queue, stop_event: threading.Event):
         super().__init__(daemon=True)
+        self.context = context
         self.client = client
         self.queue = queue
         self.stop_event = stop_event
@@ -72,6 +74,7 @@ class APIWorker(threading.Thread):
 
         if response and "id" in response:
             stint.id = response["id"]
+            self.context.stint_id = stint.id
 
         logger.info(
             "Created new stint %s for session %s with ID %s",
