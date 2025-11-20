@@ -53,7 +53,7 @@ class PitstopManager(BaseManager):
         self.road_enter_time = None
 
     def _post_pitstop_data(self):
-        data = self.current_pitstop.to_post_dict()
+        data = {"stint_id": self.context.stint_id, "pitstop_obj": self.current_pitstop}
         self._send_data(TaskType.PITSTOP_CREATE, data)
 
     def _patch_pitstop_data(self):
@@ -89,7 +89,6 @@ class PitstopManager(BaseManager):
 
     def _handle_exit_pit_box(self):
         if self.current_pitstop is not None:
-            self.current_pitstop.pitstop_id = self.context.pitstop_id
             self.current_pitstop.service_end_time = self.session_time
             self.current_pitstop.fuel_end_amount = self.fuel_level
             self.current_pitstop.end_fast_repairs = self.fast_repair_available

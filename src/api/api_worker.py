@@ -5,6 +5,7 @@ import logging
 from src.api.task_types import TaskType
 from src.api.api_client import APIClient
 from src.models.stint import Stint
+from src.models.pitstop import PitStop
 from src.context.race_context import RaceContext
 
 logger = logging.getLogger(__name__)
@@ -113,21 +114,28 @@ class APIWorker(threading.Thread):
         else:
             logger.info("Lap %s posted successfully for stint %s", lap_number, stint_id)
 
-    def _process_pitstop_create(self, pit_data: dict):
-        stint_id = pit_data.get("stint_id")
-        logger.info("Posting pitstop for stint %s", stint_id)
+    def _process_pitstop_create(self, task_data: dict):
+        stint_id = task_data["stint_id"]
+        pitstop: Optional[PitStop] = task_data["pitstop_obj"]
 
-        response = self.client.post_pitstop(pit_data)
+        if not pitstop:
+            logger.warning("No pitstop object provided in task_data")
+            return
+        
+        logger.info("Creating pitstop for stint %s", stint_id)
+        response = self.client.post_pitstop(pitstop.to_post_dict())
 
-        if response is None:
-            logger.warning("Failed to post pitstop for stint %s", stint_id)
-        else:
+        if response and "id" in response:
+            pitstop.pitstop_id = response["id"]
             logger.info("Pitstop posted successfully for stint %s", stint_id)
+        else:
+            logger.warning("Failed to post pitstop for stint %s", stint_id)
 
     def _process_pitstop_update(self, pit_data: dict):
         pitstop_id = pit_data.get("pitstop_id")
         if not pitstop_id:
             logger.warning("Cannot update pitstop without ID")
+            return
 
         logger.info("Updating pitstop %s", pitstop_id)
         response = self.client.patch_pitstop(pit_data)
