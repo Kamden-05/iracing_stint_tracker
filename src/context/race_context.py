@@ -8,5 +8,4 @@ class RaceContext:
     car_id: Optional[int]
     stint_id: Optional[int]
     pitstop_id: Optional[int]
-    stint_number: Optional[int]
     user_name: Optional[str]
