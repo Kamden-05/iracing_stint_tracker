@@ -3,7 +3,7 @@ from datetime import date
 from src.managers.base_manager import BaseManager
 from src.context.session_context import SessionContext
 from src.models.session import Session
-from src.api.task_types import get_task_dict
+from src.api.task_types import get_task_dict, TaskType
 
 class SessionManager(BaseManager):
     required_fields = {"SessionInfo", "WeekendInfo", "DriverInfo", "PlayerCarIdx"}
@@ -46,7 +46,7 @@ class SessionManager(BaseManager):
             session_date= date.today()
         )
 
-        self.queue.put(get_task_dict("Session", data))
+        self.queue.put(get_task_dict(TaskType.SESSION, data))
 
     def _get_race_duration(self) -> float:
         sessions = self.session_info.get("Sessions", [])
