@@ -69,6 +69,10 @@ class APIClient:
     def post_pits(self, pit_data: dict):
         stint_id = pit_data["stint_id"]
         return self.post(f"stints/{stint_id}/pits", pit_data)
+    
+    def patch_pits(self, pit_data: dict):
+        stint_id = pit_data["stint_id"]
+        return self.patch(f"stints/{stint_id}/pits", pit_data)
 
     def post_lap(self, lap_data: dict):
         stint_id = lap_data["stint_id"]
