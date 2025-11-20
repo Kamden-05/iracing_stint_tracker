@@ -3,7 +3,7 @@ from datetime import date
 from src.managers.base_manager import BaseManager
 from src.context.session_context import SessionContext
 from src.models.session import Session
-from src.utils.utils import get_task_dict
+from src.api.task_types import get_task_dict
 
 class SessionManager(BaseManager):
     required_fields = {"SessionInfo", "WeekendInfo", "DriverInfo", "PlayerCarIdx"}
