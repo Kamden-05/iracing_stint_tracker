@@ -1,5 +1,5 @@
 import time
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Any
 
 if TYPE_CHECKING:
     from src.fsm.driver_fsm import DriverFSM
@@ -31,6 +31,18 @@ class TelemetryLoop:
             return drivers[car_id]["UserName"]
         except Exception:
             return None
+
+    def _get_tick_data(self) -> dict[str, Any]:
+        data = {}
+        get = self.ir.get
+
+        for key in self.fsm.required_fields:
+            try:
+                data[key] = get(key)
+            except Exception:
+                data[key] = None
+        
+        return data
 
     def run(self):
         while True:
@@ -67,6 +79,10 @@ class TelemetryLoop:
             session_state = self.ir.get("SessionState")
             driver_name = self._get_current_driver_name()
 
+            tick_data = self._get_tick_data()
+
+            self.fsm.last_telem = tick_data
+
             # FSM transitions
 
             # session start
@@ -95,7 +111,7 @@ class TelemetryLoop:
                 # user enters car
                 if driver_name == self.user_name:
                     self.fsm.driver_swap_in()
-                
+
                 # user exits car
                 elif self.prev_driver_name == self.user_name:
                     self.fsm.driver_swap_out()
@@ -104,7 +120,9 @@ class TelemetryLoop:
             if session_state == 5 and self.prev_session_state != 5:
                 self.fsm.finish_session()
 
-            # TODO: update mnager values, need to write manager classes first
+            # update managers
+            for m in self.fsm.managers:
+                m.on_tick(tick_data, self.fsm.state)
 
             # update prev values
             self.prev_on_track = on_track
