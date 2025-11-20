@@ -64,7 +64,6 @@ class TelemetryLoop:
                 self.connected = False
                 self.fsm.save_state()
                 self.fsm.disconnect()
-                # TODO: self.manager.handle_disconnect
                 time.sleep(self.interval)
                 continue
 
