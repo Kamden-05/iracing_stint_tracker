@@ -6,13 +6,17 @@ from typing import Optional
 class PitStop:
 
     stint_id: int
+    pitstop_id: Optional[int] = None
     road_enter_time: Optional[float] = None
 
     service_start_time: Optional[float] = None
     fuel_start_amount: Optional[float] = None
     required_repair_time: Optional[float] = None
     optional_repair_time: Optional[float] = None
+    start_fast_repairs: Optional[int] = None
+
     fuel_end_amount: Optional[float] = None
+    end_fast_repairs: Optional[int] = None
     service_end_time: Optional[float] = None
     road_exit_time: Optional[float] = None
 
@@ -24,6 +28,12 @@ class PitStop:
 
     @property
     def has_repairs(self) -> bool:
+        start = self.start_fast_repairs or 0
+        end  = self.end_fast_repairs or 0
+
+        if start > end:
+            return True
+        
         return (self.required_repair_time or 0.0) + (
             self.optional_repair_time or 0.0
         ) > 0.0
@@ -64,7 +74,7 @@ class PitStop:
 
     def to_patch_dict(self) -> dict:
         return {
-            "stint_id": self.stint_id,
+            "pitstop_id": self.pitstop_id,
             "service_end_time": self.service_end_time,
             "fuel_end_amount": self.fuel_end_amount,
             "road_exit_time": self.road_exit_time,
