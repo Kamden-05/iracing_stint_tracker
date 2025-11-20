@@ -50,7 +50,7 @@ class SessionManager(BaseManager):
             car=car_name,
             race_duration=self._get_race_duration(),
             session_date=date.today(),
-        )
+        ).to_dict()
 
         self.queue.put(get_task_dict(TaskType.SESSION, data))
 
