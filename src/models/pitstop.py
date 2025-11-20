@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
+
 @dataclass
 class PitStop:
 
@@ -51,7 +52,7 @@ class PitStop:
             return None
         return self.service_end_time - self.service_start_time
 
-    def post_dict(self) -> dict:
+    def to_post_dict(self) -> dict:
         return {
             "stint_id": self.stint_id,
             "road_enter_time": self.road_enter_time,
@@ -61,7 +62,7 @@ class PitStop:
             "tire_change": self.has_tire_change,
         }
 
-    def patch_dict(self) -> dict:
+    def to_patch_dict(self) -> dict:
         return {
             "stint_id": self.stint_id,
             "service_end_time": self.service_end_time,
