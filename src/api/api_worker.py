@@ -2,6 +2,7 @@ import threading
 from typing import Optional
 from queue import Queue, Empty
 import logging
+from src.api.task_types import TaskType
 from src.api.api_client import APIClient
 from src.models.stint import Stint
 
@@ -37,11 +38,11 @@ class APIWorker(threading.Thread):
         data = task["data"]
 
         handlers = {
-            "Session": self._process_session,
-            "StintCreate": self._process_stint_create,
-            "StintUpdate": self._process_stint_update,
-            "Lap": self._process_lap,
-            "PitStop": self._process_pitstop,
+            TaskType.SESSION.value: self._process_session,
+            TaskType.STINT_CREATE.value: self._process_stint_create,
+            TaskType.STINT_UPDATE.value: self._process_stint_update,
+            TaskType.LAP.value: self._process_lap,
+            TaskType.PITSTOP.value: self._process_pitstop,
         }
 
         handler = handlers.get(task_type)
