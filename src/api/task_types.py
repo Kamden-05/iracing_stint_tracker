@@ -7,7 +7,8 @@ class TaskType(str, Enum):
     STINT_CREATE = "StintCreate"
     STINT_UPDATE = "StintUpdate"
     LAP = "Lap"
-    PITSTOP = "PitStop"
+    PITSTOP_CREATE = "PitstopCreate"
+    PITSTOP_UPDATE = "PitstopUpdate"
 
 
 def get_task_dict(task_type: TaskType, data: Any) -> dict[str, Any]:
