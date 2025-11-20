@@ -4,15 +4,15 @@ from typing import Optional
 from src.managers.base_manager import BaseManager
 from src.context.race_context import RaceContext
 from src.models.session import Session
-from src.api.task_types import get_task_dict, TaskType
+from src.api.task_types import TaskType
 
 
 class SessionManager(BaseManager):
     required_fields = {
         "SessionInfo": "session_info",
-        "WeekendInfo": "weekend_info", 
-        "DriverInfo": "driver_info", 
-        "PlayerCarIdx": "car_id"
+        "WeekendInfo": "weekend_info",
+        "DriverInfo": "driver_info",
+        "PlayerCarIdx": "car_id",
     }
 
     session_info: Optional[dict]
@@ -52,7 +52,7 @@ class SessionManager(BaseManager):
             session_date=date.today(),
         ).to_dict()
 
-        self.queue.put(get_task_dict(TaskType.SESSION, data))
+        self._send_data(TaskType.SESSION, data)
 
     def _get_race_duration(self) -> float:
         sessions = self.session_info.get("Sessions", [])
