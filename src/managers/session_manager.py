@@ -7,21 +7,20 @@ from src.api.task_types import get_task_dict, TaskType
 
 
 class SessionManager(BaseManager):
-    required_fields = {"SessionInfo", "WeekendInfo", "DriverInfo", "PlayerCarIdx"}
+    required_fields = {
+        "SessionInfo": "session_info",
+        "WeekendInfo": "weekend_info", 
+        "DriverInfo": "driver_info", 
+        "PlayerCarIdx": "car_id"
+    }
 
     def __init__(self, context: RaceContext, queue: Queue):
         super().__init__(context, queue)
-        self.session_info = None
-        self.weekend_info = None
-        self.driver_info = None
-        self.car_id = None
-        self.session_sent = False
 
-    def on_tick(self, telem, state):
-        self.session_info = telem["SessionInfo"]
-        self.weekend_info = telem["WeekendInfo"]
-        self.driver_info = telem["DriverInfo"]
-        self.car_id = telem["PlayerCarIdx"]
+        for attr in self.required_fields.values():
+            setattr(self, attr, None)
+
+        self.session_sent = False
 
     def handle_event(self, event, telem, ctx):
         if event == "session_start" and not self.session_sent:

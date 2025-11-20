@@ -78,7 +78,7 @@ class DriverFSM(object):
         self.required_fields = set()
 
         for m in self.managers:
-            self.required_fields.update(m.required_fields)
+            self.required_fields.update(m.required_fields.keys())
 
     def _broadcast(self, event_name: str, event: EventData):
         ctx = {
