@@ -29,7 +29,7 @@ class LapManager(BaseManager):
 
     def _check_for_new_lap(self):
         if self.current_lap == 1 and self.lap_completed == 0 and not self.lap_start_time:
-            self.lap_start_time = self.session_time 
+            self.lap_start_time = self.session_time
 
         if self.lap_completed == 0:
             return
