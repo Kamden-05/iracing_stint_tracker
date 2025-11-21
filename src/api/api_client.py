@@ -31,8 +31,8 @@ class APIClient:
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         try:
             r = self.s.request(method, url, json=json, timeout=5)
-            r.raise_for_status()
-            if r.status_code == 204:
+            #r.raise_for_status()
+            if r.status_code in [409, 204]:
                 return None
             logger.debug("%s %s -> %s", method, url, r.status_code)
             return r.json()
