@@ -1,5 +1,7 @@
 from enum import Enum
-from typing import Any
+from dataclasses import dataclass
+from typing import Union
+from src.models import Session, Stint, PitStop, Lap
 
 
 class TaskType(str, Enum):
@@ -11,8 +13,10 @@ class TaskType(str, Enum):
     PITSTOP_UPDATE = "PitstopUpdate"
 
 
-def get_task_dict(task_type: TaskType, data: Any) -> dict[str, Any]:
-    return {
-        "type": task_type.value,
-        "data": data,
-    }
+PayloadType = Union[Session, Stint, PitStop, Lap]
+
+
+@dataclass
+class APITask:
+    type: TaskType
+    payload: PayloadType
