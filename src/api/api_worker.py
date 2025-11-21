@@ -2,6 +2,7 @@ import threading
 from typing import Optional
 from queue import Queue, Empty
 import logging
+from requests import HTTPError
 from src.api.task_types import TaskType
 from src.api.api_client import APIClient
 from src.models.stint import Stint
@@ -57,7 +58,10 @@ class APIWorker(threading.Thread):
 
     def _process_session(self, session_data: dict):
         logger.info("Posting new session")
-        self.client.post_session(session_data)
+        try:
+            self.client.post_session(session_data)
+        except HTTPError as e:
+            logger.error("HTTP error: %s", e)
 
     def _process_stint_create(self, task_data: dict):
         session_id = task_data["session_id"]
