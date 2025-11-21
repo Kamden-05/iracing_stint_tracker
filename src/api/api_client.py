@@ -64,8 +64,8 @@ class APIClient:
         return self.post(f"sessions/{session_id}/stints", stint_data)
 
     def patch_stint(self, stint_data: dict):
-        session_id = stint_data["session_id"]
-        return self.patch(f"sessions/{session_id}/stints", stint_data)
+        stint_id = stint_data["id"]
+        return self.patch(f"/stints/{stint_id}", stint_data)
 
     def post_pitstop(self, pit_data: dict):
         stint_id = pit_data["stint_id"]

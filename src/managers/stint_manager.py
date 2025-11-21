@@ -86,7 +86,7 @@ class StintManager(BaseManager):
         self._send_data(TaskType.STINT_CREATE, data)
     
     def _update_stint(self):
-        if not self.current_stint or not self.current_stint.is_complete:
+        if self.current_stint and not self.current_stint.is_complete:
             self.current_stint.end_time = self.session_time
             self.current_stint.end_position = self.position
             self.current_stint.end_incidents = self.incidents
@@ -98,7 +98,7 @@ class StintManager(BaseManager):
 
     def _end_stint(self):
         self.current_stint.is_complete = True
-        data = self.current_stint.patch_dict()
+        data = {"stint_id": self.current_stint.id, "stint_obj": self.current_stint}
         self._send_data(TaskType.STINT_UPDATE, data)
 
         self.current_stint = None
