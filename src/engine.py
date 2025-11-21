@@ -6,6 +6,10 @@ from src.telemetry.telemetry_loop import TelemetryLoop
 from src.api.api_client import APIClient
 from src.api.api_worker import APIWorker
 from src.context.race_context import RaceContext
+from src.managers.session_manager import SessionManager
+from src.managers.stint_manager import StintManager
+from src.managers.pitstop_manager import PitstopManager
+from src.managers.lap_manager import LapManager
 
 
 class AppEngine:
@@ -22,7 +26,9 @@ class AppEngine:
         self.api_worker = APIWorker(self.context, self.api_client, self.queue, self.stop_event)
 
         self.fsm = DriverFSM()
-        self.managers = []
+        self.managers = [
+            SessionManager(self.context, self.queue),
+        ]
         self.fsm.attach_managers(self.managers)
 
         self.telemetry_loop = TelemetryLoop(
