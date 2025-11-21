@@ -92,7 +92,7 @@ class StintManager(BaseManager):
             self.current_stint.end_incidents = self.incidents
             self.current_stint.end_fuel = self.fuel_level
 
-            data = self.current_stint.patch_dict()
+            data = {"stint_id": self.current_stint.id, "stint_obj": self.current_stint}
 
             self._send_data(TaskType.STINT_UPDATE, data)
 

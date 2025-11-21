@@ -57,7 +57,7 @@ class PitstopManager(BaseManager):
         self._send_data(TaskType.PITSTOP_CREATE, data)
 
     def _patch_pitstop_data(self):
-        data = self.current_pitstop.to_patch_dict()
+        data = {"pitstop_id": self.current_pitstop.pitstop_id, "pitstop_obj": self.current_pitstop}
         self._send_data(TaskType.PITSTOP_UPDATE, data)
 
     def _handle_enter_pit_road(self):
