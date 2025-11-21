@@ -22,5 +22,5 @@ class BaseManager:
         for telem_key, attr_name in self.required_fields.items():
             setattr(self, attr_name, telem[telem_key])
 
-    def _send_data(self, task: TaskType, data: any):
-        self.queue.put(get_task_dict(task, data))
+    def _send_data(self, task: TaskType, obj):
+        self.queue.put(get_task_dict(task, obj))
