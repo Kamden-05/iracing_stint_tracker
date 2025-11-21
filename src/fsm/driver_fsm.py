@@ -1,18 +1,7 @@
-from enum import Enum
 from typing import Optional
 from transitions import Machine, EventData
+from src.fsm.states import States
 from src.managers.base_manager import BaseManager
-
-
-class States(Enum):
-    """Possible states a driver for a team (or solo) might be in"""
-
-    IDLE = 0
-    ON_TRACK = 1
-    ON_PIT_ROAD = 2
-    IN_PIT_BOX = 3
-    FINISHED = 4
-    DISCONNECTED = 5
 
 
 TRANSITIONS = [
@@ -26,9 +15,10 @@ TRANSITIONS = [
         "driver_swap_out",
         States.IN_PIT_BOX,
         States.IDLE,
-        {"after": "_on_driver_swap_out"},
+        [],
+        "_on_driver_swap_out",
     ],
-    ["driver_swap_in", States.IDLE, States.IN_PIT_BOX, {"after": "_on_driver_swap_in"}],
+    ["driver_swap_in", States.IDLE, States.IN_PIT_BOX, [], "_on_driver_swap_in"],
     # on track
     ["enter_pit_road", States.ON_TRACK, States.ON_PIT_ROAD],
     ["exit_pit_road", States.ON_PIT_ROAD, States.ON_TRACK],
@@ -81,6 +71,7 @@ class DriverFSM(object):
             self.required_fields.update(m.required_fields.keys())
 
     def _broadcast(self, event_name: str, event: EventData):
+        print(event.event.name)
         ctx = {
             "source": event.transition.source,
             "dest": event.transition.dest,
@@ -93,10 +84,10 @@ class DriverFSM(object):
     # state based callbacks
 
     def on_enter_ON_PIT_ROAD(self, event: EventData):
-        self._broadcast("enter_on_track", event)
+        self._broadcast("enter_pit_road", event)
 
     def on_exit_ON_PIT_ROAD(self, event: EventData):
-        self._broadcast("enter_pit_road", event)
+        self._broadcast("exit_pit_road", event)
 
     def on_enter_IN_PIT_BOX(self, event: EventData):
         self._broadcast("enter_pit_box", event)

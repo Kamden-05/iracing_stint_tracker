@@ -1,4 +1,4 @@
-from time import time
+import time
 import os
 from dotenv import load_dotenv
 from src.engine import AppEngine

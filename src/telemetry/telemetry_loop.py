@@ -1,5 +1,6 @@
 import time
 from typing import TYPE_CHECKING, Optional, Any
+from irsdk import SessionState, Flags
 
 if TYPE_CHECKING:
     from src.fsm.driver_fsm import DriverFSM
@@ -20,8 +21,10 @@ class TelemetryLoop:
         self.prev_on_track: bool = False
         self.prev_on_pit_road: bool = False
         self.prev_in_pit_box: bool = False
-        self.prev_session_state: Optional[int] = None
-        self.prev_driver_name: Optional[str] = None
+        self.session_started: bool = False
+        self.session_finished: bool = False
+        self.final_lap_completed: Optional[bool] = None
+        self.prev_driver_name: Optional[str] = user_name
 
     def _get_current_driver_name(self) -> Optional[str]:
         try:
@@ -41,11 +44,36 @@ class TelemetryLoop:
                 data[key] = get(key)
             except Exception:
                 data[key] = None
-        
+
         return data
 
+    def _check_race_start(self) -> bool:
+        return (
+            self.ir.get("SessionState") == SessionState.racing
+            and self.ir.get("PlayerCarClassPosition") > 0
+        )
+    
+    def _check_race_end(self) -> bool:
+        flags = self.ir.get("SessionFlags")
+        on_track = self.ir.get("IsOnTrack")
+        tow = self.ir.get("PlayerCarTowTime") > 0.0
+        lap_completed = self.ir.get("LapCompleted")
+
+        if flags & Flags.checkered:
+            if self.final_lap_completed is None:
+                self.final_lap_completed = lap_completed
+                return False
+
+            # Has the driver finished their final lap yet?
+            finished_final_lap = lap_completed > self.final_lap_completed
+            off_track = not on_track or tow
+
+            return finished_final_lap or off_track
+
+        return False
+
     def run(self):
-        while True:
+        while not self.session_finished:
 
             # connection handling
 
@@ -75,7 +103,6 @@ class TelemetryLoop:
             on_pit_road = bool(self.ir.get("OnPitRoad", False))
             pit_active = bool(self.ir.get("PitstopActive", False))
             tow_time = float(self.ir.get("PlayerCarTowTime", 0.0))
-            session_state = self.ir.get("SessionState")
             driver_name = self._get_current_driver_name()
 
             tick_data = self._get_tick_data()
@@ -85,7 +112,8 @@ class TelemetryLoop:
             # FSM transitions
 
             # session start
-            if session_state == 3 and self.prev_session_state != 3:
+            if self._check_race_start() and not self.session_started:
+                self.session_started = True
                 self.fsm.session_start()
 
             # enter pit road
@@ -116,7 +144,8 @@ class TelemetryLoop:
                     self.fsm.driver_swap_out()
 
             # session finish
-            if session_state == 5 and self.prev_session_state != 5:
+            if self._check_race_end() and not self.session_finished:
+                self.session_finished = True
                 self.fsm.finish_session()
 
             # update managers
@@ -127,7 +156,6 @@ class TelemetryLoop:
             self.prev_on_track = on_track
             self.prev_on_pit_road = on_pit_road
             self.prev_in_pit_box = pit_active
-            self.prev_session_state = session_state
             self.prev_driver_name = driver_name
 
             time.sleep(self.interval)
