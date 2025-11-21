@@ -10,7 +10,7 @@ TRANSITIONS = [
     ["connect", States.DISCONNECTED, States.IDLE],
     ["disconnect", "*", States.DISCONNECTED],
     # pre-session / idle
-    ["session_start", States.IDLE, States.ON_TRACK],
+    ["session_start", States.IDLE, States.ON_TRACK, [], "_on_session_start"],
     [
         "driver_swap_out",
         States.IN_PIT_BOX,
@@ -102,6 +102,9 @@ class DriverFSM(object):
         self._broadcast("disconnected", event)
 
     # event based callbacks
+
+    def _on_session_start(self, event: EventData):
+        self._broadcast("session_start", event)
 
     def _on_driver_swap_in(self, event: EventData):
         self._broadcast("driver_swap_in", event)
