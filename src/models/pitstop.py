@@ -74,7 +74,6 @@ class PitStop:
 
     def to_patch_dict(self) -> dict:
         return {
-            "pitstop_id": self.pitstop_id,
             "service_end_time": self.service_end_time,
             "fuel_end_amount": self.fuel_end_amount,
             "road_exit_time": self.road_exit_time,
