@@ -28,6 +28,7 @@ class AppEngine:
         self.fsm = DriverFSM()
         self.managers = [
             SessionManager(self.context, self.queue),
+            StintManager(self.context, self.queue),
         ]
         self.fsm.attach_managers(self.managers)
 
