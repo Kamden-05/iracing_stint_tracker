@@ -57,6 +57,6 @@ class SessionManager(BaseManager):
     def _get_race_duration(self) -> float:
         sessions = self.session_info.get("Sessions", [])
         for s in sessions:
-            if s["SessionType"] == "Race":
-                return s["SessionTime"]
+            if s.get("SessionType") == "Race":
+                return float(s["SessionTime"].split()[0])
         return 0.0
