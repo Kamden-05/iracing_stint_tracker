@@ -2,7 +2,7 @@ from queue import Queue
 from typing import Any
 from src.fsm.states import States
 from src.context.race_context import RaceContext
-from src.api.task_types import get_task_dict, TaskType
+from src.api.tasks import get_task_dict, TaskType
 
 
 class BaseManager:

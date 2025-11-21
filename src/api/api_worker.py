@@ -3,7 +3,7 @@ from typing import Optional
 from queue import Queue, Empty
 import logging
 from requests import HTTPError
-from src.api.task_types import TaskType
+from src.api.tasks import TaskType
 from src.api.api_client import APIClient
 from src.models.stint import Stint
 from src.models.pitstop import PitStop

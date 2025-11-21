@@ -3,7 +3,7 @@ from typing import Optional
 from src.managers.base_manager import BaseManager
 from src.context.race_context import RaceContext
 from src.models.pitstop import PitStop
-from src.api.task_types import TaskType
+from src.api.tasks import TaskType
 
 
 class PitstopManager(BaseManager):

@@ -3,7 +3,7 @@ from queue import Queue
 from src.managers.base_manager import BaseManager
 from src.models.stint import Stint
 from src.context.race_context import RaceContext
-from src.api.task_types import TaskType
+from src.api.tasks import TaskType
 
 
 class StintManager(BaseManager):

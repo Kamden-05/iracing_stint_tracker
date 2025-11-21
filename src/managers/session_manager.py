@@ -4,7 +4,7 @@ from typing import Optional
 from src.managers.base_manager import BaseManager
 from src.context.race_context import RaceContext
 from src.models.session import Session
-from src.api.task_types import TaskType
+from src.api.tasks import TaskType
 
 
 class SessionManager(BaseManager):
