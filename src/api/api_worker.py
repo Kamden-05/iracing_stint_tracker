@@ -84,14 +84,19 @@ class APIWorker(threading.Thread):
             stint.id,
         )
 
-    def _process_stint_update(self, stint_data: dict):
-        stint_id = stint_data.get("id")
+    def _process_stint_update(self, task_data: dict):
+        stint_id = task_data.get("stint_id")
         if not stint_id:
             logger.warning("Cannot update stint without ID")
             return
+        
+        stint: Optional[Stint] = task_data["stint_obj"]
+        if not stint:
+            logger.warning("No stint object provided in task_data")
+            return
 
         logger.info("Updating stint %s", stint_id)
-        response = self.client.patch_stint(stint_data)
+        response = self.client.patch_stint(stint.patch_dict())
         if response is None:
             logger.warning("Failed to update stint %s", stint_id)
         else:
@@ -115,8 +120,8 @@ class APIWorker(threading.Thread):
             logger.info("Lap %s posted successfully for stint %s", lap_number, stint_id)
 
     def _process_pitstop_create(self, task_data: dict):
-        stint_id = task_data["stint_id"]
-        pitstop: Optional[PitStop] = task_data["pitstop_obj"]
+        stint_id = task_data.get("stint_id")
+        pitstop: Optional[PitStop] = task_data.get("pitstop_obj")
 
         if not pitstop:
             logger.warning("No pitstop object provided in task_data")
@@ -131,14 +136,19 @@ class APIWorker(threading.Thread):
         else:
             logger.warning("Failed to post pitstop for stint %s", stint_id)
 
-    def _process_pitstop_update(self, pit_data: dict):
-        pitstop_id = pit_data.get("pitstop_id")
+    def _process_pitstop_update(self, task_data: dict):
+        pitstop_id = task_data.get("pitstop_id")
         if not pitstop_id:
             logger.warning("Cannot update pitstop without ID")
             return
+        
+        pitstop: Optional[PitStop] = task_data["pitstop_obj"]
+        if not pitstop:
+            logger.warning("No pitstop object provided in task_data")
+            return
 
         logger.info("Updating pitstop %s", pitstop_id)
-        response = self.client.patch_pitstop(pit_data)
+        response = self.client.patch_pitstop(pitstop.to_patch_dict())
         if response is None:
             logger.warning("Failed to update pitstop %s", pitstop_id)
         else:
