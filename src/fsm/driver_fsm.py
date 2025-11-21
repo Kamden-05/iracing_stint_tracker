@@ -10,15 +10,23 @@ TRANSITIONS = [
     ["connect", States.DISCONNECTED, States.IDLE],
     ["disconnect", "*", States.DISCONNECTED],
     # pre-session / idle
-    ["session_start", States.IDLE, States.ON_TRACK, [], "_on_session_start"],
+    ["session_start", States.IDLE, States.ON_TRACK, None, None, "_on_session_start"],
     [
         "driver_swap_out",
         States.IN_PIT_BOX,
         States.IDLE,
-        [],
+        None,
+        None,
         "_on_driver_swap_out",
     ],
-    ["driver_swap_in", States.IDLE, States.IN_PIT_BOX, [], "_on_driver_swap_in"],
+    [
+        "driver_swap_in",
+        States.IDLE,
+        States.IN_PIT_BOX,
+        None,
+        None,
+        "_on_driver_swap_in",
+    ],
     # on track
     ["enter_pit_road", States.ON_TRACK, States.ON_PIT_ROAD],
     ["exit_pit_road", States.ON_PIT_ROAD, States.ON_TRACK],
@@ -71,7 +79,6 @@ class DriverFSM(object):
             self.required_fields.update(m.required_fields.keys())
 
     def _broadcast(self, event_name: str, event: EventData):
-        print(event.event.name)
         ctx = {
             "source": event.transition.source,
             "dest": event.transition.dest,
