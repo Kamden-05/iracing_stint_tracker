@@ -18,5 +18,5 @@ PayloadType = Union[Session, Stint, PitStop, Lap]
 
 @dataclass
 class APITask:
-    type: TaskType
+    task: TaskType
     payload: PayloadType
