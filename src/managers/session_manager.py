@@ -43,16 +43,16 @@ class SessionManager(BaseManager):
         car_class_name = car_info["CarClassShortName"]
         car_name = car_info["CarScreenName"]
 
-        data = Session(
+        session = Session(
             id=self.context.session_id,
             track=self.weekend_info["TrackDisplayName"],
             car_class=car_class_name if car_class_name else car_name,
             car=car_name,
             race_duration=self._get_race_duration(),
             session_date=date.today(),
-        ).to_dict()
+        )
 
-        self._send_data(TaskType.SESSION, data)
+        self._send_data(TaskType.SESSION, session)
 
     def _get_race_duration(self) -> float:
         sessions = self.session_info.get("Sessions", [])
