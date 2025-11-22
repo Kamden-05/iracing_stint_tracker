@@ -81,9 +81,7 @@ class StintManager(BaseManager):
             start_fuel=self.fuel_level,
         )
 
-        data = {"session_id": self.context.session_id, "stint_obj": self.current_stint}
-
-        self._send_data(TaskType.STINT_CREATE, data)
+        self._send_data(TaskType.STINT_CREATE, self.current_stint)
     
     def _update_stint(self):
         if self.current_stint and not self.current_stint.is_complete:
@@ -92,13 +90,10 @@ class StintManager(BaseManager):
             self.current_stint.end_incidents = self.incidents
             self.current_stint.end_fuel = self.fuel_level
 
-            data = {"stint_id": self.current_stint.id, "stint_obj": self.current_stint}
-
-            self._send_data(TaskType.STINT_UPDATE, data)
+            self._send_data(TaskType.STINT_UPDATE, self.current_stint)
 
     def _end_stint(self):
         self.current_stint.is_complete = True
-        data = {"stint_id": self.current_stint.id, "stint_obj": self.current_stint}
-        self._send_data(TaskType.STINT_UPDATE, data)
+        self._send_data(TaskType.STINT_UPDATE, self.current_stint)
 
         self.current_stint = None
