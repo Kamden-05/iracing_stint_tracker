@@ -72,7 +72,7 @@ class APIWorker(threading.Thread):
 
         logger.info("Posting new session")
         try:
-            self.client.post_session(session.to_json())
+            self.client.post_session(session.to_post_json())
         except HTTPError as e:
             logger.error("HTTP error: %s", e)
 

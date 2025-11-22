@@ -11,7 +11,7 @@ class Session:
     race_duration: int
     session_date: datetime.date
 
-    def to_json(self) -> dict:
+    def to_post_json(self) -> dict:
         data = asdict(self)
 
         if isinstance(data.get("session_date"), datetime.date):
