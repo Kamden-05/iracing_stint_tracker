@@ -16,7 +16,13 @@ logging.basicConfig(
 
 
 class APIWorker(threading.Thread):
-    def __init__(self, context: RaceContext, client: APIClient, queue: Queue, stop_event: threading.Event):
+    def __init__(
+        self,
+        context: RaceContext,
+        client: APIClient,
+        queue: Queue,
+        stop_event: threading.Event,
+    ):
         super().__init__(daemon=True)
         self.context = context
         self.client = client
@@ -57,12 +63,16 @@ class APIWorker(threading.Thread):
 
     def _process_session(self, session: Session):
         if not isinstance(session, Session):
-            logger.warning("Invalid payload type: expected %s, got %s", Session.__name__, type(session).__name__)
+            logger.warning(
+                "Invalid payload type: expected %s, got %s",
+                Session.__name__,
+                type(session).__name__,
+            )
             return
 
         logger.info("Posting new session")
         try:
-            self.client.post_session(session.to_dict())
+            self.client.post_session(session.to_json())
         except HTTPError as e:
             logger.error("HTTP error: %s", e)
 
@@ -74,7 +84,7 @@ class APIWorker(threading.Thread):
                 type(stint).__name__,
             )
             return
-        
+
         session_id = stint.session_id
 
         logger.info("Creating new stint for session %s", session_id)
