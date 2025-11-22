@@ -76,9 +76,9 @@ class APIClient:
         pitstop_id = pitstop.id
         return self.patch(f"pitstops/{pitstop_id}", pitstop.to_patch_json())
 
-    def post_lap(self, lap_data: dict):
-        stint_id = lap_data["stint_id"]
-        return self.post(f"stints/{stint_id}/laps", lap_data)
+    def post_lap(self, lap: Lap):
+        stint_id = lap.stint_id
+        return self.post(f"stints/{stint_id}/laps", lap.to_post_json())
 
     # Utilities
     def check_connection(self) -> bool:
