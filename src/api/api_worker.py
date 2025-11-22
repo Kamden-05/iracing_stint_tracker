@@ -168,7 +168,7 @@ class APIWorker(threading.Thread):
             return
 
         logger.info("Updating pitstop %s", pitstop_id)
-        response = self.client.patch_pitstop(pitstop.to_patch_dict())
+        response = self.client.patch_pitstop(pitstop.to_patch_json())
         if response is None:
             logger.warning("Failed to update pitstop %s", pitstop_id)
         else:

@@ -29,11 +29,11 @@ class PitStop:
     @property
     def has_repairs(self) -> bool:
         start = self.start_fast_repairs or 0
-        end  = self.end_fast_repairs or 0
+        end = self.end_fast_repairs or 0
 
         if start > end:
             return True
-        
+
         return (self.required_repair_time or 0.0) + (
             self.optional_repair_time or 0.0
         ) > 0.0
@@ -62,7 +62,7 @@ class PitStop:
             return None
         return self.service_end_time - self.service_start_time
 
-    def to_post_dict(self) -> dict:
+    def to_post_json(self) -> dict:
         return {
             "stint_id": self.stint_id,
             "road_enter_time": self.road_enter_time,
@@ -72,7 +72,7 @@ class PitStop:
             "tire_change": self.has_tire_change,
         }
 
-    def to_patch_dict(self) -> dict:
+    def to_patch_json(self) -> dict:
         return {
             "service_end_time": self.service_end_time,
             "fuel_end_amount": self.fuel_end_amount,
