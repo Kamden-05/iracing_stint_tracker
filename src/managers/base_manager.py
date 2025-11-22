@@ -23,4 +23,4 @@ class BaseManager:
             setattr(self, attr_name, telem[telem_key])
 
     def _send_data(self, task: TaskType, payload: PayloadType):
-        self.queue.put(APITask(task=task, payload=payload))
+        self.queue.put(APITask(type=task, payload=payload))
