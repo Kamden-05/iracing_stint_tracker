@@ -3,10 +3,9 @@ from typing import Optional
 from queue import Queue, Empty
 import logging
 from requests import HTTPError
-from src.api.tasks import TaskType
+from src.api.tasks import APITask, TaskType
 from src.api.api_client import APIClient
-from src.models.stint import Stint
-from src.models.pitstop import PitStop
+from src.models import Session, Stint, PitStop, Lap
 from src.context.race_context import RaceContext
 
 logger = logging.getLogger(__name__)
@@ -37,9 +36,9 @@ class APIWorker(threading.Thread):
             except Exception as e:
                 logger.exception("Error processing task: %s", e)
 
-    def process_task(self, task: dict):
-        task_type = task["type"]
-        data = task["data"]
+    def process_task(self, task: APITask):
+        task_type = task.type
+        payload = task.payload
 
         handlers = {
             TaskType.SESSION.value: self._process_session,
@@ -52,24 +51,31 @@ class APIWorker(threading.Thread):
 
         handler = handlers.get(task_type)
         if handler:
-            handler(data)
+            handler(payload)
         else:
             logger.warning("Unknown task type: %s", task_type)
 
-    def _process_session(self, session_data: dict):
+    def _process_session(self, session: Session):
+        if not isinstance(session, Session):
+            logger.warning("Invalid payload type: expected %s, got %s", Session.__name__, type(session).__name__)
+            return
+
         logger.info("Posting new session")
         try:
-            self.client.post_session(session_data)
+            self.client.post_session(session.to_dict())
         except HTTPError as e:
             logger.error("HTTP error: %s", e)
 
-    def _process_stint_create(self, task_data: dict):
-        session_id = task_data["session_id"]
-        stint: Optional[Stint] = task_data["stint_obj"]
-
-        if not stint:
-            logger.warning("No stint object provided in task_data")
+    def _process_stint_create(self, stint: Stint):
+        if not isinstance(stint, Stint):
+            logger.warning(
+                "Invalid payload type: expected %s, got %s",
+                stint.__name__,
+                type(stint).__name__,
+            )
             return
+        
+        session_id = stint.session_id
 
         logger.info("Creating new stint for session %s", session_id)
         latest_stint = self.client.get_latest_stint(session_id=session_id)
@@ -93,7 +99,7 @@ class APIWorker(threading.Thread):
         if not stint_id:
             logger.warning("Cannot update stint without ID")
             return
-        
+
         stint: Optional[Stint] = task_data["stint_obj"]
         if not stint:
             logger.warning("No stint object provided in task_data")
@@ -130,7 +136,7 @@ class APIWorker(threading.Thread):
         if not pitstop:
             logger.warning("No pitstop object provided in task_data")
             return
-        
+
         logger.info("Creating pitstop for stint %s", stint_id)
         response = self.client.post_pitstop(pitstop.to_post_dict())
 
@@ -145,7 +151,7 @@ class APIWorker(threading.Thread):
         if not pitstop_id:
             logger.warning("Cannot update pitstop without ID")
             return
-        
+
         pitstop: Optional[PitStop] = task_data["pitstop_obj"]
         if not pitstop:
             logger.warning("No pitstop object provided in task_data")
