@@ -2,6 +2,7 @@ from typing import Optional
 from dataclasses import dataclass, field
 from src.models.lap import Lap
 
+
 @dataclass
 class Stint:
 
@@ -49,7 +50,7 @@ class Stint:
             return None
         return self.end_fuel - self.start_fuel
 
-    def post_dict(self) -> dict:
+    def to_post_json(self) -> dict:
         """
         Dictionary for creating a new stint in the backend
         """
@@ -63,7 +64,7 @@ class Stint:
             "start_fuel": self.start_fuel,
         }
 
-    def patch_dict(self) -> dict:
+    def to_patch_json(self) -> dict:
         """
         Dictionary for updating an existing stint in the backend
         """

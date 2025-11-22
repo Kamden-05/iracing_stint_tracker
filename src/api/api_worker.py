@@ -91,7 +91,7 @@ class APIWorker(threading.Thread):
         latest_stint = self.client.get_latest_stint(session_id=session_id)
         stint.number = (latest_stint["number"] + 1) if latest_stint else 1
 
-        response = self.client.post_stint(stint.post_dict())
+        response = self.client.post_stint(stint.to_post_json())
 
         if response and "id" in response:
             stint.id = response["id"]
@@ -116,7 +116,7 @@ class APIWorker(threading.Thread):
             return
 
         logger.info("Updating stint %s", stint_id)
-        response = self.client.patch_stint(stint.patch_dict())
+        response = self.client.patch_stint(stint.to_patch_json())
         if response is None:
             logger.warning("Failed to update stint %s", stint_id)
         else:
