@@ -46,10 +46,10 @@ class LapManager(BaseManager):
             self.lap_start_time = self.session_time
 
     def _post_lap_info(self, lap_time: float):
-        data = Lap(
+        lap = Lap(
             stint_id=self.context.stint_id,
             number=self.lap_completed,
             time=lap_time,
-        ).to_dict()
+        )
 
-        self._send_data(TaskType.LAP, data)
+        self._send_data(TaskType.LAP, lap)
