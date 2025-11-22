@@ -43,6 +43,12 @@ class StintManager(BaseManager):
                 self._update_stint()
                 self.last_lap_completed = self.lap_completed
 
+    def _post_stint_data(self):
+        self._send_data(TaskType.STINT_CREATE, self.current_stint)
+
+    def _patch_stint_data(self):
+        self._send_data(TaskType.STINT_UPDATE, self.current_stint)
+
     def handle_event(self, event, telem, ctx):
         if event == "exit_pit_road":
             self._handle_exit_pit_road()
@@ -81,7 +87,7 @@ class StintManager(BaseManager):
             start_fuel=self.fuel_level,
         )
 
-        self._send_data(TaskType.STINT_CREATE, self.current_stint)
+        self._post_stint_data()
     
     def _update_stint(self):
         if self.current_stint and not self.current_stint.is_complete:
@@ -90,10 +96,9 @@ class StintManager(BaseManager):
             self.current_stint.end_incidents = self.incidents
             self.current_stint.end_fuel = self.fuel_level
 
-            self._send_data(TaskType.STINT_UPDATE, self.current_stint)
+            self._patch_stint_data()
 
     def _end_stint(self):
         self.current_stint.is_complete = True
-        self._send_data(TaskType.STINT_UPDATE, self.current_stint)
-
+        self._patch_stint_data()
         self.current_stint = None
