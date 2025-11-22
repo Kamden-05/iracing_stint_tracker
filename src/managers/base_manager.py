@@ -2,7 +2,7 @@ from queue import Queue
 from typing import Any
 from src.fsm.states import States
 from src.context.race_context import RaceContext
-from src.api.tasks import get_task_dict, TaskType
+from src.api.tasks import APITask, TaskType, PayloadType
 
 
 class BaseManager:
@@ -22,5 +22,5 @@ class BaseManager:
         for telem_key, attr_name in self.required_fields.items():
             setattr(self, attr_name, telem[telem_key])
 
-    def _send_data(self, task: TaskType, obj):
-        self.queue.put(get_task_dict(task, obj))
+    def _send_data(self, task: TaskType, payload: PayloadType):
+        self.queue.put(APITask(task=task, payload=payload))
