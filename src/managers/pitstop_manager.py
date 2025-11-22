@@ -53,12 +53,10 @@ class PitstopManager(BaseManager):
         self.road_enter_time = None
 
     def _post_pitstop_data(self):
-        data = {"stint_id": self.context.stint_id, "pitstop_obj": self.current_pitstop}
-        self._send_data(TaskType.PITSTOP_CREATE, data)
+        self._send_data(TaskType.PITSTOP_CREATE, self.current_pitstop)
 
     def _patch_pitstop_data(self):
-        data = {"pitstop_id": self.current_pitstop.pitstop_id, "pitstop_obj": self.current_pitstop}
-        self._send_data(TaskType.PITSTOP_UPDATE, data)
+        self._send_data(TaskType.PITSTOP_UPDATE, self.current_pitstop)
 
     def _handle_enter_pit_road(self):
         self.road_enter_time = self.session_time
