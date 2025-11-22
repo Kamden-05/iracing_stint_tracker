@@ -66,6 +66,7 @@ class APIClient:
 
     def patch_stint(self, stint: Stint):
         stint_id = stint.id
+        logger.info("Updating stint %s", stint_id)
         return self.patch(f"/stints/{stint_id}", stint.to_patch_json())
 
     def post_pitstop(self, pitstop: PitStop):

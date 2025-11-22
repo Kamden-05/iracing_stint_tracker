@@ -89,10 +89,10 @@ class APIWorker(threading.Thread):
         session_id = stint.session_id
 
         logger.info("Creating new stint for session %s", session_id)
-        latest_stint = self.client.get_latest_stint(session_id=session_id)
+        latest_stint = self.client.get_latest_stint(session_id)
         stint.number = (latest_stint["number"] + 1) if latest_stint else 1
 
-        response = self.client.post_stint(stint.to_post_json())
+        response = self.client.post_stint(stint)
 
         if response and "id" in response:
             stint.id = response["id"]
@@ -109,21 +109,19 @@ class APIWorker(threading.Thread):
         if not self._is_valid_payload_type(stint, Stint):
             return
 
-        stint_id = stint.stint_id
-        if stint_id is None:
-            logger.warning("Cannot update stint without ID")
-            return
+        response = self.client.patch_stint(stint)
 
-        logger.info("Updating stint %s", stint_id)
-        response = self.client.patch_stint(stint.to_patch_json())
         if response is None:
-            logger.warning("Failed to update stint %s", stint_id)
+            logger.warning("Failed to update stint")
         else:
-            logger.info("Stint %s updated successfully", stint_id)
+            logger.info("Stint updated successfully")
 
-    def _process_lap(self, lap_data: dict):
-        lap_number = lap_data.get("lap_number")
-        stint_id = lap_data.get("stint_id")
+    def _process_lap(self, lap: Lap):
+        if not self._is_valid_payload_type(lap, Lap):
+            return
+        
+        lap_number = lap.number
+        stint_id = lap.stint_id
 
         logger.info(
             "Posting lap %s for stint %s",
@@ -131,23 +129,21 @@ class APIWorker(threading.Thread):
             stint_id,
         )
 
-        response = self.client.post_lap(lap_data)
+        response = self.client.post_lap(lap)
 
         if response is None:
             logger.warning("Failed to post lap %s for stint %s", lap_number, stint_id)
         else:
             logger.info("Lap %s posted successfully for stint %s", lap_number, stint_id)
 
-    def _process_pitstop_create(self, task_data: dict):
-        stint_id = task_data.get("stint_id")
-        pitstop: Optional[PitStop] = task_data.get("pitstop_obj")
-
-        if not pitstop:
-            logger.warning("No pitstop object provided in task_data")
+    def _process_pitstop_create(self, pitstop: PitStop):
+        if not self._is_valid_payload_type(pitstop, PitStop):
             return
+        
+        stint_id = pitstop.stint_id
 
         logger.info("Creating pitstop for stint %s", stint_id)
-        response = self.client.post_pitstop(pitstop.to_post_dict())
+        response = self.client.post_pitstop(pitstop)
 
         if response and "id" in response:
             pitstop.pitstop_id = response["id"]
@@ -155,20 +151,13 @@ class APIWorker(threading.Thread):
         else:
             logger.warning("Failed to post pitstop for stint %s", stint_id)
 
-    def _process_pitstop_update(self, task_data: dict):
-        pitstop_id = task_data.get("pitstop_id")
-        if not pitstop_id:
-            logger.warning("Cannot update pitstop without ID")
+    def _process_pitstop_update(self, pitstop: PitStop):
+        if not self._is_valid_payload_type(pitstop, PitStop):
             return
-
-        pitstop: Optional[PitStop] = task_data["pitstop_obj"]
-        if not pitstop:
-            logger.warning("No pitstop object provided in task_data")
-            return
-
-        logger.info("Updating pitstop %s", pitstop_id)
-        response = self.client.patch_pitstop(pitstop.to_patch_json())
+        
+        logger.info("Updating pitstop %s", pitstop.id)
+        response = self.client.patch_pitstop(pitstop)
         if response is None:
-            logger.warning("Failed to update pitstop %s", pitstop_id)
+            logger.warning("Failed to update pitstop %s", pitstop.id)
         else:
-            logger.info("Pitstop %s updated succesfully", pitstop_id)
+            logger.info("Pitstop %s updated succesfully", pitstop.id)
