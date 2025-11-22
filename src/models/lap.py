@@ -7,5 +7,5 @@ class Lap:
     number: int
     time: Optional[float] = None
 
-    def to_dict(self):
+    def to_post_json(self):
         return asdict(self)
