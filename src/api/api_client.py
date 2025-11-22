@@ -1,6 +1,7 @@
 from typing import Optional
 import logging
 import requests
+from src.models import Session, Stint, PitStop, Lap
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -31,7 +32,7 @@ class APIClient:
         url = f"{self.base_url}/{endpoint.lstrip('/')}"
         try:
             r = self.s.request(method, url, json=json, timeout=5)
-            #r.raise_for_status()
+            # r.raise_for_status()
             if r.status_code in [409, 204]:
                 return None
             logger.debug("%s %s -> %s", method, url, r.status_code)
@@ -53,27 +54,27 @@ class APIClient:
         return self._request("PATCH", endpoint, json=json)
 
     # Domain specific methods
-    def post_session(self, session_data: dict):
-        return self.post("sessions", session_data)
+    def post_session(self, session: Session):
+        return self.post("sessions", session.to_post_json())
 
     def get_latest_stint(self, session_id: int):
         return self.get(f"sessions/{session_id}/stints/latest")
 
-    def post_stint(self, stint_data: dict):
-        session_id = stint_data["session_id"]
-        return self.post(f"sessions/{session_id}/stints", stint_data)
+    def post_stint(self, stint: Stint):
+        session_id = stint.session_id
+        return self.post(f"sessions/{session_id}/stints", stint.to_post_json())
 
-    def patch_stint(self, stint_data: dict):
-        stint_id = stint_data["id"]
-        return self.patch(f"/stints/{stint_id}", stint_data)
+    def patch_stint(self, stint: Stint):
+        stint_id = stint.id
+        return self.patch(f"/stints/{stint_id}", stint.to_patch_json())
 
-    def post_pitstop(self, pit_data: dict):
-        stint_id = pit_data["stint_id"]
-        return self.post(f"stints/{stint_id}/pitstops", pit_data)
+    def post_pitstop(self, pitstop: PitStop):
+        stint_id = pitstop.stint_id
+        return self.post(f"stints/{stint_id}/pitstops", pitstop.to_post_json())
 
-    def patch_pitstop(self, pit_data: dict):
-        pitstop_id = pit_data["pitstop_id"]
-        return self.patch(f"pitstops/{pitstop_id}", pit_data)
+    def patch_pitstop(self, pitstop: PitStop):
+        pitstop_id = pitstop.id
+        return self.patch(f"pitstops/{pitstop_id}", pitstop.to_patch_json())
 
     def post_lap(self, lap_data: dict):
         stint_id = lap_data["stint_id"]

@@ -1,9 +1,9 @@
 import threading
-from typing import Optional
+from typing import Optional, Any
 from queue import Queue, Empty
 import logging
 from requests import HTTPError
-from src.api.tasks import APITask, TaskType
+from src.api.tasks import APITask, TaskType, PayloadType
 from src.api.api_client import APIClient
 from src.models import Session, Stint, PitStop, Lap
 from src.context.race_context import RaceContext
@@ -61,28 +61,29 @@ class APIWorker(threading.Thread):
         else:
             logger.warning("Unknown task type: %s", task_type)
 
-    def _process_session(self, session: Session):
-        if not isinstance(session, Session):
+    def _is_valid_payload_type(self, payload: Any, expected_type: type):
+        if not isinstance(payload, expected_type):
             logger.warning(
                 "Invalid payload type: expected %s, got %s",
-                Session.__name__,
-                type(session).__name__,
+                expected_type.__name__,
+                type(payload).__name__,
             )
+            return False
+
+        return True
+
+    def _process_session(self, session: Session):
+        if not self._is_valid_payload_type(session, Session):
             return
 
         logger.info("Posting new session")
         try:
-            self.client.post_session(session.to_post_json())
+            self.client.post_session(session)
         except HTTPError as e:
             logger.error("HTTP error: %s", e)
 
     def _process_stint_create(self, stint: Stint):
-        if not isinstance(stint, Stint):
-            logger.warning(
-                "Invalid payload type: expected %s, got %s",
-                stint.__name__,
-                type(stint).__name__,
-            )
+        if not self._is_valid_payload_type(stint, Stint):
             return
 
         session_id = stint.session_id
@@ -104,15 +105,13 @@ class APIWorker(threading.Thread):
             stint.id,
         )
 
-    def _process_stint_update(self, task_data: dict):
-        stint_id = task_data.get("stint_id")
-        if not stint_id:
-            logger.warning("Cannot update stint without ID")
+    def _process_stint_update(self, stint: Stint):
+        if not self._is_valid_payload_type(stint, Stint):
             return
 
-        stint: Optional[Stint] = task_data["stint_obj"]
-        if not stint:
-            logger.warning("No stint object provided in task_data")
+        stint_id = stint.stint_id
+        if stint_id is None:
+            logger.warning("Cannot update stint without ID")
             return
 
         logger.info("Updating stint %s", stint_id)

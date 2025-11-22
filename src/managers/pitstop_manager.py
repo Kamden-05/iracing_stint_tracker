@@ -47,7 +47,7 @@ class PitstopManager(BaseManager):
             self._handle_driver_swap_in()
         elif event == "driver_swap_out":
             self._handle_driver_swap_out()
-    
+
     def _reset_pit(self):
         self.current_pitstop = None
         self.road_enter_time = None
@@ -65,7 +65,7 @@ class PitstopManager(BaseManager):
         if self.current_pitstop is not None:
             self.current_pitstop.road_exit_time = self.session_time
             self._patch_pitstop_data()
-            
+
         self._reset_pit()
 
     def _handle_enter_pit_box(self):
@@ -80,7 +80,7 @@ class PitstopManager(BaseManager):
             left_front=self.left_front,
             right_front=self.right_front,
             left_rear=self.left_rear,
-            right_rear=self.right_rear
+            right_rear=self.right_rear,
         )
 
         self._post_pitstop_data()
@@ -90,12 +90,12 @@ class PitstopManager(BaseManager):
             self.current_pitstop.service_end_time = self.session_time
             self.current_pitstop.fuel_end_amount = self.fuel_level
             self.current_pitstop.end_fast_repairs = self.fast_repair_available
-    
+
     def _handle_driver_swap_in(self):
         self.current_pitstop = PitStop(
             stint_id=self.context.stint_id,
-            pitstop_id=self.context.pitstop_id,
+            id=self.context.pitstop_id,
         )
-    
+
     def _handle_driver_swap_out(self):
         self._reset_pit()

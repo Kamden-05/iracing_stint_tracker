@@ -6,7 +6,7 @@ from typing import Optional
 class PitStop:
 
     stint_id: int
-    pitstop_id: Optional[int] = None
+    id: Optional[int] = None
     road_enter_time: Optional[float] = None
 
     service_start_time: Optional[float] = None
