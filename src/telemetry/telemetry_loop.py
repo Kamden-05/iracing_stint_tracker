@@ -10,16 +10,18 @@ if TYPE_CHECKING:
 
 class TelemetryLoop:
     def __init__(
-        self, ir_client: "IRacingClient", fsm: "DriverFSM", user_name: str, hz: int = 60
+        self, ir_client: "IRacingClient", fsm: "DriverFSM", user_name: str, session_reset_event: threading.Event, hz: int = 60
     ):
         self.connected: bool = False
         self._stop_event = threading.Event()
+        self.session_reset_event = session_reset_event
 
         self.user_name: str = user_name
         self.ir: "IRacingClient" = ir_client
         self.fsm: "DriverFSM" = fsm
         self.interval: float = 1.0 / hz
 
+        self.prev_session_id: Optional[int] = None
         self.prev_on_track: bool = False
         self.prev_on_pit_road: bool = False
         self.prev_in_pit_box: bool = False
@@ -54,7 +56,7 @@ class TelemetryLoop:
             self.ir.get("SessionState") == SessionState.racing
             and self.ir.get("PlayerCarClassPosition") > 0
         )
-    
+
     def _check_race_end(self) -> bool:
         flags = self.ir.get("SessionFlags")
         on_track = self.ir.get("IsOnTrack")
@@ -74,6 +76,9 @@ class TelemetryLoop:
 
         return False
     
+    def _signal_session_change(self):
+        self.session_reset_event.set()
+
     def stop(self):
         self._stop_event.set()
 
@@ -103,6 +108,14 @@ class TelemetryLoop:
             # telemetry reading
 
             self.ir.update()
+
+            current_session_id = self.ir.get("")  # TODO: get session id
+            if (
+                self.prev_session_id is not None
+                and current_session_id != self.prev_session_id
+            ):
+                self._signal_session_change()
+            self.prev_session_id = current_session_id
 
             on_track = bool(self.ir.get("IsOnTrack", False))
             on_pit_road = bool(self.ir.get("OnPitRoad", False))
