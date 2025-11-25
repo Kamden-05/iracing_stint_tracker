@@ -12,6 +12,7 @@ class TelemetryLoop:
         self, ir_client: "IRacingClient", fsm: "DriverFSM", user_name: str, hz: int = 60
     ):
         self.connected: bool = False
+        self._stop: bool = False
 
         self.user_name: str = user_name
         self.ir: "IRacingClient" = ir_client
@@ -71,9 +72,12 @@ class TelemetryLoop:
             return finished_final_lap or off_track
 
         return False
+    
+    def stop(self):
+        self._stop = True
 
     def run(self):
-        while not self.session_finished:
+        while not self._stop and not self.session_finished:
 
             # connection handling
 
