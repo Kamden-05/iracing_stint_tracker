@@ -1,4 +1,5 @@
 import time
+import threading
 from typing import TYPE_CHECKING, Optional, Any
 from irsdk import SessionState, Flags
 
@@ -12,7 +13,7 @@ class TelemetryLoop:
         self, ir_client: "IRacingClient", fsm: "DriverFSM", user_name: str, hz: int = 60
     ):
         self.connected: bool = False
-        self._stop: bool = False
+        self._stop_event = threading.Event()
 
         self.user_name: str = user_name
         self.ir: "IRacingClient" = ir_client
@@ -74,10 +75,10 @@ class TelemetryLoop:
         return False
     
     def stop(self):
-        self._stop = True
+        self._stop_event.set()
 
     def run(self):
-        while not self._stop and not self.session_finished:
+        while not self._stop_event.is_set() and not self.session_finished:
 
             # connection handling
 
