@@ -109,7 +109,7 @@ class TelemetryLoop:
 
             self.ir.update()
 
-            current_session_id = self.ir.get("")  # TODO: get session id
+            current_session_id = self.ir.get("WeekendInfo")["SubSessionID"]
             if (
                 self.prev_session_id is not None
                 and current_session_id != self.prev_session_id
