@@ -67,7 +67,7 @@ class DriverFSM(object):
 
     def reconnect(self):
         if self.last_state:
-            self.set_state(self.last_state)
+            self.machine.set_state(self.last_state)
         else:
             self.set_state(States.IDLE)
 
