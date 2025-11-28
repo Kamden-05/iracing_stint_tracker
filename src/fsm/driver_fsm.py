@@ -5,10 +5,10 @@ from src.managers.base_manager import BaseManager
 
 
 TRANSITIONS = [
-    # [event, source, destination]
+    # [event, source, destination, conditions, unless, after]
     # connection/initialization
-    ["connect", States.DISCONNECTED, States.IDLE],
-    ["disconnect", "*", States.DISCONNECTED],
+    ["connect", States.DISCONNECTED, States.IDLE, None, None, None],
+    ["disconnect", "*", States.DISCONNECTED, None, None, None],
     # pre-session / idle
     ["session_start", States.IDLE, States.ON_TRACK, None, None, "_on_session_start"],
     [
@@ -28,16 +28,19 @@ TRANSITIONS = [
         "_on_driver_swap_in",
     ],
     # on track
-    ["enter_pit_road", States.ON_TRACK, States.ON_PIT_ROAD],
-    ["exit_pit_road", States.ON_PIT_ROAD, States.ON_TRACK],
+    ["enter_pit_road", States.ON_TRACK, States.ON_PIT_ROAD, None, None, None],
+    ["exit_pit_road", States.ON_PIT_ROAD, States.ON_TRACK, None, None, None],
     # pit stop
-    ["enter_pit_box", States.ON_PIT_ROAD, States.IN_PIT_BOX],
-    ["exit_pit_box", States.IN_PIT_BOX, States.ON_PIT_ROAD],
+    ["enter_pit_box", States.ON_PIT_ROAD, States.IN_PIT_BOX, None, None, None],
+    ["exit_pit_box", States.IN_PIT_BOX, States.ON_PIT_ROAD, None, None, None],
     # post-session
     [
         "finish_session",
         [States.ON_TRACK, States.ON_PIT_ROAD, States.IN_PIT_BOX, States.IDLE],
         States.FINISHED,
+        None,
+        None,
+        None,
     ],
 ]
 
