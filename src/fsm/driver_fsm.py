@@ -91,28 +91,6 @@ class DriverFSM(object):
         for m in self.managers:
             m.handle_event(event_name, self.last_telem, ctx)
 
-    # state based callbacks
-
-    def on_enter_ON_PIT_ROAD(self, event: EventData):
-        self._broadcast("enter_pit_road", event)
-
-    def on_exit_ON_PIT_ROAD(self, event: EventData):
-        self._broadcast("exit_pit_road", event)
-
-    def on_enter_IN_PIT_BOX(self, event: EventData):
-        self._broadcast("enter_pit_box", event)
-
-    def on_exit_IN_PIT_BOX(self, event: EventData):
-        self._broadcast("exit_pit_box", event)
-
-    def on_enter_FINISHED(self, event: EventData):
-        self._broadcast("finished", event)
-
-    def on_enter_DISCONNECTED(self, event: EventData):
-        self._broadcast("disconnected", event)
-
-    # event based callbacks
-
     def _on_session_start(self, event: EventData):
         self._broadcast("session_start", event)
 
