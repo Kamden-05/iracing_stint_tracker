@@ -58,6 +58,8 @@ class StintManager(BaseManager):
             self._handle_session_start()
         elif event == "enter_pit_box":
             self._handle_enter_pit_box()
+        
+        print(f"Pending stint end: {self.pending_stint_end}")
 
 
     def _handle_session_start(self):
