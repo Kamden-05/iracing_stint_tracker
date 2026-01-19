@@ -27,7 +27,6 @@ class StintManager(BaseManager):
         super().__init__(context, queue)
         self.current_stint = None
         self.last_lap_completed = 0
-        self.pending_stint_end = False
 
     def on_tick(self, telem, state):
         super().on_tick(telem, state)
@@ -35,13 +34,12 @@ class StintManager(BaseManager):
         self._check_for_new_lap()
 
     def _check_for_new_lap(self):
-        if not self.pending_stint_end:
-            if self.lap_completed is None:
-                return
-            
-            if self.lap_completed > self.last_lap_completed:
-                self._update_stint()
-                self.last_lap_completed = self.lap_completed
+        if not self.current_stint or self.lap_completed is None:
+            return
+
+        if self.lap_completed > self.last_lap_completed:
+            self._update_stint()
+            self.last_lap_completed = self.lap_completed
 
     def _post_stint_data(self):
         self._send_data(TaskType.STINT_CREATE, self.current_stint)
@@ -50,36 +48,25 @@ class StintManager(BaseManager):
         self._send_data(TaskType.STINT_UPDATE, self.current_stint)
 
     def handle_event(self, event, telem, ctx):
-        if event == "exit_pit_road":
-            self._handle_exit_pit_road()
-        elif event == "enter_pit_road":
-            self._handle_enter_pit_road()
-        elif event == "session_start":
+        if event == "session_start":
             self._handle_session_start()
         elif event == "enter_pit_box":
             self._handle_enter_pit_box()
-        
-        print(f"Pending stint end: {self.pending_stint_end}")
-
+        elif event == "exit_pit_box":
+            self._start_stint()
+        elif event == "session_finish":
+            self._end_stint()
 
     def _handle_session_start(self):
         self._start_stint()
 
-    def _handle_enter_pit_road(self):
-        self._update_stint()
-        self.pending_stint_end = True
-
-    def _handle_exit_pit_road(self):
-        if self.pending_stint_end:
-            self.pending_stint_end = False
-        else:
-            self._start_stint()
-
     def _handle_enter_pit_box(self):
         self._end_stint()
-        self.pending_stint_end = False
 
     def _start_stint(self):
+        if self.current_stint:
+            return
+
         self.current_stint = Stint(
             session_id=self.context.session_id,
             driver_name=self.context.user_name,
@@ -89,18 +76,25 @@ class StintManager(BaseManager):
             start_fuel=self.fuel_level,
         )
 
+        self.last_lap_completed = self.lap_completed or 0
         self._post_stint_data()
-    
+
+        print("stint started")
+
     def _update_stint(self):
-        if self.current_stint and not self.current_stint.is_complete:
+        if self.current_stint:
             self.current_stint.end_time = self.session_time
             self.current_stint.end_position = self.position
             self.current_stint.end_incidents = self.incidents
             self.current_stint.end_fuel = self.fuel_level
 
             self._patch_stint_data()
+            print("stint updated")
 
     def _end_stint(self):
-        self.current_stint.is_complete = True
+        if not self.current_stint:
+            return
+
         self._patch_stint_data()
         self.current_stint = None
+        print("stint ended")

@@ -31,8 +31,22 @@ TRANSITIONS = [
     ["enter_pit_road", States.ON_TRACK, States.ON_PIT_ROAD, None, None, None],
     ["exit_pit_road", States.ON_PIT_ROAD, States.ON_TRACK, None, None, None],
     # pit stop
-    ["enter_pit_box", States.ON_PIT_ROAD, States.IN_PIT_BOX, None, None, None],
-    ["exit_pit_box", States.IN_PIT_BOX, States.ON_PIT_ROAD, None, None, None],
+    [
+        "enter_pit_box",
+        States.ON_PIT_ROAD,
+        States.IN_PIT_BOX,
+        None,
+        None,
+        "_on_enter_pit_box",
+    ],
+    [
+        "exit_pit_box",
+        States.IN_PIT_BOX,
+        States.ON_PIT_ROAD,
+        None,
+        None,
+        "_on_exit_pit_box",
+    ],
     # post-session
     [
         "finish_session",
@@ -40,7 +54,7 @@ TRANSITIONS = [
         States.FINISHED,
         None,
         None,
-        None,
+        "_on_session_finish",
     ],
 ]
 
@@ -93,6 +107,15 @@ class DriverFSM(object):
 
     def _on_session_start(self, event: EventData):
         self._broadcast("session_start", event)
+
+    def _on_session_finish(self, event: EventData):
+        self._broadcast("session_finish", event)
+
+    def _on_enter_pit_box(self, event: EventData):
+        self._broadcast("enter_pit_box", event)
+
+    def _on_exit_pit_box(self, event: EventData):
+        self._broadcast("exit_pit_box", event)
 
     def _on_driver_swap_in(self, event: EventData):
         self._broadcast("driver_swap_in", event)
