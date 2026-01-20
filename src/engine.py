@@ -46,6 +46,7 @@ class AppEngine:
         self.managers = [
             SessionManager(self.context, self.queue),
             StintManager(self.context, self.queue),
+            PitstopManager(self.context, self.queue),
         ]
         self.fsm.attach_managers(self.managers)
 
@@ -54,7 +55,7 @@ class AppEngine:
             ir_client=IRacingClient(),
             fsm=self.fsm,
             user_name=self.user_name,
-            session_reset_event=self.session_reset_event
+            session_reset_event=self.session_reset_event,
         )
 
         self.telemetry_thread = threading.Thread(
