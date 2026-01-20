@@ -60,12 +60,14 @@ class PitstopManager(BaseManager):
 
     def _handle_enter_pit_road(self):
         self.road_enter_time = self.session_time
+        print(f"enter pit road: {self.road_enter_time}")
 
     def _handle_exit_pit_road(self):
         if self.current_pitstop is not None:
             self.current_pitstop.road_exit_time = self.session_time
             self._patch_pitstop_data()
 
+        print(f"exit pit road: {self.current_pitstop}")
         self._reset_pit()
 
     def _handle_enter_pit_box(self):
@@ -84,12 +86,15 @@ class PitstopManager(BaseManager):
         )
 
         self._post_pitstop_data()
+        print(f"enter pit: {self.current_pitstop}")
 
     def _handle_exit_pit_box(self):
         if self.current_pitstop is not None:
             self.current_pitstop.service_end_time = self.session_time
             self.current_pitstop.fuel_end_amount = self.fuel_level
             self.current_pitstop.end_fast_repairs = self.fast_repair_available
+
+        print(f"exit box: {self.current_pitstop}")
 
     def _handle_driver_swap_in(self):
         self.current_pitstop = PitStop(
