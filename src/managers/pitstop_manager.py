@@ -9,8 +9,8 @@ from src.api.tasks import TaskType
 class PitstopManager(BaseManager):
     required_fields = {
         "SessionTime": "session_time",
-        "PitRepairLeft": "repair_time",
-        "PitOptRepairLeft": "repair_opt_time",
+        "PitRepairLeft": "required_repair_time",
+        "PitOptRepairLeft": "optional_repair_time",
         "FuelLevel": "fuel_level",
         "dpRFTireChange": "right_front",
         "dpLFTireChange": "left_front",
@@ -20,8 +20,8 @@ class PitstopManager(BaseManager):
     }
 
     session_time: Optional[float]
-    repair_time: Optional[float]
-    repair_opt_time: Optional[float]
+    required_repair_time: Optional[float]
+    optional_repair_time: Optional[float]
     fast_repair_available: Optional[int]
     fuel_level: Optional[float]
     right_front: Optional[bool]
@@ -71,12 +71,15 @@ class PitstopManager(BaseManager):
         self._reset_pit()
 
     def _handle_enter_pit_box(self):
+        if self.road_enter_time is None:
+            self.road_enter_time = self.session_time
+
         self.current_pitstop = PitStop(
             stint_id=self.context.stint_id,
             road_enter_time=self.road_enter_time,
             service_start_time=self.session_time,
-            required_repair_time=self.repair_time,
-            optional_repair_time=self.repair_opt_time,
+            required_repair_time=self.required_repair_time,
+            optional_repair_time=self.optional_repair_time,
             start_fast_repairs=self.fast_repair_available,
             fuel_start_amount=self.fuel_level,
             left_front=self.left_front,

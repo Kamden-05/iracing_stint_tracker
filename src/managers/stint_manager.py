@@ -54,7 +54,7 @@ class StintManager(BaseManager):
             self._handle_enter_pit_box()
         elif event == "exit_pit_box":
             self._start_stint()
-        elif event == "session_finish":
+        elif event == "finish_session":
             self._end_stint()
 
     def _handle_session_start(self):
@@ -95,6 +95,6 @@ class StintManager(BaseManager):
         if not self.current_stint:
             return
 
-        self._patch_stint_data()
+        self._update_stint()
         self.current_stint = None
         print("stint ended")

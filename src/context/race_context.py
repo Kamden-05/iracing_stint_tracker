@@ -7,6 +7,7 @@ class RaceContext:
     session_id: Optional[int] = None
     car_id: Optional[int] = None
     stint_id: Optional[int] = None
+    pitstop_id: Optional[int] = None
     user_name: Optional[str] = None
 
     def reset(self):
