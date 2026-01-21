@@ -47,6 +47,7 @@ class AppEngine:
             SessionManager(self.context, self.queue),
             StintManager(self.context, self.queue),
             PitstopManager(self.context, self.queue),
+            LapManager(self.context, self.queue),
         ]
         self.fsm.attach_managers(self.managers)
 
