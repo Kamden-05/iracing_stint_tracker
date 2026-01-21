@@ -119,7 +119,7 @@ class APIWorker(threading.Thread):
     def _process_lap(self, lap: Lap):
         if not self._is_valid_payload_type(lap, Lap):
             return
-        
+
         lap_number = lap.number
         stint_id = lap.stint_id
 
@@ -139,14 +139,15 @@ class APIWorker(threading.Thread):
     def _process_pitstop_create(self, pitstop: PitStop):
         if not self._is_valid_payload_type(pitstop, PitStop):
             return
-        
+
         stint_id = pitstop.stint_id
 
         logger.info("Creating pitstop for stint %s", stint_id)
         response = self.client.post_pitstop(pitstop)
 
         if response and "id" in response:
-            pitstop.pitstop_id = response["id"]
+            pitstop.id = response["id"]
+            self.context.pitstop_id = pitstop.id
             logger.info("Pitstop posted successfully for stint %s", stint_id)
         else:
             logger.warning("Failed to post pitstop for stint %s", stint_id)
@@ -154,7 +155,7 @@ class APIWorker(threading.Thread):
     def _process_pitstop_update(self, pitstop: PitStop):
         if not self._is_valid_payload_type(pitstop, PitStop):
             return
-        
+
         logger.info("Updating pitstop %s", pitstop.id)
         response = self.client.patch_pitstop(pitstop)
         if response is None:
