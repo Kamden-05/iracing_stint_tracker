@@ -10,13 +10,16 @@ if TYPE_CHECKING:
 
 class TelemetryLoop:
     def __init__(
-        self, ir_client: "IRacingClient", fsm: "DriverFSM", user_name: str, session_reset_event: threading.Event, hz: int = 60
+        self,
+        ir_client: "IRacingClient",
+        fsm: "DriverFSM",
+        session_reset_event: threading.Event,
+        hz: int = 60,
     ):
         self.connected: bool = False
         self._stop_event = threading.Event()
         self.session_reset_event = session_reset_event
 
-        self.user_name: str = user_name
         self.ir: "IRacingClient" = ir_client
         self.fsm: "DriverFSM" = fsm
         self.interval: float = 1.0 / hz
@@ -28,16 +31,6 @@ class TelemetryLoop:
         self.session_started: bool = False
         self.session_finished: bool = False
         self.final_lap_completed: Optional[bool] = None
-        self.prev_driver_name: Optional[str] = user_name
-
-    def _get_current_driver_name(self) -> Optional[str]:
-        try:
-            car_id = int(self.ir.get("PlayerCarIdx"))
-            drivers = self.ir.get("DriverInfo")["Drivers"]
-
-            return drivers[car_id]["UserName"]
-        except Exception:
-            return None
 
     def _get_tick_data(self) -> dict[str, Any]:
         data = {}
@@ -75,7 +68,7 @@ class TelemetryLoop:
             return finished_final_lap or off_track
 
         return False
-    
+
     def _signal_session_change(self):
         self.session_reset_event.set()
 
@@ -117,11 +110,10 @@ class TelemetryLoop:
                 self._signal_session_change()
             self.prev_session_id = current_session_id
 
-            on_track = bool(self.ir.get("IsOnTrack", False))
+            on_track = bool(self.ir.get("IsOnTrackCar", False))
             on_pit_road = bool(self.ir.get("OnPitRoad", False))
             pit_active = bool(self.ir.get("PitstopActive", False))
             tow_time = float(self.ir.get("PlayerCarTowTime", 0.0))
-            driver_name = self._get_current_driver_name()
 
             tick_data = self._get_tick_data()
 
@@ -151,15 +143,12 @@ class TelemetryLoop:
                 self.fsm.exit_pit_box()
 
             # driver swaps
-            if driver_name != self.prev_driver_name:
-
-                # user enters car
-                if driver_name == self.user_name:
-                    self.fsm.driver_swap_in()
-
-                # user exits car
-                elif self.prev_driver_name == self.user_name:
+            if self.session_started:
+                if not on_track and self.prev_on_track:
                     self.fsm.driver_swap_out()
+
+                if on_track and not self.prev_on_track:
+                    self.fsm.driver_swap_in()
 
             # session finish
             if self._check_race_end() and not self.session_finished:
@@ -174,6 +163,5 @@ class TelemetryLoop:
             self.prev_on_track = on_track
             self.prev_on_pit_road = on_pit_road
             self.prev_in_pit_box = pit_active
-            self.prev_driver_name = driver_name
 
             time.sleep(self.interval)
