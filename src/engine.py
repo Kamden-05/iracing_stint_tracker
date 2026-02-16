@@ -54,7 +54,6 @@ class AppEngine:
         self.telemetry_loop = TelemetryLoop(
             ir_client=IRacingClient(),
             fsm=self.fsm,
-            user_name=self.user_name,
             session_reset_event=self.session_reset_event,
         )
 
