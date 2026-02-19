@@ -17,6 +17,7 @@ class AppEngine:
         self,
         user_name: str,
         api_base_url: str,
+        export_local: bool,
     ):
         self.context = RaceContext(user_name=user_name)
         self.queue = Queue()
@@ -25,7 +26,11 @@ class AppEngine:
         self.user_name = user_name
         self.api_url = api_base_url
 
-        self._setup_api()
+        if self.api_url:
+            self._setup_api()
+        else:
+            self.api_thread = None
+
         self._setup_fsm_managers()
         self._setup_telemetry()
 
@@ -69,8 +74,11 @@ class AppEngine:
                 self.reset()
 
     def start(self):
-        print("Starting API Worker")
-        self.api_thread.start()
+        if self.api_thread:
+            print("Starting API Worker")
+            self.api_thread.start()
+        else:
+            print("No API Thread")
 
         print("Starting telemetry loop")
         self.telemetry_thread.start()
@@ -81,7 +89,8 @@ class AppEngine:
     def stop(self):
         print("Stopping engine")
         self.stop_event.set()
-        self.api_thread.join()
+        if self.api_thread:
+            self.api_thread.join()
         self.telemetry_loop.stop()
         self.telemetry_thread.join()
 
@@ -94,6 +103,5 @@ class AppEngine:
 
         self._setup_fsm_managers()
         self._setup_telemetry()
-
 
         self.telemetry_thread.start()
