@@ -30,7 +30,7 @@ class BaseManager:
         if task is TaskType.SESSION:
             self.excel.create_workbook(payload)
             print("workbook created")
-        elif task in [TaskType.STINT_CREATE, TaskType.PITSTOP_CREATE, TaskType.Lap]:
+        elif task in [TaskType.STINT_CREATE, TaskType.PITSTOP_CREATE, TaskType.LAP]:
             self.excel.update_sheet(payload, append=True)
             print("appended to sheet")
         else:
