@@ -17,8 +17,8 @@ class LapManager(BaseManager):
     last_lap_time: Optional[float]
     current_lap: Optional[int]
 
-    def __init__(self, context, queue):
-        super().__init__(context, queue)
+    def __init__(self, context, queue, excel):
+        super().__init__(context, queue, excel)
         self.last_lap_completed = 0
         self.lap_start_time = None
 
@@ -28,7 +28,11 @@ class LapManager(BaseManager):
         self._check_for_new_lap()
 
     def _check_for_new_lap(self):
-        if self.current_lap == 1 and self.lap_completed == 0 and not self.lap_start_time:
+        if (
+            self.current_lap == 1
+            and self.lap_completed == 0
+            and not self.lap_start_time
+        ):
             self.lap_start_time = self.session_time
 
         if self.lap_completed == 0:

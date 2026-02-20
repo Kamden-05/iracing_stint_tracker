@@ -5,6 +5,7 @@ from src.managers.base_manager import BaseManager
 from src.context.race_context import RaceContext
 from src.models.session import Session
 from src.api.tasks import TaskType
+from src.exporters.excel_exporter import ExcelExporter
 
 
 class SessionManager(BaseManager):
@@ -20,8 +21,8 @@ class SessionManager(BaseManager):
     driver_info: Optional[dict]
     car_id: Optional[int]
 
-    def __init__(self, context: RaceContext, queue: Queue):
-        super().__init__(context, queue)
+    def __init__(self, context: RaceContext, queue: Queue, excel: ExcelExporter):
+        super().__init__(context, queue, excel)
 
         for attr in self.required_fields.values():
             setattr(self, attr, None)
