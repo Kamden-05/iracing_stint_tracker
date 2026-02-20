@@ -10,6 +10,7 @@ from src.managers.session_manager import SessionManager
 from src.managers.stint_manager import StintManager
 from src.managers.pitstop_manager import PitstopManager
 from src.managers.lap_manager import LapManager
+from src.exporters.excel_exporter import ExcelExporter
 
 
 class AppEngine:
@@ -17,7 +18,6 @@ class AppEngine:
         self,
         user_name: str,
         api_base_url: str,
-        export_local: bool,
     ):
         self.context = RaceContext(user_name=user_name)
         self.queue = Queue()
@@ -43,15 +43,15 @@ class AppEngine:
         self.api_worker = APIWorker(
             self.context, self.api_client, self.queue, self.stop_event
         )
-
         self.api_thread = threading.Thread(target=self.api_worker.run, daemon=True)
 
     def _setup_fsm_managers(self):
         self.fsm = DriverFSM()
+        excel = ExcelExporter()
         self.managers = [
-            SessionManager(self.context, self.queue),
-            StintManager(self.context, self.queue),
-            PitstopManager(self.context, self.queue),
+            SessionManager(self.context, self.queue, excel),
+            StintManager(self.context, self.queue, excel),
+            PitstopManager(self.context, self.queue, excel),
         ]
         self.fsm.attach_managers(self.managers)
 

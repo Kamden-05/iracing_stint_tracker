@@ -9,7 +9,7 @@ def main():
     api_url = os.getenv("TEST_URL")
     user_name = "Kam Wilson"
 
-    engine = AppEngine(user_name=user_name, api_base_url=None, export_local=False)
+    engine = AppEngine(user_name=user_name, api_base_url=None)
 
     engine.start()
 
