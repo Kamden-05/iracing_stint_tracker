@@ -41,20 +41,18 @@ class ExcelExporter:
             lap_df.to_excel(writer, sheet_name="Lap", index=False)
             pitstop_df.to_excel(writer, sheet_name="PitStop", index=False)
 
-    def update_sheet(self, obj: Session | Lap | PitStop | Stint):
+    def update_sheet(self, obj: Session | Lap | PitStop | Stint, append: bool = False):
         sheet_name = obj.__class__.__name__
+
         old_df = pd.read_excel(self.file_path, sheet_name=sheet_name)
+        if not append:
+            old_df = old_df.iloc[:-1]
+
         df = pd.DataFrame([asdict(obj)])
+
         combined_df = pd.concat([old_df, df], ignore_index=True)
 
         with pd.ExcelWriter(
             self.file_path, engine="openpyxl", mode="a", if_sheet_exists="replace"
         ) as writer:
             combined_df.to_excel(writer, sheet_name=sheet_name, index=False)
-
-
-s = Session(1, "VIR", None, None, None, None)
-
-e = ExcelExporter()
-
-e.create_workbook(s)
