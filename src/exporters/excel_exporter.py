@@ -6,26 +6,29 @@ import pandas as pd
 
 
 class ExcelExporter:
-    def __init__(
-        self,
-        output_path: str = r"C:\Users\kmdnw\Projects\iRacing\iracing_stint_tracker\races",
-    ):
-        self.file_name = ""
+    def __init__(self):
+        self.file_path = ""
         self.stint_headers = [field.name for field in fields(Stint)]
         self.lap_headers = [field.name for field in fields(Lap)]
         self.pitstop_headers = [field.name for field in fields(PitStop)]
 
-        self.output_dir = output_path
+        self.current_dir = os.path.dirname(__file__)
+        self.project_root = os.path.abspath(
+            os.path.join(self.current_dir, os.pardir, os.pardir)
+        )
 
     def create_workbook(self, session: Session):
-        self.file_name = (
-            str(session.id)
+        file_name = (
+            str(session.track)
             + "_"
             + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             + ".xlsx"
         )
 
-        self.file_path = os.path.join(self.output_dir, self.file_name)
+        races_dir = os.path.join(self.project_root, "races")
+        os.makedirs(races_dir, exist_ok=True)
+
+        self.file_path = os.path.join(races_dir, file_name)
 
         session_df = pd.DataFrame([asdict(session)])
         stint_df = pd.DataFrame(columns=self.stint_headers)
@@ -48,3 +51,10 @@ class ExcelExporter:
             self.file_path, engine="openpyxl", mode="a", if_sheet_exists="replace"
         ) as writer:
             combined_df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+
+s = Session(1, "VIR", None, None, None, None)
+
+e = ExcelExporter()
+
+e.create_workbook(s)
