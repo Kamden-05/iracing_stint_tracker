@@ -17,7 +17,7 @@ class BaseManager:
         for attr in self.required_fields.values():
             setattr(self, attr, None)
 
-    def handle_event(self, event: str, telem: dict[str, Any], ctx: dict[str, Any]):
+    def handle_event(self, event_name: str):
         pass
 
     def on_tick(self, telem: dict[str, Any], state: States):

@@ -29,8 +29,8 @@ class SessionManager(BaseManager):
 
         self.session_sent = False
 
-    def handle_event(self, event, telem, ctx):
-        if event == "session_start" and not self.session_sent:
+    def handle_event(self, event_name: str):
+        if event_name == "session_start" and not self.session_sent:
             self.set_context()
             self._post_session_info()
             self.session_sent = True

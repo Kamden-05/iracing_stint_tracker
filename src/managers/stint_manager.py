@@ -48,14 +48,14 @@ class StintManager(BaseManager):
     def _patch_stint_data(self):
         self._send_data(TaskType.STINT_UPDATE, self.current_stint)
 
-    def handle_event(self, event, telem, ctx):
-        if event == "session_start":
+    def handle_event(self, event_name: str):
+        if event_name == "session_start":
             self._handle_session_start()
-        elif event == "enter_pit_box":
+        elif event_name == "enter_pit_box":
             self._handle_enter_pit_box()
-        elif event == "exit_pit_box":
+        elif event_name == "exit_pit_box":
             self._start_stint()
-        elif event == "finish_session":
+        elif event_name == "finish_session":
             self._end_stint()
 
     def _handle_session_start(self):

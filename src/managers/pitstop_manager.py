@@ -35,18 +35,18 @@ class PitstopManager(BaseManager):
         self.current_pitstop: Optional[PitStop] = None
         self.road_enter_time: Optional[float] = None
 
-    def handle_event(self, event, telem, ctx):
-        if event == "enter_pit_road":
+    def handle_event(self, event_name: str):
+        if event_name == "enter_pit_road":
             self._handle_enter_pit_road()
-        elif event == "exit_pit_road":
+        elif event_name == "exit_pit_road":
             self._handle_exit_pit_road()
-        elif event == "enter_pit_box":
+        elif event_name == "enter_pit_box":
             self._handle_enter_pit_box()
-        elif event == "exit_pit_box":
+        elif event_name == "exit_pit_box":
             self._handle_exit_pit_box()
-        elif event == "driver_swap_in":
+        elif event_name == "driver_swap_in":
             self._handle_driver_swap_in()
-        elif event == "driver_swap_out":
+        elif event_name == "driver_swap_out":
             self._handle_driver_swap_out()
 
     def _reset_pit(self):

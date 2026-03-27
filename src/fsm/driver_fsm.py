@@ -109,36 +109,30 @@ class DriverFSM(object):
         for m in self.managers:
             self.required_fields.update(m.required_fields.keys())
 
-    def _broadcast(self, event_name: str, event: EventData):
-        ctx = {
-            "source": event.transition.source,
-            "dest": event.transition.dest,
-            "event": event.event.name,
-        }
-
+    def _broadcast(self, event_name: str):
         for m in self.managers:
-            m.handle_event(event_name, self.last_telem, ctx)
+            m.handle_event(event_name)
 
-    def _on_session_start(self, event: EventData):
-        self._broadcast("session_start", event)
+    def _on_session_start(self):
+        self._broadcast("session_start")
 
-    def _on_session_finish(self, event: EventData):
-        self._broadcast("session_finish", event)
+    def _on_session_finish(self):
+        self._broadcast("session_finish")
 
-    def _on_enter_pit_road(self, event: EventData):
-        self._broadcast("enter_pit_road", event)
+    def _on_enter_pit_road(self):
+        self._broadcast("enter_pit_road")
 
-    def _on_exit_pit_road(self, event: EventData):
-        self._broadcast("exit_pit_road", event)
+    def _on_exit_pit_road(self):
+        self._broadcast("exit_pit_road")
 
-    def _on_enter_pit_box(self, event: EventData):
-        self._broadcast("enter_pit_box", event)
+    def _on_enter_pit_box(self):
+        self._broadcast("enter_pit_box")
 
-    def _on_exit_pit_box(self, event: EventData):
-        self._broadcast("exit_pit_box", event)
+    def _on_exit_pit_box(self):
+        self._broadcast("exit_pit_box")
 
-    def _on_driver_swap_in(self, event: EventData):
-        self._broadcast("driver_swap_in", event)
+    def _on_driver_swap_in(self):
+        self._broadcast("driver_swap_in")
 
-    def _on_driver_swap_out(self, event: EventData):
-        self._broadcast("driver_swap_out", event)
+    def _on_driver_swap_out(self):
+        self._broadcast("driver_swap_out")
