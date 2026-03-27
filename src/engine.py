@@ -10,6 +10,7 @@ from src.managers.session_manager import SessionManager
 from src.managers.stint_manager import StintManager
 from src.managers.pitstop_manager import PitstopManager
 from src.managers.lap_manager import LapManager
+from src.exporters.excel_exporter import ExcelExporter
 
 
 class AppEngine:
@@ -25,7 +26,11 @@ class AppEngine:
         self.user_name = user_name
         self.api_url = api_base_url
 
-        self._setup_api()
+        if self.api_url:
+            self._setup_api()
+        else:
+            self.api_thread = None
+
         self._setup_fsm_managers()
         self._setup_telemetry()
 
@@ -38,15 +43,15 @@ class AppEngine:
         self.api_worker = APIWorker(
             self.context, self.api_client, self.queue, self.stop_event
         )
-
         self.api_thread = threading.Thread(target=self.api_worker.run, daemon=True)
 
     def _setup_fsm_managers(self):
         self.fsm = DriverFSM()
+        excel = ExcelExporter()
         self.managers = [
-            SessionManager(self.context, self.queue),
-            StintManager(self.context, self.queue),
-            PitstopManager(self.context, self.queue),
+            SessionManager(self.context, self.queue, excel),
+            StintManager(self.context, self.queue, excel),
+            PitstopManager(self.context, self.queue, excel),
         ]
         self.fsm.attach_managers(self.managers)
 
@@ -68,8 +73,11 @@ class AppEngine:
                 self.reset()
 
     def start(self):
-        print("Starting API Worker")
-        self.api_thread.start()
+        if self.api_thread:
+            print("Starting API Worker")
+            self.api_thread.start()
+        else:
+            print("No API Thread")
 
         print("Starting telemetry loop")
         self.telemetry_thread.start()
@@ -80,7 +88,8 @@ class AppEngine:
     def stop(self):
         print("Stopping engine")
         self.stop_event.set()
-        self.api_thread.join()
+        if self.api_thread:
+            self.api_thread.join()
         self.telemetry_loop.stop()
         self.telemetry_thread.join()
 
@@ -93,6 +102,5 @@ class AppEngine:
 
         self._setup_fsm_managers()
         self._setup_telemetry()
-
 
         self.telemetry_thread.start()

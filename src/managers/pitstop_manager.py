@@ -4,6 +4,7 @@ from src.managers.base_manager import BaseManager
 from src.context.race_context import RaceContext
 from src.models.pitstop import PitStop
 from src.api.tasks import TaskType
+from src.exporters.excel_exporter import ExcelExporter
 
 
 class PitstopManager(BaseManager):
@@ -29,8 +30,8 @@ class PitstopManager(BaseManager):
     right_rear: Optional[bool]
     left_rear: Optional[bool]
 
-    def __init__(self, context: RaceContext, queue: Queue):
-        super().__init__(context, queue)
+    def __init__(self, context: RaceContext, queue: Queue, excel: ExcelExporter):
+        super().__init__(context, queue, excel)
         self.current_pitstop: Optional[PitStop] = None
         self.road_enter_time: Optional[float] = None
 

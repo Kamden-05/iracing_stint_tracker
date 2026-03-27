@@ -4,6 +4,7 @@ from src.managers.base_manager import BaseManager
 from src.models.stint import Stint
 from src.context.race_context import RaceContext
 from src.api.tasks import TaskType
+from src.exporters.excel_exporter import ExcelExporter
 
 
 class StintManager(BaseManager):
@@ -23,8 +24,8 @@ class StintManager(BaseManager):
     fuel_level: Optional[float]
     lap_completed: Optional[int]
 
-    def __init__(self, context: RaceContext, queue: Queue):
-        super().__init__(context, queue)
+    def __init__(self, context: RaceContext, queue: Queue, excel: ExcelExporter):
+        super().__init__(context, queue, excel)
         self.current_stint = None
         self.last_lap_completed = 0
 
