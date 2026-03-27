@@ -34,11 +34,10 @@ class TelemetryLoop:
 
     def _get_tick_data(self) -> dict[str, Any]:
         data = {}
-        get = self.ir.get
 
         for key in self.fsm.required_fields:
             try:
-                data[key] = get(key)
+                data[key] = self.ir.get(key)
             except Exception:
                 data[key] = None
 
@@ -83,10 +82,8 @@ class TelemetryLoop:
             if not self.connected:
                 if self.ir.connect():
                     self.connected = True
-                    if self.fsm.last_state:
-                        self.fsm.reconnect()
-                    else:
-                        self.fsm.connect()
+                    self.fsm.connect()
+
                 else:
                     time.sleep(self.interval)
                     continue
@@ -116,8 +113,6 @@ class TelemetryLoop:
             tow_time = float(self.ir.get("PlayerCarTowTime", 0.0))
 
             tick_data = self._get_tick_data()
-
-            self.fsm.last_telem = tick_data
 
             # FSM transitions
 

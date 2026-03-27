@@ -1,5 +1,5 @@
 from typing import Optional
-from transitions import Machine, EventData
+from transitions import Machine
 from src.fsm.states import States
 from src.managers.base_manager import BaseManager
 
@@ -77,7 +77,6 @@ class DriverFSM(object):
 
     state: States
     set_state: callable
-    last_telem: dict[str, any]
 
     def __init__(self):
         self.machine = Machine(
@@ -96,7 +95,7 @@ class DriverFSM(object):
         if self.state != States.DISCONNECTED:
             self.last_state = self.state
 
-    def reconnect(self):
+    def connect(self):
         if self.last_state:
             self.machine.set_state(self.last_state)
         else:
