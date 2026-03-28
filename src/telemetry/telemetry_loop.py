@@ -138,7 +138,7 @@ class TelemetryLoop:
                 self.fsm.exit_pit_box()
 
             # driver swaps
-            if self.session_started:
+            if self.session_started and tow_time == 0.0:
                 if not on_track and self.prev_on_track:
                     self.fsm.driver_swap_out()
 
