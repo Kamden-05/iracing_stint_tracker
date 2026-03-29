@@ -1,8 +1,8 @@
 from typing import Optional
 import logging
 from transitions import Machine, EventData
-from src.fsm.states import States
-from src.managers.base_manager import BaseManager
+from src.fsm import States
+from src.managers import BaseManager
 
 logger = logging.getLogger(__name__)
 

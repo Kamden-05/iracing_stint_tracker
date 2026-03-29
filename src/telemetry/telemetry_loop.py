@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Optional, Any
 from irsdk import SessionState, Flags
 
 if TYPE_CHECKING:
-    from src.fsm.driver_fsm import DriverFSM
-    from src.telemetry.iracing_client import IRacingClient
+    from src.fsm import DriverFSM
+    from src.telemetry import IRacingClient
 
 
 class TelemetryLoop:

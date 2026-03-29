@@ -1,17 +1,12 @@
 from queue import Queue
 import threading
 import logging
-from src.fsm.driver_fsm import DriverFSM
-from src.telemetry.iracing_client import IRacingClient
-from src.telemetry.telemetry_loop import TelemetryLoop
-from src.api.api_client import APIClient
-from src.api.api_worker import APIWorker
-from src.context.race_context import RaceContext
-from src.managers.session_manager import SessionManager
-from src.managers.stint_manager import StintManager
-from src.managers.pitstop_manager import PitstopManager
-from src.managers.lap_manager import LapManager
-from src.exporters.excel_exporter import ExcelExporter
+from src.fsm import DriverFSM
+from src.telemetry import IRacingClient, TelemetryLoop
+from src.api import APIClient, APIWorker
+from src.context import RaceContext
+from src.managers import SessionManager, StintManager, LapManager, PitstopManager
+from src.exporters import ExcelExporter
 
 logger = logging.getLogger(__name__)
 
