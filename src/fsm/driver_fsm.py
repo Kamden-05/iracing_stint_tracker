@@ -12,14 +12,14 @@ TRANSITIONS = [
     ["connect", States.DISCONNECTED, States.IDLE, None, None, None],
     ["disconnect", "*", States.DISCONNECTED, None, None, None],
     # pre-session / idle
-    ["session_start", States.IDLE, States.ON_TRACK, None, None, "_on_session_start"],
+    ["session_start", States.IDLE, States.ON_TRACK, None, None, "_handle_event"],
     [
         "driver_swap_out",
         States.IN_PIT_BOX,
         States.IDLE,
         None,
         None,
-        "_on_driver_swap_out",
+        "_handle_event",
     ],
     [
         "driver_swap_in",
@@ -27,7 +27,7 @@ TRANSITIONS = [
         States.IN_PIT_BOX,
         None,
         None,
-        "_on_driver_swap_in",
+        "_handle_event",
     ],
     # on track
     [
@@ -36,7 +36,7 @@ TRANSITIONS = [
         States.ON_PIT_ROAD,
         None,
         None,
-        "_on_enter_pit_road",
+        "_handle_event",
     ],
     [
         "exit_pit_road",
@@ -44,7 +44,7 @@ TRANSITIONS = [
         States.ON_TRACK,
         None,
         None,
-        "_on_exit_pit_road",
+        "_handle_event",
     ],
     # pit stop
     [
@@ -53,7 +53,7 @@ TRANSITIONS = [
         States.IN_PIT_BOX,
         None,
         None,
-        "_on_enter_pit_box",
+        "_handle_event",
     ],
     [
         "exit_pit_box",
@@ -61,7 +61,7 @@ TRANSITIONS = [
         States.ON_PIT_ROAD,
         None,
         None,
-        "_on_exit_pit_box",
+        "_handle_event",
     ],
     # post-session
     [
@@ -70,7 +70,7 @@ TRANSITIONS = [
         States.FINISHED,
         None,
         None,
-        "_on_session_finish",
+        "_handle_event",
     ],
 ]
 
@@ -110,62 +110,13 @@ class DriverFSM(object):
         for m in self.managers:
             self.required_fields.update(m.required_fields.keys())
 
+    def _handle_event(self, event_data: EventData):
+        logger.debug(f"Event: {event_data.event.name}")
+        logger.debug(f"From: {event_data.transition.source}")
+        logger.debug(f"To: {event_data.transition.dest}")
+        logger.debug(f"Current state: {event_data.state}")
+        self._broadcast(event_data.event.name)
+
     def _broadcast(self, event_name: str):
         for m in self.managers:
             m.handle_event(event_name)
-
-    def _on_session_start(self, event_data: EventData):
-        logger.debug(f"Event: {event_data.event.name}")
-        logger.debug(f"From: {event_data.transition.source}")
-        logger.debug(f"To: {event_data.transition.dest}")
-        logger.debug(f"Current state: {event_data.state}")
-        self._broadcast("session_start")
-
-    def _on_session_finish(self, event_data: EventData):
-        logger.debug(f"Event: {event_data.event.name}")
-        logger.debug(f"From: {event_data.transition.source}")
-        logger.debug(f"To: {event_data.transition.dest}")
-        logger.debug(f"Current state: {event_data.state}")
-        self._broadcast("session_finish")
-
-    def _on_enter_pit_road(self, event_data: EventData):
-        logger.debug(f"Event: {event_data.event.name}")
-        logger.debug(f"From: {event_data.transition.source}")
-        logger.debug(f"To: {event_data.transition.dest}")
-        logger.debug(f"Current state: {event_data.state}")
-        self._broadcast("enter_pit_road")
-
-    def _on_exit_pit_road(self, event_data: EventData):
-        logger.debug(f"Event: {event_data.event.name}")
-        logger.debug(f"From: {event_data.transition.source}")
-        logger.debug(f"To: {event_data.transition.dest}")
-        logger.debug(f"Current state: {event_data.state}")
-        self._broadcast("exit_pit_road")
-
-    def _on_enter_pit_box(self, event_data: EventData):
-        logger.debug(f"Event: {event_data.event.name}")
-        logger.debug(f"From: {event_data.transition.source}")
-        logger.debug(f"To: {event_data.transition.dest}")
-        logger.debug(f"Current state: {event_data.state}")
-        self._broadcast("enter_pit_box")
-
-    def _on_exit_pit_box(self, event_data: EventData):
-        logger.debug(f"Event: {event_data.event.name}")
-        logger.debug(f"From: {event_data.transition.source}")
-        logger.debug(f"To: {event_data.transition.dest}")
-        logger.debug(f"Current state: {event_data.state}")
-        self._broadcast("exit_pit_box")
-
-    def _on_driver_swap_in(self, event_data: EventData):
-        logger.debug(f"Event: {event_data.event.name}")
-        logger.debug(f"From: {event_data.transition.source}")
-        logger.debug(f"To: {event_data.transition.dest}")
-        logger.debug(f"Current state: {event_data.state}")
-        self._broadcast("driver_swap_in")
-
-    def _on_driver_swap_out(self, event_data: EventData):
-        logger.debug(f"Event: {event_data.event.name}")
-        logger.debug(f"From: {event_data.transition.source}")
-        logger.debug(f"To: {event_data.transition.dest}")
-        logger.debug(f"Current state: {event_data.state}")
-        self._broadcast("driver_swap_out")
