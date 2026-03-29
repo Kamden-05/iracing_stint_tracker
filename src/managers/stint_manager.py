@@ -1,11 +1,13 @@
 from typing import Optional
 from queue import Queue
+import logging
 from src.managers.base_manager import BaseManager
 from src.models.stint import Stint
 from src.context.race_context import RaceContext
 from src.api.tasks import TaskType
 from src.exporters.excel_exporter import ExcelExporter
 
+logger = logging.getLogger(__name__)
 
 class StintManager(BaseManager):
     required_fields = {
@@ -80,7 +82,7 @@ class StintManager(BaseManager):
         self.last_lap_completed = self.lap_completed or 0
         self._post_stint_data()
 
-        print("stint started")
+        logger.info("stint started")
 
     def _update_stint(self):
         if self.current_stint:
@@ -90,7 +92,7 @@ class StintManager(BaseManager):
             self.current_stint.end_fuel = self.fuel_level
 
             self._patch_stint_data()
-            print("stint updated")
+            logger.info("stint updated")
 
     def _end_stint(self):
         if not self.current_stint:
@@ -98,4 +100,4 @@ class StintManager(BaseManager):
 
         self._update_stint()
         self.current_stint = None
-        print("stint ended")
+        logger.info("stint ended")

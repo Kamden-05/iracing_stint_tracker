@@ -74,6 +74,9 @@ class TelemetryLoop:
     def stop(self):
         self._stop_event.set()
 
+    #TODO: dont make non session related transitions unless the session has actually started
+    #TODO: make sure driver is in the car before we call certain transitions
+    #TODO: re order transitons if need be
     def run(self):
         while not self._stop_event.is_set() and not self.session_finished:
 
@@ -82,7 +85,7 @@ class TelemetryLoop:
             if not self.connected:
                 if self.ir.connect():
                     self.connected = True
-                    self.fsm.connect()
+                    self.fsm.restore_state()
 
                 else:
                     time.sleep(self.interval)

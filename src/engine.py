@@ -1,5 +1,6 @@
 from queue import Queue
 import threading
+import logging
 from src.fsm.driver_fsm import DriverFSM
 from src.telemetry.iracing_client import IRacingClient
 from src.telemetry.telemetry_loop import TelemetryLoop
@@ -11,6 +12,8 @@ from src.managers.stint_manager import StintManager
 from src.managers.pitstop_manager import PitstopManager
 from src.managers.lap_manager import LapManager
 from src.exporters.excel_exporter import ExcelExporter
+
+logger = logging.getLogger(__name__)
 
 
 class AppEngine:
@@ -52,6 +55,7 @@ class AppEngine:
             SessionManager(self.context, self.queue, excel),
             StintManager(self.context, self.queue, excel),
             PitstopManager(self.context, self.queue, excel),
+            LapManager(self.context, self.queue, excel),
         ]
         self.fsm.attach_managers(self.managers)
 
@@ -74,19 +78,19 @@ class AppEngine:
 
     def start(self):
         if self.api_thread:
-            print("Starting API Worker")
+            logger.info("Starting API Worker")
             self.api_thread.start()
         else:
-            print("No API Thread")
+            logger.info("No API Thread")
 
-        print("Starting telemetry loop")
+        logger.info("Starting telemetry loop")
         self.telemetry_thread.start()
 
-        print("Starting session reset watcher")
+        logger.info("Starting session reset watcher")
         self.session_reset_thread.start()
 
     def stop(self):
-        print("Stopping engine")
+        logger.info("Stopping engine")
         self.stop_event.set()
         if self.api_thread:
             self.api_thread.join()
@@ -94,7 +98,7 @@ class AppEngine:
         self.telemetry_thread.join()
 
     def reset(self):
-        print("Resetting engine...")
+        logger.info("Resetting engine...")
         self.telemetry_loop.stop()
         self.telemetry_thread.join()
 

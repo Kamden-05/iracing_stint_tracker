@@ -1,7 +1,20 @@
 import time
 import os
+import logging
+import sys
 from dotenv import load_dotenv
 from src.engine import AppEngine
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    format="%(asctime)s [%(levelname)s] %(message)s",
+    handlers=[
+        logging.FileHandler("dicom_processing.log"),
+        logging.StreamHandler(sys.stdout),
+    ],
+)
+
+logger = logging.getLogger(__name__)
 
 
 def main():
@@ -9,7 +22,7 @@ def main():
     api_url = os.getenv("TEST_URL")
     user_name = "Kam Wilson"
 
-    engine = AppEngine(user_name=user_name, api_base_url=None)
+    engine = AppEngine(user_name=user_name, api_base_url=api_url)
 
     engine.start()
 

@@ -4,11 +4,6 @@ import requests
 from src.models import Session, Stint, PitStop, Lap
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
-
 
 class APIClient:
     """Synchronous API client for interacting with telemetry backend."""

@@ -9,11 +9,6 @@ from src.models import Session, Stint, PitStop, Lap
 from src.context.race_context import RaceContext
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-)
-
 
 class APIWorker(threading.Thread):
     def __init__(
