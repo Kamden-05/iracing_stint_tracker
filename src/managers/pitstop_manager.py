@@ -9,6 +9,7 @@ from src.exporters.excel_exporter import ExcelExporter
 
 logger = logging.getLogger(__name__)
 
+
 class PitstopManager(BaseManager):
     required_fields = {
         "SessionTime": "session_time",
@@ -37,19 +38,14 @@ class PitstopManager(BaseManager):
         self.current_pitstop: Optional[PitStop] = None
         self.road_enter_time: Optional[float] = None
 
-    def handle_event(self, event_name: str):
-        if event_name == "enter_pit_road":
-            self._handle_enter_pit_road()
-        elif event_name == "exit_pit_road":
-            self._handle_exit_pit_road()
-        elif event_name == "enter_pit_box":
-            self._handle_enter_pit_box()
-        elif event_name == "exit_pit_box":
-            self._handle_exit_pit_box()
-        elif event_name == "driver_swap_in":
-            self._handle_driver_swap_in()
-        elif event_name == "driver_swap_out":
-            self._handle_driver_swap_out()
+        self.event_handlers = {
+            "enter_pit_road": self._on_enter_pit_road,
+            "exit_pit_road": self._on_exit_pit_road,
+            "enter_pit_box": self._on_enter_pit_box,
+            "exit_pit_box": self._on_exit_pit_box,
+            "driver_swap_in": self._on_driver_swap_in,
+            "driver_swap_out": self._on_driver_swap_out,
+        }
 
     def _reset_pit(self):
         self.current_pitstop = None
@@ -61,11 +57,11 @@ class PitstopManager(BaseManager):
     def _patch_pitstop_data(self):
         self._send_data(TaskType.PITSTOP_UPDATE, self.current_pitstop)
 
-    def _handle_enter_pit_road(self):
+    def _on_enter_pit_road(self):
         self.road_enter_time = self.session_time
         logger.info(f"enter pit road: {self.road_enter_time}")
 
-    def _handle_exit_pit_road(self):
+    def _on_exit_pit_road(self):
         if self.current_pitstop is not None:
             self.current_pitstop.road_exit_time = self.session_time
             self._patch_pitstop_data()
@@ -73,7 +69,7 @@ class PitstopManager(BaseManager):
         logger.info(f"exit pit road: {self.current_pitstop}")
         self._reset_pit()
 
-    def _handle_enter_pit_box(self):
+    def _on_enter_pit_box(self):
         if self.road_enter_time is None:
             self.road_enter_time = self.session_time
 
@@ -94,7 +90,7 @@ class PitstopManager(BaseManager):
         self._post_pitstop_data()
         logger.info(f"enter pit: {self.current_pitstop}")
 
-    def _handle_exit_pit_box(self):
+    def _on_exit_pit_box(self):
         if self.current_pitstop is not None:
             self.current_pitstop.service_end_time = self.session_time
             self.current_pitstop.fuel_end_amount = self.fuel_level
@@ -102,11 +98,11 @@ class PitstopManager(BaseManager):
 
         logger.info(f"exit box: {self.current_pitstop}")
 
-    def _handle_driver_swap_in(self):
+    def _on_driver_swap_in(self):
         self.current_pitstop = PitStop(
             stint_id=self.context.stint_id,
             id=self.context.pitstop_id,
         )
 
-    def _handle_driver_swap_out(self):
+    def _on_driver_swap_out(self):
         self._reset_pit()

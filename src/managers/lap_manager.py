@@ -21,6 +21,7 @@ class LapManager(BaseManager):
         super().__init__(context, queue, excel)
         self.last_lap_completed = 0
         self.lap_start_time = None
+        self.event_handlers = {}
 
     def on_tick(self, telem: dict[str, any], state):
         super().on_tick(telem, state)

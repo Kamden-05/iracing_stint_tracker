@@ -31,9 +31,12 @@ class SessionManager(BaseManager):
             setattr(self, attr, None)
 
         self.session_sent = False
+        self.event_handlers = {
+            "session_start": self._on_session_start,
+        }
 
-    def handle_event(self, event_name: str):
-        if event_name == "session_start" and not self.session_sent:
+    def _on_session_start(self):
+        if not self.session_sent:
             self.set_context()
             self._post_session_info()
             self.session_sent = True

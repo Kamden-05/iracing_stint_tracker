@@ -7,7 +7,7 @@ from src.managers.base_manager import BaseManager
 logger = logging.getLogger(__name__)
 
 TRANSITIONS = [
-    # [event, source, destination, conditions, unless, after]
+    # [event name, source, destination, conditions, unless, after]
     # connection/initialization
     ["connect", States.DISCONNECTED, States.IDLE, None, None, None],
     ["disconnect", "*", States.DISCONNECTED, None, None, None],
@@ -65,7 +65,7 @@ TRANSITIONS = [
     ],
     # post-session
     [
-        "finish_session",
+        "session_finish",
         [States.ON_TRACK, States.ON_PIT_ROAD, States.IN_PIT_BOX, States.IDLE],
         States.FINISHED,
         None,

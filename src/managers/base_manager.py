@@ -16,12 +16,14 @@ class BaseManager:
         self.context = context
         self.queue = queue
         self.excel = excel
+        self.event_handlers = {}
 
         for attr in self.required_fields.values():
             setattr(self, attr, None)
 
     def handle_event(self, event_name: str):
-        pass
+        if event_name in self.event_handlers:
+            self.event_handlers[event_name]()
 
     def on_tick(self, telem: dict[str, Any], state: States):
         for telem_key, attr_name in self.required_fields.items():

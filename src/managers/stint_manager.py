@@ -9,6 +9,7 @@ from src.exporters.excel_exporter import ExcelExporter
 
 logger = logging.getLogger(__name__)
 
+
 class StintManager(BaseManager):
     required_fields = {
         "DriverInfo": "driver_info",
@@ -31,6 +32,13 @@ class StintManager(BaseManager):
         self.current_stint = None
         self.last_lap_completed = 0
 
+        self.event_handlers = {
+            "session_start": self._on_session_start,
+            "enter_pit_box": self._on_enter_pit_box,
+            "exit_pit_box": self._on_exit_pit_box,
+            "session_finish": self._on_session_finish,
+        }
+
     def on_tick(self, telem, state):
         super().on_tick(telem, state)
 
@@ -50,23 +58,13 @@ class StintManager(BaseManager):
     def _patch_stint_data(self):
         self._send_data(TaskType.STINT_UPDATE, self.current_stint)
 
-    def handle_event(self, event_name: str):
-        if event_name == "session_start":
-            self._handle_session_start()
-        elif event_name == "enter_pit_box":
-            self._handle_enter_pit_box()
-        elif event_name == "exit_pit_box":
-            self._start_stint()
-        elif event_name == "finish_session":
-            self._end_stint()
+    def _on_session_start(self):
+        self._on_exit_pit_box()
 
-    def _handle_session_start(self):
-        self._start_stint()
+    def _on_enter_pit_box(self):
+        self._on_session_finish()
 
-    def _handle_enter_pit_box(self):
-        self._end_stint()
-
-    def _start_stint(self):
+    def _on_exit_pit_box(self):
         if self.current_stint:
             return
 
@@ -94,7 +92,7 @@ class StintManager(BaseManager):
             self._patch_stint_data()
             logger.info("stint updated")
 
-    def _end_stint(self):
+    def _on_session_finish(self):
         if not self.current_stint:
             return
 
