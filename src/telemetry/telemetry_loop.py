@@ -74,9 +74,9 @@ class TelemetryLoop:
     def stop(self):
         self._stop_event.set()
 
-    #TODO: dont make non session related transitions unless the session has actually started
-    #TODO: make sure driver is in the car before we call certain transitions
-    #TODO: re order transitons if need be
+    # TODO: dont make non session related transitions unless the session has actually started
+    # TODO: make sure driver is in the car before we call certain transitions
+    # TODO: re order transitons if need be
     def run(self):
         while not self._stop_event.is_set() and not self.session_finished:
 
@@ -155,7 +155,7 @@ class TelemetryLoop:
 
             # update managers
             for m in self.fsm.managers:
-                m.on_tick(tick_data, self.fsm.state)
+                m.on_tick(tick_data)
 
             # update prev values
             self.prev_on_track = on_track

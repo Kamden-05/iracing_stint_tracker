@@ -39,8 +39,8 @@ class StintManager(BaseManager):
             "session_finish": self._on_session_finish,
         }
 
-    def on_tick(self, telem, state):
-        super().on_tick(telem, state)
+    def on_tick(self, telem):
+        super().on_tick(telem)
 
         self._check_for_new_lap()
 

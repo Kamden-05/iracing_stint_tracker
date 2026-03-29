@@ -23,8 +23,8 @@ class LapManager(BaseManager):
         self.lap_start_time = None
         self.event_handlers = {}
 
-    def on_tick(self, telem: dict[str, any], state):
-        super().on_tick(telem, state)
+    def on_tick(self, telem: dict[str, any]):
+        super().on_tick(telem)
 
         self._check_for_new_lap()
 
