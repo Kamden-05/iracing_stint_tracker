@@ -1,13 +1,8 @@
 from queue import Queue
 from typing import Any
-import logging
-from src.fsm.states import States
 from src.context.race_context import RaceContext
 from src.api.tasks import APITask, TaskType, PayloadType
 from src.exporters.excel_exporter import ExcelExporter
-
-logger = logging.getLogger(__name__)
-
 
 class BaseManager:
     required_fields: dict[str, str] = {}
@@ -34,9 +29,7 @@ class BaseManager:
 
         if task is TaskType.SESSION:
             self.excel.create_workbook(payload)
-            logger.info("workbook created")
         elif task in [TaskType.STINT_CREATE, TaskType.PITSTOP_CREATE, TaskType.LAP]:
             self.excel.update_sheet(payload, append=True)
-            logger.info("appended to sheet")
         else:
             self.excel.update_sheet(payload, append=False)

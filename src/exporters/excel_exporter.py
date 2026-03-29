@@ -1,8 +1,11 @@
 from dataclasses import fields, asdict
+import logging
 from datetime import datetime
 import os
 from src.models import Session, Stint, Lap, PitStop
 import pandas as pd
+
+logger = logging.getLogger(__name__)
 
 
 class ExcelExporter:
@@ -41,6 +44,8 @@ class ExcelExporter:
             lap_df.to_excel(writer, sheet_name="Lap", index=False)
             pitstop_df.to_excel(writer, sheet_name="PitStop", index=False)
 
+        logger.info(f"Workbook created at {self.file_path}")
+
     def update_sheet(self, obj: Session | Lap | PitStop | Stint, append: bool = False):
         sheet_name = obj.__class__.__name__
 
@@ -56,3 +61,5 @@ class ExcelExporter:
             self.file_path, engine="openpyxl", mode="a", if_sheet_exists="replace"
         ) as writer:
             combined_df.to_excel(writer, sheet_name=sheet_name, index=False)
+
+        logger.info(f"Updated sheet {sheet_name}")
