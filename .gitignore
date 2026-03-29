@@ -13,3 +13,4 @@ build
 config
 main.spec
 dist
+stint_tracker.log

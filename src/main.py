@@ -9,7 +9,7 @@ logging.basicConfig(
     level=logging.DEBUG,
     format="%(asctime)s [%(levelname)s] %(message)s",
     handlers=[
-        logging.FileHandler("dicom_processing.log"),
+        logging.FileHandler("stint_tracker.log"),
         logging.StreamHandler(sys.stdout),
     ],
 )
