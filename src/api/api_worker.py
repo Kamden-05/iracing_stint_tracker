@@ -1,12 +1,12 @@
 import threading
-from typing import Optional, Any
+from typing import Any
 from queue import Queue, Empty
 import logging
 from requests import HTTPError
-from src.api.tasks import APITask, TaskType, PayloadType
+from src.api.tasks import APITask, TaskType
 from src.api.api_client import APIClient
 from src.models import Session, Stint, PitStop, Lap
-from src.context.race_context import RaceContext
+from src.context import RaceContext
 
 logger = logging.getLogger(__name__)
 
