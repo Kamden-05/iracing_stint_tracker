@@ -24,7 +24,9 @@ class SessionManager(BaseManager):
     driver_info: Optional[dict]
     car_id: Optional[int]
 
-    def __init__(self, context: RaceContext, queue: Queue, excel: ExcelExporter):
+    def __init__(
+        self, context: RaceContext, queue: Queue, excel: Optional[ExcelExporter]
+    ):
         super().__init__(context, queue, excel)
 
         for attr in self.required_fields.values():

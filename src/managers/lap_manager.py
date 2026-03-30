@@ -1,8 +1,11 @@
 from typing import Optional
+from queue import Queue
 import logging
 from src.managers.base_manager import BaseManager
 from src.models import Lap
 from src.api import TaskType
+from src.context import RaceContext
+from src.exporters import ExcelExporter
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +23,9 @@ class LapManager(BaseManager):
     last_lap_time: Optional[float]
     current_lap: Optional[int]
 
-    def __init__(self, context, queue, excel):
+    def __init__(
+        self, context: RaceContext, queue: Queue, excel: Optional[ExcelExporter]
+    ):
         super().__init__(context, queue, excel)
         self.last_lap_completed = 0
         self.lap_start_time = None

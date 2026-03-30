@@ -1,16 +1,17 @@
 from queue import Queue
-from typing import Any
-from src.context.race_context import RaceContext
+from typing import Any, Optional
+from src.context import RaceContext
 from src.api import APITask, TaskType, PayloadType
 from src.exporters import ExcelExporter
+
 
 class BaseManager:
     required_fields: dict[str, str] = {}
 
-    def __init__(self, context: RaceContext, queue: Queue, excel: ExcelExporter):
-        self.context = context
-        self.queue = queue
-        self.excel = excel
+    def __init__(self, context: RaceContext, queue: Queue, excel: Optional[ExcelExporter]):
+        self.context: RaceContext = context
+        self.queue: Queue = queue
+        self.excel: Optional[ExcelExporter] = excel
         self.event_handlers = {}
 
         for attr in self.required_fields.values():
@@ -27,9 +28,10 @@ class BaseManager:
     def _send_data(self, task: TaskType, payload: PayloadType):
         self.queue.put(APITask(type=task, payload=payload))
 
-        if task is TaskType.SESSION:
-            self.excel.create_workbook(payload)
-        elif task in [TaskType.STINT_CREATE, TaskType.PITSTOP_CREATE, TaskType.LAP]:
-            self.excel.update_sheet(payload, append=True)
-        else:
-            self.excel.update_sheet(payload, append=False)
+        if self.excel is not None:
+            if task is TaskType.SESSION:
+                self.excel.create_workbook(payload)
+            elif task in [TaskType.STINT_CREATE, TaskType.PITSTOP_CREATE, TaskType.LAP]:
+                self.excel.update_sheet(payload, append=True)
+            else:
+                self.excel.update_sheet(payload, append=False)

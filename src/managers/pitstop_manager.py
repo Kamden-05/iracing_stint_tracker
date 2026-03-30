@@ -33,7 +33,9 @@ class PitstopManager(BaseManager):
     right_rear: Optional[bool]
     left_rear: Optional[bool]
 
-    def __init__(self, context: RaceContext, queue: Queue, excel: ExcelExporter):
+    def __init__(
+        self, context: RaceContext, queue: Queue, excel: Optional[ExcelExporter]
+    ):
         super().__init__(context, queue, excel)
         self.current_pitstop: Optional[PitStop] = None
         self.road_enter_time: Optional[float] = None

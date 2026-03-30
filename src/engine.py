@@ -16,19 +16,17 @@ class AppEngine:
         self,
         user_name: str,
         api_base_url: str,
+        enable_excel: bool,
     ):
         self.context = RaceContext(user_name=user_name)
         self.queue = Queue()
+        self.enable_excel = enable_excel
         self.stop_event = threading.Event()
         self.session_reset_event = threading.Event()
         self.user_name = user_name
         self.api_url = api_base_url
 
-        if self.api_url:
-            self._setup_api()
-        else:
-            self.api_thread = None
-
+        self._setup_api()
         self._setup_fsm_managers()
         self._setup_telemetry()
 
@@ -37,15 +35,18 @@ class AppEngine:
         )
 
     def _setup_api(self):
-        self.api_client = APIClient(self.api_url)
-        self.api_worker = APIWorker(
-            self.context, self.api_client, self.queue, self.stop_event
-        )
-        self.api_thread = threading.Thread(target=self.api_worker.run, daemon=True)
+        if self.api_url:
+            self.api_client = APIClient(self.api_url)
+            self.api_worker = APIWorker(
+                self.context, self.api_client, self.queue, self.stop_event
+            )
+            self.api_thread = threading.Thread(target=self.api_worker.run, daemon=True)
+        else:
+            self.api_thread = None
 
     def _setup_fsm_managers(self):
         self.fsm = DriverFSM()
-        excel = ExcelExporter()
+        excel = ExcelExporter() if self.enable_excel else None
         self.managers = [
             SessionManager(self.context, self.queue, excel),
             StintManager(self.context, self.queue, excel),

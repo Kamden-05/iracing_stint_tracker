@@ -27,7 +27,7 @@ class StintManager(BaseManager):
     fuel_level: Optional[float]
     lap_completed: Optional[int]
 
-    def __init__(self, context: RaceContext, queue: Queue, excel: ExcelExporter):
+    def __init__(self, context: RaceContext, queue: Queue, excel: Optional[ExcelExporter]):
         super().__init__(context, queue, excel)
         self.current_stint = None
         self.last_lap_completed = 0
