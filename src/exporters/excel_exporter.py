@@ -21,7 +21,7 @@ class ExcelExporter:
     def create_workbook(self, session: Session):
         track_name = str(session.track).replace(" ", "_").replace("/", "-")
         date = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-        file_name = f"{str(session.track)}_{date}.xlsx"
+        file_name = f"{track_name}_{date}.xlsx"
 
         races_dir = self.project_root / "races"
         races_dir.mkdir(parents=True, exist_ok=True)
