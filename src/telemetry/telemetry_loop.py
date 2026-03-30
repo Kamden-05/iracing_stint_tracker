@@ -58,10 +58,12 @@ class TelemetryLoop:
         tow = self.ir.get("PlayerCarTowTime") > 0.0
         lap_completed = self.ir.get("LapCompleted")
 
-        if self.final_lap_completed is not None and not (flags & Flags.checkered):
+        is_checkered = flags & Flags.checkered
+
+        if self.final_lap_completed is not None and not is_checkered:
             self.final_lap_completed = None
 
-        if session_num == 2 and (flags & Flags.checkered):
+        if session_num == 2 and is_checkered:
             if self.final_lap_completed is None:
                 self.final_lap_completed = lap_completed
                 return False

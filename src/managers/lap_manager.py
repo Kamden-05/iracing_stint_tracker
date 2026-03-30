@@ -1,7 +1,10 @@
 from typing import Optional
+import logging
 from src.managers.base_manager import BaseManager
 from src.models import Lap
 from src.api import TaskType
+
+logger = logging.getLogger(__name__)
 
 
 class LapManager(BaseManager):
@@ -29,22 +32,26 @@ class LapManager(BaseManager):
         self._check_for_new_lap()
 
     def _check_for_new_lap(self):
-        if (
-            self.current_lap == 1
-            and self.lap_completed == 0
-            and not self.lap_start_time
-        ):
-            self.lap_start_time = self.session_time
 
         if self.lap_completed == 0:
+            # pre-first-lap initialization
+            if self.current_lap == 1 and not self.lap_start_time:
+                self.lap_start_time = self.session_time
+
             return
 
         if self.lap_completed > self.last_lap_completed:
 
             if self.last_lap_time and self.last_lap_time > 0.0:
                 lap_time = self.last_lap_time
-            else:
+            elif self.lap_start_time is not None:
                 lap_time = self.session_time - self.lap_start_time
+            else:
+                logger.warning(
+                    "Skipping lap: lap_completed=%s session_time=%s",
+                    self.lap_completed,
+                    self.session_time,
+                )
 
             self._post_lap_info(lap_time)
             self.last_lap_completed = self.lap_completed
