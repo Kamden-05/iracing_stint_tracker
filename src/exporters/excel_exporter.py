@@ -1,7 +1,7 @@
 from dataclasses import fields, asdict
 import logging
 from datetime import datetime
-import os
+from pathlib import Path
 from src.models import Session, Stint, Lap, PitStop
 import pandas as pd
 
@@ -15,23 +15,18 @@ class ExcelExporter:
         self.lap_headers = [field.name for field in fields(Lap)]
         self.pitstop_headers = [field.name for field in fields(PitStop)]
 
-        self.current_dir = os.path.dirname(__file__)
-        self.project_root = os.path.abspath(
-            os.path.join(self.current_dir, os.pardir, os.pardir)
-        )
+        self.current_dir = Path(__file__).parent
+        self.project_root = self.current_dir.parent.parent
 
     def create_workbook(self, session: Session):
-        file_name = (
-            str(session.track)
-            + "_"
-            + datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-            + ".xlsx"
-        )
+        track_name = str(session.track).replace(" ", "_").replace("/", "-")
+        date = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        file_name = f"{str(session.track)}_{date}.xlsx"
 
-        races_dir = os.path.join(self.project_root, "races")
-        os.makedirs(races_dir, exist_ok=True)
+        races_dir = self.project_root / "races"
+        races_dir.mkdir(parents=True, exist_ok=True)
 
-        self.file_path = os.path.join(races_dir, file_name)
+        self.file_path = races_dir / file_name
 
         session_df = pd.DataFrame([asdict(session)])
         stint_df = pd.DataFrame(columns=self.stint_headers)
