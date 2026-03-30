@@ -34,6 +34,7 @@ class StintManager(BaseManager):
         super().__init__(context, queue, excel)
         self.current_stint = None
         self.last_lap_completed = 0
+        self.driver_name = ""
 
         self.event_handlers = {
             "session_start": self._on_session_start,
@@ -86,10 +87,13 @@ class StintManager(BaseManager):
         if self.current_stint:
             return
 
+        if not self.driver_name:
+            self.driver_name = self._get_driver_name()
+
         # TODO replace context.user_name with name from IRSDK
         self.current_stint = Stint(
             session_id=self.context.session_id,
-            driver_name=self._get_driver_name(),
+            driver_name=self.driver_name,
             start_time=self.session_time,
             start_position=self.position,
             start_incidents=self.incidents,
