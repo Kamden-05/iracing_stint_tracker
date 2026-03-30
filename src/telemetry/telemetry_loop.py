@@ -53,17 +53,22 @@ class TelemetryLoop:
 
     def _check_race_end(self) -> bool:
         flags = self.ir.get("SessionFlags")
+        session_num = self.ir.get("SessionNum")
         on_track = self.ir.get("IsOnTrack")
         tow = self.ir.get("PlayerCarTowTime") > 0.0
         lap_completed = self.ir.get("LapCompleted")
 
-        if flags & Flags.checkered:
+        if self.final_lap_completed is not None and not (flags & Flags.checkered):
+            self.final_lap_completed = None
+
+        if session_num == 2 and (flags & Flags.checkered):
             if self.final_lap_completed is None:
                 self.final_lap_completed = lap_completed
                 return False
 
             # Has the driver finished their final lap yet?
             finished_final_lap = lap_completed > self.final_lap_completed
+
             off_track = not on_track or tow
 
             return finished_final_lap or off_track
