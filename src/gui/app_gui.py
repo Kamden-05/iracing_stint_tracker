@@ -1,26 +1,28 @@
 import sys
-from enum import Enum
+import logging
+from src.gui.constants import Status, Header
 from PySide6.QtWidgets import QApplication, QLabel, QWidget, QGridLayout
 from PySide6.QtGui import QFont, QIcon
 
 APP_NAME = "Stint Tracker"
 
-
-class StatusColor(Enum):
-    GREEN = "green"
-    ORANGE = "orange"
-    RED = "red"
+logger = logging.getLogger(__name__)
 
 
 class StintTrackerWidget(QWidget):
     ICON_CHAR = "⬤"
-    GOOD_COLOR = "green"
-    BAD_COLOR = "red"
-    WAITING_COLOR = "orange"
     WINDOW_HEIGHT = 150
     WINDOW_WIDTH = 325
     FONT_SIZE = 12
     ICON_PATH = r"src\gui\resources\icon.ico"
+
+    STATUS_MAPPING = {
+        Status.CONNECTED: ("green", "Connected"),
+        Status.DISCONNECTED: ("red", "Disconnected"),
+        Status.WAITING: ("orange", "Waiting..."),
+        Status.RUNNING: ("green", "Running"),
+        Status.STARTUP: ("white", "Initializing..."),
+    }
 
     def __init__(self):
         super().__init__()
@@ -33,41 +35,39 @@ class StintTrackerWidget(QWidget):
         self.setWindowIcon(QIcon(self.ICON_PATH))
 
         # Layout details
-        self.ir_label = QLabel(
-            f"{self._get_status_icon(StatusColor.GREEN)} Connected"
-        )
-        self.api_label = QLabel(
-            f"{self._get_status_icon(StatusColor.RED)} Disconnected"
-        )
-        self.tracker_label = QLabel(
-            f"{self._get_status_icon(StatusColor.ORANGE)} Waiting"
-        )
-
         layout = QGridLayout()
-
         layout.setContentsMargins(30, 0, 0, 0)
-        layout.addWidget(QLabel("iRacing"), 0, 0)
-        layout.addWidget(self.ir_label, 0, 1)
 
-        layout.addWidget(QLabel("API"), 1, 0)
-        layout.addWidget(self.api_label, 1, 1)
+        self.status_labels = {}
 
-        layout.addWidget(QLabel("Tracker"), 2, 0)
-        layout.addWidget(self.tracker_label, 2, 1)
+        for row, header in enumerate(Header):
+
+            color, status_text = self.STATUS_MAPPING[Status.STARTUP]
+
+            title_label = QLabel(header.value)
+            status_label = QLabel(self._build_status_text(color, status_text))
+
+            layout.addWidget(title_label, row, 0)
+            layout.addWidget(status_label, row, 1)
+
+            self.status_labels[header] = status_label
 
         self.setLayout(layout)
 
-    def _get_status_icon(self, color: StatusColor):
-        return f'<span style="color:{color.value};">{self.ICON_CHAR}</span>'
+    def _build_status_text(self, color: str, text: str) -> str:
+        icon = f'<span style="color:{color};">{self.ICON_CHAR}</span>'
+        return f"{icon} {text}"
 
-    def set_ir_status(self):
-        pass
+    def _set_status(self, header: Header, color: str, text: str):
+        status = self._build_status_text(color, text)
+        self.status_labels[header].setText(status)
 
-    def set_api_status(self):
-        pass
+    def on_status_change(self, header: Header, status: Status):
+        if not status in self.STATUS_MAPPING:
+            logger.warning("Invalid status %s for header %s", status, header)
 
-    def set_tracker_status(self):
-        pass
+        color, text = self.STATUS_MAPPING.get(status, ("gray", "Unkown"))
+        self._set_status(header, color, text)
 
 
 if __name__ == "__main__":
