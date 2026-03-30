@@ -1,5 +1,6 @@
 from dataclasses import fields, asdict
 import logging
+from typing import Optional
 from datetime import datetime
 from pathlib import Path
 from src.models import Session, Stint, Lap, PitStop
@@ -10,13 +11,13 @@ logger = logging.getLogger(__name__)
 
 class ExcelExporter:
     def __init__(self):
-        self.file_path = ""
+        self.file_path: Optional[Path] = None
         self.stint_headers = [field.name for field in fields(Stint)]
         self.lap_headers = [field.name for field in fields(Lap)]
         self.pitstop_headers = [field.name for field in fields(PitStop)]
 
-        self.current_dir = Path(__file__).parent
-        self.project_root = self.current_dir.parent.parent
+        self.current_dir: Path = Path(__file__).parent
+        self.project_root: Path = self.current_dir.parent.parent
 
     def create_workbook(self, session: Session):
         track_name = str(session.track).replace(" ", "_").replace("/", "-")
@@ -39,13 +40,25 @@ class ExcelExporter:
             lap_df.to_excel(writer, sheet_name="Lap", index=False)
             pitstop_df.to_excel(writer, sheet_name="PitStop", index=False)
 
-        logger.info(f"Workbook created at {self.file_path}")
+        logger.info("Workbook created at %s", self.file_path)
 
     def update_sheet(self, obj: Session | Lap | PitStop | Stint, append: bool = False):
+        if self.file_path is None:
+            raise RuntimeError("Workbook not created yet. Call create_workbook first.")
+
         sheet_name = obj.__class__.__name__
 
-        old_df = pd.read_excel(self.file_path, sheet_name=sheet_name)
-        if not append:
+        try:
+            old_df = pd.read_excel(self.file_path, sheet_name=sheet_name)
+        except (FileNotFoundError, ValueError):
+            logger.warning(
+                "Sheet %s not found in %s",
+                sheet_name,
+                self.file_path,
+            )
+            old_df = pd.DataFrame()
+
+        if not append and not old_df.empty:
             old_df = old_df.iloc[:-1]
 
         df = pd.DataFrame([asdict(obj)])
@@ -57,4 +70,4 @@ class ExcelExporter:
         ) as writer:
             combined_df.to_excel(writer, sheet_name=sheet_name, index=False)
 
-        logger.info(f"Updated sheet {sheet_name}")
+        logger.info("Updated sheet %s now has %s rows", sheet_name, len(combined_df))
