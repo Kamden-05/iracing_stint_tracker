@@ -14,16 +14,14 @@ logger = logging.getLogger(__name__)
 class AppEngine:
     def __init__(
         self,
-        user_name: str,
         api_base_url: str,
         enable_excel: bool,
     ):
-        self.context = RaceContext(user_name=user_name)
+        self.context = RaceContext()
         self.queue = Queue()
         self.enable_excel = enable_excel
         self.stop_event = threading.Event()
         self.session_reset_event = threading.Event()
-        self.user_name = user_name
         self.api_url = api_base_url
 
         self._setup_api()

@@ -20,9 +20,8 @@ logger = logging.getLogger(__name__)
 def main():
     load_dotenv()
     api_url = os.getenv("TEST_URL")
-    user_name = "Kam Wilson"
 
-    engine = AppEngine(user_name=user_name, api_base_url=api_url, enable_excel=False)
+    engine = AppEngine(api_base_url=api_url, enable_excel=False)
 
     engine.start()
 

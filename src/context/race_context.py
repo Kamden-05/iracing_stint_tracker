@@ -8,11 +8,7 @@ class RaceContext:
     car_id: Optional[int] = None
     stint_id: Optional[int] = None
     pitstop_id: Optional[int] = None
-    user_name: Optional[str] = None
 
     def reset(self):
-        excluded = {"user_name"}
         for field in fields(self):
-            if field.name not in excluded:
-                continue
             setattr(self, field.name, None)
