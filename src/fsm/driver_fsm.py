@@ -111,10 +111,13 @@ class DriverFSM(object):
             self.required_fields.update(m.required_fields.keys())
 
     def _handle_event(self, event_data: EventData):
-        logger.debug(f"Event: {event_data.event.name}")
-        logger.debug(f"From: {event_data.transition.source}")
-        logger.debug(f"To: {event_data.transition.dest}")
-        logger.debug(f"Current state: {event_data.state}")
+        logger.debug(
+            "FSM Transition | event=%s from=%s to=%s state=%s",
+            event_data.event.name,
+            event_data.transition.source,
+            event_data.transition.dest,
+            event_data.state,
+        )
         self._broadcast(event_data.event.name)
 
     def _broadcast(self, event_name: str):
