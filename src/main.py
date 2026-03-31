@@ -3,7 +3,10 @@ import os
 import logging
 import sys
 from dotenv import load_dotenv
+from PySide6.QtWidgets import QApplication
 from src.engine import AppEngine
+from src.gui import StintTrackerWidget, GUINotifier
+
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -17,19 +20,36 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
+APP_NAME = "Stint Tracker"
+
+
 def main():
+    app = QApplication([])
+
+    widget = StintTrackerWidget()
+    widget.setWindowTitle(APP_NAME)
+
     load_dotenv()
     api_url = os.getenv("TEST_URL")
 
-    engine = AppEngine(api_base_url=api_url, enable_excel=False)
-
+    engine = AppEngine(api_base_url=api_url, enable_excel=True)
     engine.start()
 
-    try:
-        while True:
-            time.sleep(1)
-    except KeyboardInterrupt:
+    notifier = GUINotifier(engine)
+    engine.notifier = notifier
+    notifier.status_data_ready.connect(widget.on_status_change)
+    notifier.start()
+
+    widget.show()
+
+    def cleanup():
+        engine.notifier = None
+        notifier.stop()
         engine.stop()
+
+    app.aboutToQuit.connect(cleanup)
+
+    sys.exit(app.exec())
 
 
 if __name__ == "__main__":

@@ -1,6 +1,8 @@
 import sys
 import logging
 from src.gui.constants import Status, Header
+from PySide6.QtCore import Slot
+from PySide6.QtCore import QObject, Signal, QTimer
 from PySide6.QtWidgets import QApplication, QLabel, QWidget, QGridLayout
 from PySide6.QtGui import QFont, QIcon
 
@@ -9,18 +11,40 @@ APP_NAME = "Stint Tracker"
 logger = logging.getLogger(__name__)
 
 
+class GUINotifier(QObject):
+    status_data_ready = Signal(Header, Status)
+
+    def __init__(self, engine: "AppEngine", poll_rate_ms: int = 100):
+        super().__init__()
+        self.engine = engine
+        self.timer = QTimer()
+        self.timer.setInterval(poll_rate_ms)
+        self.timer.timeout.connect(self.poll_engine)
+
+    def start(self):
+        self.timer.start()
+
+    def stop(self):
+        self.timer.stop()
+
+    def poll_engine(self):
+        if self.engine:
+            self.engine.emit_gui_updates()
+
+
 class StintTrackerWidget(QWidget):
     ICON_CHAR = "⬤"
     WINDOW_HEIGHT = 150
-    WINDOW_WIDTH = 325
+    WINDOW_WIDTH = 350
     FONT_SIZE = 12
     ICON_PATH = r"src\gui\resources\icon.ico"
 
     STATUS_MAPPING = {
         Status.CONNECTED: ("green", "Connected"),
         Status.DISCONNECTED: ("red", "Disconnected"),
-        Status.WAITING: ("orange", "Waiting..."),
+        Status.WAITING: ("orange", "Waiting for race..."),
         Status.RUNNING: ("green", "Running"),
+        Status.FINISHED: ("purple", "Session finished"),
         Status.STARTUP: ("white", "Initializing..."),
     }
 
@@ -62,6 +86,7 @@ class StintTrackerWidget(QWidget):
         status = self._build_status_text(color, text)
         self.status_labels[header].setText(status)
 
+    @Slot(Header, Status)
     def on_status_change(self, header: Header, status: Status):
         if not status in self.STATUS_MAPPING:
             logger.warning("Invalid status %s for header %s", status, header)
@@ -74,7 +99,5 @@ if __name__ == "__main__":
     app = QApplication([])
     app.setApplicationDisplayName(APP_NAME)
     app.setApplicationName(APP_NAME)
-    widget = StintTrackerWidget()
-    widget.setWindowTitle(APP_NAME)
-    widget.show()
+
     sys.exit(app.exec())

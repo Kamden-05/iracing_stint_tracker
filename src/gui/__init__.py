@@ -1,2 +1,2 @@
-from constants import Status, Header
-from app_gui import StintTrackerWidget
+from src.gui.constants import Status, Header
+from src.gui.app_gui import StintTrackerWidget, GUINotifier

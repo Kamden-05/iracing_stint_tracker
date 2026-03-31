@@ -5,6 +5,7 @@ class Status(Enum):
     CONNECTED = auto()
     RUNNING = auto()
     WAITING = auto()
+    FINISHED = auto()
     DISCONNECTED = auto()
     STARTUP = auto()
 
