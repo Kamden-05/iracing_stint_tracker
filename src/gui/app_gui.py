@@ -1,9 +1,8 @@
-import sys
 import logging
 from src.gui.constants import Status, Header
 from PySide6.QtCore import Slot
 from PySide6.QtCore import QObject, Signal, QTimer
-from PySide6.QtWidgets import QApplication, QLabel, QWidget, QGridLayout
+from PySide6.QtWidgets import QLabel, QWidget, QGridLayout
 from PySide6.QtGui import QFont, QIcon
 
 APP_NAME = "Stint Tracker"
@@ -14,7 +13,7 @@ logger = logging.getLogger(__name__)
 class GUINotifier(QObject):
     status_data_ready = Signal(Header, Status)
 
-    def __init__(self, engine: "AppEngine", poll_rate_ms: int = 100):
+    def __init__(self, engine, poll_rate_ms: int = 100):
         super().__init__()
         self.engine = engine
         self.timer = QTimer()
@@ -93,11 +92,3 @@ class StintTrackerWidget(QWidget):
 
         color, text = self.STATUS_MAPPING.get(status, ("gray", "Unkown"))
         self._set_status(header, color, text)
-
-
-if __name__ == "__main__":
-    app = QApplication([])
-    app.setApplicationDisplayName(APP_NAME)
-    app.setApplicationName(APP_NAME)
-
-    sys.exit(app.exec())
