@@ -1,9 +1,16 @@
 import logging
 from src.gui.constants import Status, Header
 from PySide6.QtCore import Slot
-from PySide6.QtCore import QObject, Signal, QTimer
-from PySide6.QtWidgets import QLabel, QWidget, QGridLayout
-from PySide6.QtGui import QFont, QIcon
+from PySide6.QtCore import QObject, Signal, QTimer, QPoint
+from PySide6.QtWidgets import (
+    QLabel,
+    QWidget,
+    QGridLayout,
+    QSystemTrayIcon,
+    QMenu,
+    QApplication,
+)
+from PySide6.QtGui import QFont, QIcon, QCloseEvent, QCursor
 
 APP_NAME = "Stint Tracker"
 
@@ -51,11 +58,13 @@ class StintTrackerWidget(QWidget):
         super().__init__()
 
         # Display details
+        self._quit_requested = False
+        self.icon = QIcon(self.ICON_PATH)
         self.setFixedSize(self.WINDOW_WIDTH, self.WINDOW_HEIGHT)
         font = QFont()
         font.setPointSize(self.FONT_SIZE)
         self.setFont(font)
-        self.setWindowIcon(QIcon(self.ICON_PATH))
+        self.setWindowIcon(self.icon)
 
         # Layout details
         layout = QGridLayout()
@@ -77,6 +86,21 @@ class StintTrackerWidget(QWidget):
 
         self.setLayout(layout)
 
+        self.tray = QSystemTrayIcon(self.icon)
+        tray_menu = QMenu()
+
+        show_action = tray_menu.addAction("Show")
+        show_action.triggered.connect(self._on_show_clicked)
+
+        quit_action = tray_menu.addAction("Quit")
+        quit_action.triggered.connect(self._on_quit_clicked)
+
+        self.tray.activated.connect(self._on_tray_activated)
+
+        self.tray.setContextMenu(tray_menu)
+        self.tray.setToolTip(APP_NAME)
+        self.tray.show()
+
     def _build_status_text(self, color: str, text: str) -> str:
         icon = f'<span style="color:{color};">{self.ICON_CHAR}</span>'
         return f"{icon} {text}"
@@ -84,6 +108,40 @@ class StintTrackerWidget(QWidget):
     def _set_status(self, header: Header, color: str, text: str):
         status = self._build_status_text(color, text)
         self.status_labels[header].setText(status)
+
+    def _on_show_clicked(self):
+        self.show()
+
+    def _on_tray_activated(self, reason: QSystemTrayIcon.ActivationReason):
+        if reason == QSystemTrayIcon.Trigger:
+            tray_geometry = self.tray.geometry()
+
+            if tray_geometry.isValid():
+                pos = QPoint(
+                    tray_geometry.left(),
+                    tray_geometry.top() - self.tray.contextMenu().sizeHint().height(),
+                )
+            else:
+                pos = QCursor.pos()
+
+            self.tray.contextMenu().popup(pos)
+
+    def _on_quit_clicked(self):
+        self._quit_requested = True
+        QApplication.instance().quit()
+
+    def closeEvent(self, event: QCloseEvent):
+        if self._quit_requested:
+            event.accept()
+        else:
+            event.ignore()  # ignore the default close
+            self.hide()
+            self.tray.showMessage(
+                "Stint Tracker",
+                "App minimized to tray",
+                QSystemTrayIcon.Information,
+                2000,
+            )
 
     @Slot(Header, Status)
     def on_status_change(self, header: Header, status: Status):
