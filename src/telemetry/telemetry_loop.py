@@ -44,6 +44,7 @@ class TelemetryLoop:
 
         return data
 
+    # TODO make sure race doesnt start under the pace car / before the green flag
     def _check_race_start(self) -> bool:
         return (
             self.ir.get("SessionNum") == 2  # 0 for practice, 1 for quali, 2 for race

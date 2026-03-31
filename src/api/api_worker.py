@@ -10,6 +10,7 @@ from src.context import RaceContext
 
 logger = logging.getLogger(__name__)
 
+
 class APIWorker(threading.Thread):
     def __init__(
         self,
