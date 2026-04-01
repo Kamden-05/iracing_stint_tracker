@@ -68,8 +68,12 @@ class PitStop:
             "road_enter_time": self.road_enter_time,
             "service_start_time": self.service_start_time,
             "fuel_start_amount": self.fuel_start_amount,
-            "repairs": self.has_repairs,
-            "tire_change": self.has_tire_change,
+            "required_repair_time": self.required_repair_time,
+            "optional_repair_time": self.optional_repair_time,
+            "left_front_tire_change": self.left_front,
+            "left_rear_tire_change": self.left_rear,
+            "right_front_tire_change": self.right_front,
+            "right_rear_tire_change": self.right_rear,
         }
 
     def to_patch_json(self) -> dict:

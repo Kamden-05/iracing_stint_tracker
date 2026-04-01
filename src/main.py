@@ -31,7 +31,7 @@ def main():
     load_dotenv()
     api_url = os.getenv("TEST_URL")
 
-    engine = AppEngine(api_base_url=None, enable_excel=True)
+    engine = AppEngine(api_base_url=api_url, enable_excel=True)
     engine.start()
 
     notifier = GUINotifier(engine)
