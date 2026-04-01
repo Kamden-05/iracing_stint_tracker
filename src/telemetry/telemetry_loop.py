@@ -138,6 +138,8 @@ class TelemetryLoop:
                 and current_session_id != self.prev_session_id
             ):
                 self._signal_session_change()
+                break
+
             self.prev_session_id = current_session_id
 
             on_track = bool(self.ir.get("IsOnTrackCar", False))
