@@ -52,6 +52,7 @@ class StintTrackerWidget(QWidget):
         Status.RUNNING: ("green", "Running"),
         Status.FINISHED: ("purple", "Session finished"),
         Status.STARTUP: ("white", "Initializing..."),
+        Status.OFFLINE: ("gray", "Offline"),
     }
 
     def __init__(self):

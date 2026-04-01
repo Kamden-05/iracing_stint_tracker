@@ -8,6 +8,7 @@ class Status(Enum):
     FINISHED = auto()
     DISCONNECTED = auto()
     STARTUP = auto()
+    OFFLINE = auto()
 
 
 class Header(Enum):

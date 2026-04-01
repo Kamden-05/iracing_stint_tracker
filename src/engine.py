@@ -111,6 +111,9 @@ class AppEngine:
                 api_status = Status.CONNECTED if api_connected else Status.DISCONNECTED
                 updates.append((Header.API, api_status))
                 self.prev_api_connected = api_connected
+        elif self.prev_api_connected is None:
+            self.prev_api_connected = False
+            updates.append((Header.API, Status.OFFLINE))
 
         return updates
 
