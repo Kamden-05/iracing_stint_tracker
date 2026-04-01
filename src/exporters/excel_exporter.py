@@ -5,6 +5,7 @@ from datetime import datetime
 from pathlib import Path
 from src.models import Session, Stint, Lap, PitStop
 import pandas as pd
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -18,6 +19,30 @@ class ExcelExporter:
 
         self.current_dir: Path = Path(__file__).parent
         self.project_root: Path = self.current_dir.parent.parent
+        self.MAX_AGE_DAYS = 30
+
+    def delete_old_files(self):
+        if not self.project_root.is_dir():
+            logger.info("Root folder does not exist")
+            return
+
+        races_dir = self.project_root / "races"
+        if not races_dir.is_dir():
+            logger.info("Race directory not found")
+            return
+
+        files = races_dir.rglob("*.xlsx")
+        max_age_seconds = self.MAX_AGE_DAYS * 86400
+        now = time.time()
+
+        for f in files:
+            if f.stat().st_birthtime < now - max_age_seconds:
+                try:
+                    f.unlink()
+                    logger.info("File deleted: %s", f.name)
+                except FileNotFoundError as e:
+                    logger.warning("File not found: %s", e)
+                    continue
 
     def create_workbook(self, session: Session):
         track_name = str(session.track).replace(" ", "_").replace("/", "-")
