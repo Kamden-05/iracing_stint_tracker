@@ -43,6 +43,9 @@ class ExcelExporter:
                 except FileNotFoundError as e:
                     logger.warning("File not found: %s", e)
                     continue
+                except PermissionError:
+                    logger.error("File %s is open: %s", f.name, e)
+                    continue
 
     def create_workbook(self, session: Session):
         track_name = str(session.track).replace(" ", "_").replace("/", "-")
