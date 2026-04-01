@@ -16,6 +16,7 @@ class LapManager(BaseManager):
         "LapCompleted": "lap_completed",
         "LapLastLapTime": "last_lap_time",
         "Lap": "current_lap",
+        "SessionTick": "current_tick",
     }
 
     session_time: Optional[float]
@@ -24,19 +25,26 @@ class LapManager(BaseManager):
     current_lap: Optional[int]
 
     def __init__(
-        self, context: RaceContext, queue: Queue, excel: Optional[ExcelExporter]
+        self,
+        context: RaceContext,
+        queue: Queue,
+        excel: Optional[ExcelExporter],
+        delay_ticks: int,
     ):
         super().__init__(context, queue, excel)
         self.last_lap_completed = 0
         self.lap_start_time = None
         self.event_handlers = {}
+        self.delay_ticks = delay_ticks
+        self.temp_lap_time = None
+        self.temp_lap_tick = None
 
     def on_tick(self, telem: dict[str, any]):
         super().on_tick(telem)
 
-        self._check_for_new_lap()
+        self._detect_new_lap()
 
-    def _check_for_new_lap(self):
+    def _detect_new_lap(self):
 
         if self.lap_completed == 0:
             # pre-first-lap initialization
@@ -46,21 +54,33 @@ class LapManager(BaseManager):
             return
 
         if self.lap_completed > self.last_lap_completed:
+            self.temp_lap_tick = self.current_tick
 
-            if self.last_lap_time and self.last_lap_time > 0.0:
-                lap_time = self.last_lap_time
-            elif self.lap_start_time is not None:
-                lap_time = self.session_time - self.lap_start_time
-            else:
-                logger.warning(
-                    "Skipping lap: lap_completed=%s session_time=%s",
-                    self.lap_completed,
-                    self.session_time,
-                )
+            if self.lap_start_time is not None:
+                self.temp_lap_time = self.session_time - self.lap_start_time
 
-            self._post_lap_info(lap_time)
-            self.last_lap_completed = self.lap_completed
             self.lap_start_time = self.session_time
+            self.last_lap_completed = self.lap_completed
+
+        if self.temp_lap_tick is not None:
+            if (self.current_tick - self.temp_lap_tick) >= self.delay_ticks:
+                self._record_lap()
+                self.temp_lap_tick = None
+
+    def _record_lap(self):
+        if self.last_lap_time and self.last_lap_time > 0.0:
+            lap_time = self.last_lap_time
+        elif self.temp_lap_time is not None:
+            lap_time = self.temp_lap_time
+        else:
+            logger.warning(
+                "Skipping lap: lap_completed=%s session_time=%s",
+                self.lap_completed,
+                self.session_time,
+            )
+
+        self._post_lap_info(lap_time)
+        self.temp_lap_time = None
 
     def _post_lap_info(self, lap_time: float):
         lap = Lap(
@@ -68,5 +88,7 @@ class LapManager(BaseManager):
             number=self.lap_completed,
             time=lap_time,
         )
+
+        logger.debug("Lap Posted: number=%s time=%s", self.lap_completed, lap_time)
 
         self._send_data(TaskType.LAP, lap)

@@ -19,6 +19,7 @@ class AppEngine:
         api_base_url: str,
         enable_excel: bool = False,
     ):
+        self.delay_ticks = 60
         self.context = RaceContext()
         self.queue = Queue()
         self.enable_excel = enable_excel
@@ -57,7 +58,7 @@ class AppEngine:
             SessionManager(self.context, self.queue, excel),
             StintManager(self.context, self.queue, excel),
             PitstopManager(self.context, self.queue, excel),
-            LapManager(self.context, self.queue, excel),
+            LapManager(self.context, self.queue, excel, self.delay_ticks),
         ]
         self.fsm.attach_managers(self.managers)
 
@@ -66,6 +67,7 @@ class AppEngine:
             ir_client=IRacingClient(),
             fsm=self.fsm,
             session_reset_event=self.session_reset_event,
+            delay_ticks=self.delay_ticks,
         )
 
         self.telemetry_thread = threading.Thread(

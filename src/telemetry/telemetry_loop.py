@@ -12,11 +12,13 @@ logger = logging.getLogger(__name__)
 
 
 class TelemetryLoop:
+
     def __init__(
         self,
         ir_client: "IRacingClient",
         fsm: "DriverFSM",
         session_reset_event: threading.Event,
+        delay_ticks: int,
         hz: int = 60,
     ):
         self.connected: bool = False
@@ -26,6 +28,8 @@ class TelemetryLoop:
         self.ir: "IRacingClient" = ir_client
         self.fsm: "DriverFSM" = fsm
         self.interval: float = 1.0 / hz
+        self.delay_ticks = delay_ticks
+        self.final_lap_tick = None
 
         self.prev_user_in_car: bool = False
         self.prev_session_id: Optional[int] = None
@@ -61,11 +65,13 @@ class TelemetryLoop:
         on_track = self.ir.get("IsOnTrack")
         tow = self.ir.get("PlayerCarTowTime") > 0.0
         lap_completed = self.ir.get("LapCompleted")
+        current_tick = self.ir.get("SessionTick")
 
         is_checkered = flags & Flags.checkered
 
         if self.final_lap_completed is not None and not is_checkered:
             self.final_lap_completed = None
+            self.final_lap_tick = None
 
         if session_num == 2 and is_checkered:
             if self.final_lap_completed is None:
@@ -73,11 +79,19 @@ class TelemetryLoop:
                 return False
 
             # Has the driver finished their final lap yet?
+
             finished_final_lap = lap_completed > self.final_lap_completed
+
+            if finished_final_lap and self.final_lap_tick is None:
+                self.final_lap_tick = current_tick
+
+            ticks_since_final_lap = (
+                current_tick - self.final_lap_tick if self.final_lap_tick else 0
+            )
 
             off_track = not on_track or tow
 
-            return finished_final_lap or off_track
+            return (finished_final_lap and ticks_since_final_lap >= self.delay_ticks) or off_track
 
         return False
 
@@ -124,13 +138,13 @@ class TelemetryLoop:
             pit_active = bool(self.ir.get("PitstopActive", False))
             tow_time = float(self.ir.get("PlayerCarTowTime", 0.0))
 
-            tick_data = self._get_tick_data()
-
             # FSM transitions
 
             user_is_driving = on_track or (tow_time > 0.0 and self.prev_user_in_car)
 
             # update manager state
+            tick_data = self._get_tick_data()
+
             for m in self.fsm.managers:
                 m.on_tick(tick_data)
 
