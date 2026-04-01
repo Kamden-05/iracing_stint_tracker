@@ -1,11 +1,14 @@
 import time
 import threading
+import logging
 from typing import TYPE_CHECKING, Optional, Any
 from irsdk import SessionState, Flags
 
 if TYPE_CHECKING:
     from src.fsm import DriverFSM
     from src.telemetry import IRacingClient
+
+logger = logging.getLogger(__name__)
 
 
 class TelemetryLoop:
@@ -127,27 +130,36 @@ class TelemetryLoop:
 
             user_is_driving = on_track or (tow_time > 0.0 and self.prev_user_in_car)
 
+            # update manager state
+            for m in self.fsm.managers:
+                m.on_tick(tick_data)
+
             # session start
             if self._check_race_start() and not self.session_started:
                 self.session_started = True
                 self.fsm.session_start()
+                logger.debug("Session started")
 
             if self.session_started:
                 if user_is_driving:
                     # enter pit road
                     if not self.prev_on_pit_road and (on_pit_road or tow_time > 0.0):
+                        logger.debug("Entered pit road")
                         self.fsm.enter_pit_road()
 
                     # exit pit road
                     if self.prev_on_pit_road and not on_pit_road:
+                        logger.debug("Exited pit road")
                         self.fsm.exit_pit_road()
 
                     # enter pit box
                     if not self.prev_in_pit_box and pit_active:
+                        logger.debug("Entered pit box")
                         self.fsm.enter_pit_box()
 
                     # exit pit box
                     if self.prev_in_pit_box and not pit_active:
+                        logger.debug("Exited pit box")
                         self.fsm.exit_pit_box()
 
                 # driver swaps
@@ -160,11 +172,8 @@ class TelemetryLoop:
             # session finish
             if self._check_race_end() and not self.session_finished:
                 self.session_finished = True
-                self.fsm.finish_session()
-
-            # update managers
-            for m in self.fsm.managers:
-                m.on_tick(tick_data)
+                self.fsm.session_finish()
+                logger.debug("Session finished")
 
             # update prev values
             self.prev_user_in_car = user_is_driving

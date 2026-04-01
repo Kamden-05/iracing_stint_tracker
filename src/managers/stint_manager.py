@@ -119,6 +119,7 @@ class StintManager(BaseManager):
         if not self.current_stint:
             return
 
+        self.current_stint.is_complete = True
         self._update_stint()
         self.current_stint = None
         logger.info("stint ended")

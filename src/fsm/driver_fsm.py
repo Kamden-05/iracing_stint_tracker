@@ -116,7 +116,7 @@ class DriverFSM(object):
             event_data.event.name,
             event_data.transition.source,
             event_data.transition.dest,
-            event_data.state,
+            event_data.state.name,
         )
         self._broadcast(event_data.event.name)
 

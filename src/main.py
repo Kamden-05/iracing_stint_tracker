@@ -9,7 +9,7 @@ from src.gui import StintTrackerWidget, GUINotifier
 
 logging.basicConfig(
     level=logging.DEBUG,
-    format="%(asctime)s [%(levelname)s] %(message)s",
+    format="%(asctime)s [%(levelname)s] [%(name)s:%(lineno)d] %(message)s",
     handlers=[
         logging.FileHandler("stint_tracker.log"),
         logging.StreamHandler(sys.stdout),
@@ -31,7 +31,7 @@ def main():
     load_dotenv()
     api_url = os.getenv("TEST_URL")
 
-    engine = AppEngine(api_base_url=api_url, enable_excel=True)
+    engine = AppEngine(api_base_url=None, enable_excel=True)
     engine.start()
 
     notifier = GUINotifier(engine)
