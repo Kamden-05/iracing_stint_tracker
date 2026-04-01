@@ -66,6 +66,17 @@ class TelemetryLoop:
         tow = self.ir.get("PlayerCarTowTime") > 0.0
         lap_completed = self.ir.get("LapCompleted")
         current_tick = self.ir.get("SessionTick")
+        session_state = self.ir.get("SessionState")
+
+        if session_num != 2:
+            return False
+
+        if session_state == SessionState.cool_down:
+            return True
+
+        off_track = not on_track or tow
+        if session_state == SessionState.checkered and off_track:
+            return True
 
         is_checkered = flags & Flags.checkered
 
@@ -73,12 +84,10 @@ class TelemetryLoop:
             self.final_lap_completed = None
             self.final_lap_tick = None
 
-        if session_num == 2 and is_checkered:
+        if is_checkered:
             if self.final_lap_completed is None:
                 self.final_lap_completed = lap_completed
                 return False
-
-            # Has the driver finished their final lap yet?
 
             finished_final_lap = lap_completed > self.final_lap_completed
 
@@ -89,9 +98,7 @@ class TelemetryLoop:
                 current_tick - self.final_lap_tick if self.final_lap_tick else 0
             )
 
-            off_track = not on_track or tow
-
-            return (finished_final_lap and ticks_since_final_lap >= self.delay_ticks) or off_track
+            return finished_final_lap and ticks_since_final_lap >= self.delay_ticks
 
         return False
 
@@ -154,7 +161,13 @@ class TelemetryLoop:
                 self.fsm.session_start()
                 logger.debug("Session started")
 
-            if self.session_started:
+            # session finish
+            if self._check_race_end() and not self.session_finished:
+                self.session_finished = True
+                self.fsm.session_finish()
+                logger.debug("Session finished")
+
+            if self.session_started and not self.session_finished:
                 if user_is_driving:
                     # enter pit road
                     if not self.prev_on_pit_road and (on_pit_road or tow_time > 0.0):
@@ -182,12 +195,6 @@ class TelemetryLoop:
 
                 if not self.prev_user_in_car and user_is_driving:
                     self.fsm.driver_swap_in()
-
-            # session finish
-            if self._check_race_end() and not self.session_finished:
-                self.session_finished = True
-                self.fsm.session_finish()
-                logger.debug("Session finished")
 
             # update prev values
             self.prev_user_in_car = user_is_driving

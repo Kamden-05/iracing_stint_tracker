@@ -15,7 +15,7 @@ TRANSITIONS = [
     ["session_start", States.IDLE, States.ON_TRACK, None, None, "_handle_event"],
     [
         "driver_swap_out",
-        States.IN_PIT_BOX,
+        [States.ON_TRACK, States.IN_PIT_BOX, States.ON_PIT_ROAD],
         States.IDLE,
         None,
         None,
