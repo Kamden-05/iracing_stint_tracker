@@ -19,6 +19,10 @@ class StintManager(BaseManager):
         "PlayerCarMyIncidentCount": "incidents",
         "FuelLevel": "fuel_level",
         "LapCompleted": "lap_completed",
+        "TrackTempCrew": "track_temp",
+        "TrackWetness": "track_wetness",
+        "Skies": "sky_cover",
+        "Precipitation": "precipitation",
     }
 
     driver_info: Optional[dict]
@@ -98,6 +102,10 @@ class StintManager(BaseManager):
             start_position=self.position,
             start_incidents=self.incidents,
             start_fuel=self.fuel_level,
+            track_temp=self.track_temp,
+            track_wetness=self.track_wetness,
+            sky_cover=self.sky_cover,
+            precipitation=self.precipitation,
         )
 
         self.last_lap_completed = self.lap_completed or 0

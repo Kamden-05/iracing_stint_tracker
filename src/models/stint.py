@@ -13,6 +13,10 @@ class Stint:
     start_position: int
     start_incidents: int
     start_fuel: float
+    track_temp: float
+    track_wetness: int
+    sky_cover: int
+    precipitation: float
 
     # meta data
     number: Optional[int] = None
@@ -62,6 +66,10 @@ class Stint:
             "start_position": self.start_position,
             "start_incidents": self.start_incidents,
             "start_fuel": self.start_fuel,
+            "track_temp": self.track_temp,
+            "track_wetness": self.track_wetness,
+            "sky_cover": self.sky_cover,
+            "precipitation": self.precipitation,
         }
 
     def to_patch_json(self) -> dict:
