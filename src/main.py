@@ -29,7 +29,7 @@ def main():
     widget.setWindowTitle(APP_NAME)
 
     load_dotenv()
-    api_url = os.getenv("TEST_URL")
+    api_url = os.getenv("PROD_URL")
 
     engine = AppEngine(api_base_url=api_url, enable_excel=True)
     engine.start()
