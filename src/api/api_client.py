@@ -80,7 +80,7 @@ class APIClient:
     def check_connection(self) -> bool:
         """Check if backend is reachable."""
         try:
-            r = self.s.get(f"{self.base_url}/health", timeout=3)
+            r = self.s.get(f"{self.base_url}/health", timeout=10)
             return r.status_code == 200
         except requests.RequestException:
             return False

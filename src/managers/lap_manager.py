@@ -17,6 +17,7 @@ class LapManager(BaseManager):
         "LapLastLapTime": "last_lap_time",
         "Lap": "current_lap",
         "SessionTick": "current_tick",
+        "SessionNum": "session_num",
     }
 
     session_time: Optional[float]
@@ -45,6 +46,8 @@ class LapManager(BaseManager):
         self._detect_new_lap()
 
     def _detect_new_lap(self):
+        if self.session_num != 2:
+            return
 
         if self.lap_completed == 0:
             # pre-first-lap initialization
