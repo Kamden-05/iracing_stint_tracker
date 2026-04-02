@@ -6,6 +6,7 @@ from src.models import Lap
 from src.api import TaskType
 from src.context import RaceContext
 from src.exporters import ExcelExporter
+from src.fsm import States
 
 logger = logging.getLogger(__name__)
 
@@ -40,21 +41,28 @@ class LapManager(BaseManager):
         self.temp_lap_time = None
         self.temp_lap_tick = None
 
-    def on_tick(self, telem: dict[str, any]):
+    def on_tick(self, telem: dict[str, any], state: States):
         super().on_tick(telem)
 
-        self._detect_new_lap()
+        if state in [
+            States.ON_TRACK,
+            States.ON_PIT_ROAD,
+            States.IN_PIT_BOX,
+        ]:
+            if self._is_new_lap_ready():
+                self._record_lap()
+        else:
+            self.temp_lap_time = None
+            self.temp_lap_tick = None
+            self.lap_start_time = None
 
-    def _detect_new_lap(self):
-        if self.session_num != 2:
-            return
-
+    def _is_new_lap_ready(self) -> bool:
         if self.lap_completed == 0:
             # pre-first-lap initialization
             if self.current_lap == 1 and not self.lap_start_time:
                 self.lap_start_time = self.session_time
 
-            return
+            return False
 
         if self.lap_completed > self.last_lap_completed:
             self.temp_lap_tick = self.current_tick
@@ -67,8 +75,10 @@ class LapManager(BaseManager):
 
         if self.temp_lap_tick is not None:
             if (self.current_tick - self.temp_lap_tick) >= self.delay_ticks:
-                self._record_lap()
                 self.temp_lap_tick = None
+                return True
+
+        return False
 
     def _record_lap(self):
         if self.last_lap_time and self.last_lap_time > 0.0:
@@ -81,6 +91,7 @@ class LapManager(BaseManager):
                 self.lap_completed,
                 self.session_time,
             )
+            return
 
         self._post_lap_info(lap_time)
         self.temp_lap_time = None

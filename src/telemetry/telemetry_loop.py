@@ -153,12 +153,12 @@ class TelemetryLoop:
 
             tick_data = self._get_tick_data()
 
+            # update manager state
+
+            for m in self.fsm.managers:
+                m.on_tick(tick_data, self.fsm.state)
+
             if not self.session_finished:
-
-                # update manager state
-
-                for m in self.fsm.managers:
-                    m.on_tick(tick_data)
 
                 # session start
                 if self._check_race_start() and not self.session_started:

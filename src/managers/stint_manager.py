@@ -6,6 +6,7 @@ from src.models import Stint
 from src.context import RaceContext
 from src.api import TaskType
 from src.exporters import ExcelExporter
+from src.fsm import States
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +47,7 @@ class StintManager(BaseManager):
             "session_finish": self._on_session_finish,
         }
 
-    def on_tick(self, telem):
+    def on_tick(self, telem, state: States):
         super().on_tick(telem)
 
         self._check_for_new_lap()
