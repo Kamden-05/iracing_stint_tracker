@@ -109,7 +109,7 @@ class TelemetryLoop:
         self._stop_event.set()
 
     def run(self):
-        while not self._stop_event.is_set() and not self.session_finished:
+        while not self._stop_event.is_set():
 
             # connection handling
 
@@ -151,52 +151,58 @@ class TelemetryLoop:
 
             user_is_driving = on_track or (tow_time > 0.0 and self.prev_user_in_car)
 
-            # update manager state
             tick_data = self._get_tick_data()
 
-            for m in self.fsm.managers:
-                m.on_tick(tick_data)
+            if not self.session_finished:
 
-            # session start
-            if self._check_race_start() and not self.session_started:
-                self.session_started = True
-                self.fsm.session_start()
-                logger.debug("Session started")
+                # update manager state
 
-            # session finish
-            if self._check_race_end() and not self.session_finished:
-                self.session_finished = True
-                self.fsm.session_finish()
-                logger.debug("Session finished")
+                for m in self.fsm.managers:
+                    m.on_tick(tick_data)
 
-            if self.session_started and not self.session_finished:
-                if user_is_driving:
-                    # enter pit road
-                    if not self.prev_on_pit_road and (on_pit_road or tow_time > 0.0):
-                        logger.debug("Entered pit road")
-                        self.fsm.enter_pit_road()
+                # session start
+                if self._check_race_start() and not self.session_started:
+                    self.session_started = True
+                    self.fsm.session_start()
+                    logger.debug("Session started")
 
-                    # exit pit road
-                    if self.prev_on_pit_road and not on_pit_road:
-                        logger.debug("Exited pit road")
-                        self.fsm.exit_pit_road()
+                # session finish
+                if self._check_race_end():
+                    self.session_finished = True
+                    self.fsm.session_finish()
+                    logger.debug("Session finished")
+                    continue
 
-                    # enter pit box
-                    if not self.prev_in_pit_box and pit_active:
-                        logger.debug("Entered pit box")
-                        self.fsm.enter_pit_box()
+                if self.session_started:
+                    if user_is_driving:
+                        # enter pit road
+                        if not self.prev_on_pit_road and (
+                            on_pit_road or tow_time > 0.0
+                        ):
+                            logger.debug("Entered pit road")
+                            self.fsm.enter_pit_road()
 
-                    # exit pit box
-                    if self.prev_in_pit_box and not pit_active:
-                        logger.debug("Exited pit box")
-                        self.fsm.exit_pit_box()
+                        # exit pit road
+                        if self.prev_on_pit_road and not on_pit_road:
+                            logger.debug("Exited pit road")
+                            self.fsm.exit_pit_road()
 
-                # driver swaps
-                if self.prev_user_in_car and not user_is_driving:
-                    self.fsm.driver_swap_out()
+                        # enter pit box
+                        if not self.prev_in_pit_box and pit_active:
+                            logger.debug("Entered pit box")
+                            self.fsm.enter_pit_box()
 
-                if not self.prev_user_in_car and user_is_driving:
-                    self.fsm.driver_swap_in()
+                        # exit pit box
+                        if self.prev_in_pit_box and not pit_active:
+                            logger.debug("Exited pit box")
+                            self.fsm.exit_pit_box()
+
+                    # driver swaps
+                    if self.prev_user_in_car and not user_is_driving:
+                        self.fsm.driver_swap_out()
+
+                    if not self.prev_user_in_car and user_is_driving:
+                        self.fsm.driver_swap_in()
 
             # update prev values
             self.prev_user_in_car = user_is_driving
