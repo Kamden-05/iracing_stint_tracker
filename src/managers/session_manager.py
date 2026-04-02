@@ -46,7 +46,11 @@ class SessionManager(BaseManager):
     def set_context(self):
         self.context.session_id = self.weekend_info["SubSessionID"]
         self.context.car_id = self.car_id
-        logger.info(f"Session ID: {self.context.session_id}")
+        logger.info(
+            "Context set - Session ID: %s, Car ID: %s",
+            self.context.session_id,
+            self.context.car_id,
+        )
 
     def _post_session_info(self):
         car_info = self.driver_info["Drivers"][self.car_id]

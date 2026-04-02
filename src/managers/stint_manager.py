@@ -14,7 +14,6 @@ class StintManager(BaseManager):
     required_fields = {
         "DriverInfo": "driver_info",
         "SessionTime": "session_time",
-        "PlayerCarIdx": "player_car_id",
         "PlayerCarClassPosition": "position",
         "PlayerCarMyIncidentCount": "incidents",
         "FuelLevel": "fuel_level",
@@ -53,7 +52,7 @@ class StintManager(BaseManager):
         self._check_for_new_lap()
 
     def _get_driver_name(self) -> str:
-        car_id = self.player_car_id
+        car_id = self.context.car_id
         drivers = self.driver_info["Drivers"]
 
         driver = next(
