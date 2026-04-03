@@ -33,12 +33,11 @@ class TelemetryLoop:
 
         self.prev_user_in_car: bool = False
         self.prev_session_id: Optional[int] = None
-        self.prev_on_track: bool = False
         self.prev_on_pit_road: bool = False
         self.prev_in_pit_box: bool = False
         self.session_started: bool = False
         self.session_finished: bool = False
-        self.final_lap_completed: Optional[bool] = None
+        self.final_lap_completed: Optional[int] = None
 
     def _get_tick_data(self) -> dict[str, Any]:
         data = {}
@@ -206,7 +205,6 @@ class TelemetryLoop:
 
             # update prev values
             self.prev_user_in_car = user_is_driving
-            self.prev_on_track = on_track
             self.prev_on_pit_road = on_pit_road
             self.prev_in_pit_box = pit_active
 
