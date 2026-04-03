@@ -42,7 +42,7 @@ class LapManager(BaseManager):
         self.temp_lap_tick = None
 
     def on_tick(self, telem: dict[str, any], state: States):
-        super().on_tick(telem)
+        super().on_tick(telem, state)
 
         if state in [
             States.ON_TRACK,
@@ -57,9 +57,9 @@ class LapManager(BaseManager):
             self.lap_start_time = None
 
     def _is_new_lap_ready(self) -> bool:
-        if self.lap_completed == 0:
+        if self.lap_completed <= 0:
             # pre-first-lap initialization
-            if self.current_lap == 1 and not self.lap_start_time:
+            if self.current_lap == 1 and self.lap_start_time is None:
                 self.lap_start_time = self.session_time
 
             return False
@@ -81,6 +81,10 @@ class LapManager(BaseManager):
         return False
 
     def _record_lap(self):
+        if self.lap_completed == 0:
+            logger.info("Skipping lap 0 which had time=%s", self.last_lap_time)
+            return
+
         if self.last_lap_time and self.last_lap_time > 0.0:
             lap_time = self.last_lap_time
         elif self.temp_lap_time is not None:

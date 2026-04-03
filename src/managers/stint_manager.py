@@ -48,7 +48,7 @@ class StintManager(BaseManager):
         }
 
     def on_tick(self, telem, state: States):
-        super().on_tick(telem)
+        super().on_tick(telem, state)
 
         self._check_for_new_lap()
 
@@ -68,7 +68,7 @@ class StintManager(BaseManager):
         return driver["UserName"]
 
     def _check_for_new_lap(self):
-        if not self.current_stint or self.lap_completed is None:
+        if self.current_stint is None or self.lap_completed is None:
             return
 
         if self.lap_completed > self.last_lap_completed:
