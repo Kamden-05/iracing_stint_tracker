@@ -72,5 +72,11 @@ class SessionManager(BaseManager):
         sessions = self.session_info.get("Sessions", [])
         for s in sessions:
             if s.get("SessionType") == "Race":
-                return float(s["SessionTime"].split()[0])
+                duration = s["SessionTime"].split()[0]
+
+                try:
+                    return float(duration)
+                except (TypeError, ValueError):
+                    return 0.0
+
         return 0.0
