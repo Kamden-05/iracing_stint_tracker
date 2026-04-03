@@ -85,7 +85,7 @@ class LapManager(BaseManager):
             logger.info("Skipping lap 0 which had time=%s", self.last_lap_time)
             return
 
-        if self.last_lap_time and self.last_lap_time > 0.0:
+        if self.last_lap_time is not None and self.last_lap_time > 0.0:
             lap_time = self.last_lap_time
         elif self.temp_lap_time is not None:
             lap_time = self.temp_lap_time
