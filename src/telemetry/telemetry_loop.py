@@ -52,8 +52,14 @@ class TelemetryLoop:
 
     # TODO make sure race doesnt start under the pace car / before the green flag
     def _check_race_start(self) -> bool:
+        session_info = self.ir.get("SessionInfo")
+        sessions = session_info.get("Sessions", [])
+        session_num = self.ir.get("SessionNum")
+
+        session_type = sessions[session_num].get("SessionType", None)
+
         return (
-            self.ir.get("SessionNum") == 2  # 0 for practice, 1 for quali, 2 for race
+            session_type == "Race"
             and self.ir.get("SessionState") == SessionState.racing
             and self.ir.get("PlayerCarClassPosition") > 0
         )
