@@ -1,4 +1,6 @@
 import logging
+import os
+import sys
 from src.gui.constants import Status, Header
 from PySide6.QtCore import Slot
 from PySide6.QtCore import QObject, Signal, QTimer, QPoint
@@ -15,6 +17,14 @@ from PySide6.QtGui import QFont, QIcon, QCloseEvent, QCursor
 APP_NAME = "Stint Tracker"
 
 logger = logging.getLogger(__name__)
+
+
+def resource_path(relative_path):
+    try:
+        base_path = sys._MEIPASS
+    except AttributeError:
+        base_path = os.path.abspath(".")
+    return os.path.join(base_path, relative_path)
 
 
 class GUINotifier(QObject):
@@ -43,7 +53,7 @@ class StintTrackerWidget(QWidget):
     WINDOW_HEIGHT = 150
     WINDOW_WIDTH = 350
     FONT_SIZE = 12
-    ICON_PATH = r"src\gui\resources\icon.ico"
+    ICON_PATH = resource_path(r"src\gui\resources\icon.ico")
 
     STATUS_MAPPING = {
         Status.CONNECTED: ("green", "Connected"),
