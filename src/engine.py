@@ -53,8 +53,12 @@ class AppEngine:
 
     def _setup_fsm_managers(self):
         self.fsm = DriverFSM()
-        excel = ExcelExporter() if self.enable_excel else None
-        excel.delete_old_files()
+        if self.enable_excel:
+            excel = ExcelExporter()
+            excel.delete_old_files()
+        else:
+            excel = None
+
         self.managers = [
             SessionManager(self.context, self.queue, excel),
             StintManager(self.context, self.queue, excel),
