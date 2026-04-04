@@ -19,7 +19,7 @@ class AppEngine:
         api_base_url: str,
         enable_excel: bool = False,
     ):
-        self.delay_ticks = 60
+        self.delay_ticks = 500
         self.context = RaceContext()
         self.queue = Queue()
         self.enable_excel = enable_excel

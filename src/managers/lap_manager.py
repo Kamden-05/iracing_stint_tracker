@@ -40,6 +40,7 @@ class LapManager(BaseManager):
         self.delay_ticks = delay_ticks
         self.temp_lap_time = None
         self.temp_lap_tick = None
+        self.prev_current_lap = None
 
     def on_tick(self, telem: dict[str, any], state: States):
         super().on_tick(telem, state)
@@ -57,21 +58,16 @@ class LapManager(BaseManager):
             self.lap_start_time = None
 
     def _is_new_lap_ready(self) -> bool:
-        if self.lap_completed <= 0:
-            # pre-first-lap initialization
-            if self.current_lap == 1 and self.lap_start_time is None:
-                self.lap_start_time = self.session_time
-
-            return False
-
-        if self.lap_completed > self.last_lap_completed:
-            self.temp_lap_tick = self.current_tick
-
-            if self.lap_start_time is not None:
-                self.temp_lap_time = self.session_time - self.lap_start_time
-
+        if self.prev_current_lap is None:
+            self.prev_current_lap = self.current_lap
             self.lap_start_time = self.session_time
-            self.last_lap_completed = self.lap_completed
+
+        if self.current_lap != self.prev_current_lap:
+            self.temp_lap_time = self.session_time - self.lap_start_time
+            self.temp_lap_tick = self.current_tick
+            self.lap_start_time = self.session_time
+            self.prev_current_lap = self.current_lap
+            return False
 
         if self.temp_lap_tick is not None:
             if (self.current_tick - self.temp_lap_tick) >= self.delay_ticks:
@@ -81,10 +77,6 @@ class LapManager(BaseManager):
         return False
 
     def _record_lap(self):
-        if self.lap_completed == 0:
-            logger.info("Skipping lap 0 which had time=%s", self.last_lap_time)
-            return
-
         if self.last_lap_time is not None and self.last_lap_time > 0.0:
             lap_time = self.last_lap_time
         elif self.temp_lap_time is not None:
@@ -97,13 +89,15 @@ class LapManager(BaseManager):
             )
             return
 
-        self._post_lap_info(lap_time)
+        lap_number = self.current_lap - 1
+        if lap_number > 0:
+            self._post_lap_info(lap_time, lap_number)
         self.temp_lap_time = None
 
-    def _post_lap_info(self, lap_time: float):
+    def _post_lap_info(self, lap_time: float, lap_number: int):
         lap = Lap(
             stint_id=self.context.stint_id,
-            number=self.lap_completed,
+            number=lap_number,
             time=lap_time,
         )
 
