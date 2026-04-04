@@ -161,7 +161,7 @@ class TelemetryLoop:
             # update manager state
 
             for m in self.fsm.managers:
-                m.on_tick(tick_data, self.fsm.state)
+                m.on_tick(tick_data, self.fsm.state, user_is_driving)
 
             if not self.session_finished:
 

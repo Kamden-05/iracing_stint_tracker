@@ -24,7 +24,7 @@ class BaseManager:
         if event_name in self.event_handlers:
             self.event_handlers[event_name]()
 
-    def on_tick(self, telem: dict[str, Any], state: States):
+    def on_tick(self, telem: dict[str, Any], state: States, user_is_driving: bool):
         for telem_key, attr_name in self.required_fields.items():
             setattr(self, attr_name, telem[telem_key])
 

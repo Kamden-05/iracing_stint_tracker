@@ -38,7 +38,7 @@ class StintManager(BaseManager):
         super().__init__(context, queue, excel)
         self.current_stint = None
         self.last_lap_completed = 0
-        self.driver_name = ""
+        self.user_is_driving = None
 
         self.event_handlers = {
             "session_start": self._on_session_start,
@@ -47,8 +47,9 @@ class StintManager(BaseManager):
             "session_finish": self._on_session_finish,
         }
 
-    def on_tick(self, telem, state: States):
-        super().on_tick(telem, state)
+    def on_tick(self, telem, state: States, user_is_driving: bool):
+        super().on_tick(telem, state, user_is_driving)
+        self.user_is_driving = user_is_driving
 
         self._check_for_new_lap()
 
@@ -82,7 +83,8 @@ class StintManager(BaseManager):
         self._send_data(TaskType.STINT_UPDATE, self.current_stint)
 
     def _on_session_start(self):
-        self._on_exit_pit_box()
+        if self.user_is_driving:
+            self._on_exit_pit_box()
 
     def _on_enter_pit_box(self):
         self._on_session_finish()
@@ -91,13 +93,12 @@ class StintManager(BaseManager):
         if self.current_stint:
             return
 
-        if not self.driver_name:
-            self.driver_name = self._get_driver_name()
+        driver_name = self._get_driver_name()
 
         # TODO replace context.user_name with name from IRSDK
         self.current_stint = Stint(
             session_id=self.context.session_id,
-            driver_name=self.driver_name,
+            driver_name=driver_name,
             start_time=self.session_time,
             start_position=self.position,
             start_incidents=self.incidents,

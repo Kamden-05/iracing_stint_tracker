@@ -42,8 +42,8 @@ class LapManager(BaseManager):
         self.temp_lap_tick = None
         self.prev_current_lap = None
 
-    def on_tick(self, telem: dict[str, any], state: States):
-        super().on_tick(telem, state)
+    def on_tick(self, telem: dict[str, any], state: States, user_is_driving: bool):
+        super().on_tick(telem, state, user_is_driving)
 
         if state in [
             States.ON_TRACK,
